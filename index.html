@@ -7,34 +7,48 @@
 </head>
 <body>
   <div class="calendar-page">
-    <div class="header">
-      <span id="gregorian"></span>
-      <span id="islamic">伊斯蘭曆 Rejab 27, 1447</span>
+    <div class="top-row">
+      <div class="gregorian" id="gregorian"></div>
+      <div class="lunar" id="lunar"></div>
+      <div class="islamic">Rejab 27hb, 1447</div>
     </div>
 
     <div class="main-date">
-      <div id="dayNum"></div>
-      <div id="shengxiao"></div>
+      <div class="digit">1<span class="zodiac">🐭</span></div>
+      <div class="digit">6<span class="zodiac">🐔</span></div>
     </div>
 
-    <div class="lunar-info" id="almanacInfo"></div>
+    <div class="solar-term" id="solarTerm"></div>
+    <div class="folk-info">三九第九天 · 九水</div>
 
-    <div class="extra-info">
-      <p id="sunInfo">日出日落載入中...</p>
-      <p id="yi">宜：祭祀、祈福、嫁娶</p>
-      <p id="ji">忌：出行、安葬</p>
+    <div class="yi-ji">
+      <div class="yi">宜：祭祀、祈福、嫁娶</div>
+      <div class="ji">忌：出行、安葬、動土</div>
+    </div>
+
+    <div class="sun-time" id="sunInfo">日出 07:19 · 日落 17:43</div>
+
+    <!-- 縣市天氣 -->
+    <div class="weather">
+      <label for="city">選擇地區：</label>
+      <select id="city" onchange="loadWeather()">
+        <option value="臺北市">台北市</option>
+        <option value="新北市">新北市</option>
+        <option value="桃園市">桃園市</option>
+        <option value="臺中市">台中市</option>
+        <option value="臺南市">台南市</option>
+        <option value="高雄市">高雄市</option>
+        <option value="宜蘭縣">宜蘭縣</option>
+        <option value="花蓮縣">花蓮縣</option>
+        <option value="臺東縣">台東縣</option>
+      </select>
       <p id="weatherInfo">天氣載入中...</p>
     </div>
 
     <div class="clock" id="clock"></div>
-
-    <div class="side-text left">三九第九天</div>
-    <div class="side-text right">九水</div>
   </div>
 
-  <!-- LunarCalendar 函式庫 -->
   <script src="https://cdn.jsdelivr.net/npm/lunar-calendar/lib/LunarCalendar.min.js"></script>
-  <!-- 主程式 -->
   <script src="script.js"></script>
 </body>
 </html>
