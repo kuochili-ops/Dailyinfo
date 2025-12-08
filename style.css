@@ -1,29 +1,37 @@
-.calendar-page {
-  width: 480px;
+body {
+  background: #fefef8;
+  font-family: "標楷體", "Noto Serif TC", serif;
+  margin: 0;
+  padding: 0;
+}
+
+.calendar-sheet {
+  width: 360px;
   margin: 20px auto;
   padding: 20px;
-  border: 12px double #006400;
   background: #fff url("https://www.transparenttextures.com/patterns/paper-fibers.png");
-  box-shadow: 0 0 15px rgba(0,0,0,0.3);
+  border: 10px double #b71c1c;
+  box-shadow: 0 0 10px rgba(0,0,0,0.2);
 }
 
-.top-row {
-  display: flex;
-  justify-content: space-between;
+/* 頂部資訊 */
+.top-info {
+  text-align: center;
   font-size: 14px;
-  border-bottom: 2px solid #006400;
-  padding-bottom: 5px;
+  line-height: 1.6;
+  margin-bottom: 10px;
 }
 
+/* 主日期區塊 */
 .main-date {
   display: flex;
   justify-content: center;
   align-items: flex-end;
-  margin: 15px 0;
+  margin: 10px 0;
 }
 
 .digit {
-  font-size: 160px;
+  font-size: 120px;
   font-weight: bold;
   color: #2e7d32;
   text-shadow: 2px 2px #ccc;
@@ -32,7 +40,7 @@
 }
 
 .zodiac {
-  font-size: 40px;
+  font-size: 32px;
   position: absolute;
   bottom: -10px;
   left: 50%;
@@ -40,41 +48,20 @@
   color: #d32f2f;
 }
 
-.solar-term {
-  font-size: 16px;
+/* 中段資訊 */
+.middle-info {
   text-align: center;
+  font-size: 14px;
+  margin-bottom: 10px;
+}
+
+.solar-term {
   color: #d32f2f;
-  margin: 5px 0;
+  margin-bottom: 4px;
 }
 
 .folk-info {
-  font-size: 14px;
-  text-align: center;
   color: #006400;
-  margin-bottom: 10px;
 }
 
-.yi-ji {
-  font-size: 14px;
-  line-height: 1.6;
-  margin-bottom: 10px;
-  text-align: center;
-}
-
-.yi { color: #d32f2f; }
-.ji { color: #000; }
-
-.sun-time, .weather {
-  font-size: 14px;
-  text-align: center;
-  color: #444;
-  margin-bottom: 10px;
-}
-
-.clock {
-  font-size: 20px;
-  font-weight: bold;
-  text-align: center;
-  background: #f0f0f0;
-  padding: 5px;
-}
+/*
