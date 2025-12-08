@@ -5,71 +5,82 @@ body {
   padding: 0;
 }
 
-.calendar-sheet {
+.calendar {
   width: 360px;
-  margin: 20px auto;
-  padding: 20px;
-  background: #fff url("https://www.transparenttextures.com/patterns/paper-fibers.png");
-  border: 10px double #b71c1c;
+  margin: 30px auto;
   box-shadow: 0 0 10px rgba(0,0,0,0.2);
+  border: 1px solid #ccc;
 }
 
-/* 頂部資訊 */
-.top-info {
+/* 紅頭區塊 */
+.header {
+  background: #b71c1c;
+  color: gold;
+  text-align: center;
+  padding: 10px 0;
+  position: relative;
+}
+
+.header .title {
+  font-size: 24px;
+  letter-spacing: 10px;
+  font-weight: bold;
+}
+
+.header .hole {
+  width: 12px;
+  height: 12px;
+  background: #900;
+  border-radius: 50%;
+  position: absolute;
+  top: 6px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+/* 主體區塊 */
+.content {
+  background: #fff;
+  padding: 15px;
+  border-top: 1px solid #ccc;
+}
+
+.date-block {
   text-align: center;
   font-size: 14px;
   line-height: 1.6;
   margin-bottom: 10px;
 }
 
-/* 主日期區塊 */
-.main-date {
-  display: flex;
-  justify-content: center;
-  align-items: flex-end;
-  margin: 10px 0;
-}
-
-.digit {
+.main-number {
+  text-align: center;
   font-size: 120px;
   font-weight: bold;
   color: #2e7d32;
-  text-shadow: 2px 2px #ccc;
-  margin: 0 10px;
   position: relative;
 }
 
 .zodiac {
   font-size: 32px;
-  position: absolute;
-  bottom: -10px;
-  left: 50%;
-  transform: translateX(-50%);
   color: #d32f2f;
+  position: absolute;
+  top: 20px;
+  right: 30px;
 }
 
-/* 中段資訊 */
-.middle-info {
-  text-align: center;
+.info-block {
   font-size: 14px;
-  margin-bottom: 10px;
+  line-height: 1.8;
+  text-align: center;
+  margin-top: 10px;
 }
 
 .solar-term {
   color: #d32f2f;
-  margin-bottom: 4px;
 }
 
-.folk-info {
+.folk {
   color: #006400;
-}
-
-/* 宜忌區塊 */
-.yi-ji {
-  font-size: 14px;
-  line-height: 1.6;
-  margin-bottom: 10px;
-  text-align: center;
 }
 
 .yi {
@@ -78,14 +89,6 @@ body {
 
 .ji {
   color: #000;
-}
-
-/* 底部資訊 */
-.bottom-info {
-  font-size: 14px;
-  text-align: center;
-  line-height: 1.6;
-  color: #444;
 }
 
 .clock {
