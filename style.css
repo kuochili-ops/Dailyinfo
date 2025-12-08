@@ -1,60 +1,68 @@
 body {
-  font-family: "標楷體", "Noto Serif TC", serif;
   background: #fdfdf9;
-  margin: 0;
-  padding: 0;
+  font-family: "標楷體", "Noto Serif TC", serif;
 }
-.page {
-  border: 10px double #006400;
-  width: 440px;
+
+.calendar-page {
+  width: 480px;
   margin: 20px auto;
   padding: 20px;
-  position: relative;
+  border: 12px double #006400;
   background: #fff url("https://www.transparenttextures.com/patterns/paper-fibers.png");
-  box-shadow: 0 0 12px rgba(0,0,0,0.25);
-  color: #006400;
+  box-shadow: 0 0 15px rgba(0,0,0,0.3);
+  position: relative;
 }
+
 .header {
   display: flex;
   justify-content: space-between;
-  font-size: 16px;
-  margin-bottom: 5px;
+  font-size: 14px;
   border-bottom: 2px solid #006400;
   padding-bottom: 5px;
 }
-.banner {
-  font-size: 20px;
-  font-weight: bold;
-  color: #d32f2f;
-  border-top: 2px solid #d32f2f;
-  border-bottom: 2px solid #d32f2f;
-  margin: 10px 0;
-  padding: 5px 0;
+
+.main-date {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 15px 0;
 }
-.big-date {
-  font-size: 150px;
+
+#dayNum {
+  font-size: 180px;
   font-weight: bold;
-  color: #006400;
+  color: #2e7d32;
   line-height: 1;
-  margin: 10px 0;
+  text-shadow: 2px 2px #ccc;
 }
-.zodiac {
+
+#shengxiao {
   font-size: 40px;
-  margin-top: -20px;
+  margin-left: 15px;
   color: #d32f2f;
 }
-.sub-info {
-  font-size: 14px;
-  margin: 5px 0;
+
+.lunar-info {
+  font-size: 16px;
+  text-align: center;
+  margin: 10px 0;
 }
+
+.extra-info {
+  font-size: 14px;
+  margin-top: 10px;
+  line-height: 1.6;
+}
+
 .clock {
   margin-top: 15px;
-  font-size: 22px;
+  font-size: 20px;
   font-weight: bold;
-  color: #000;
+  text-align: center;
   background: #f0f0f0;
   padding: 5px;
 }
+
 .side-text {
   position: absolute;
   top: 120px;
@@ -63,13 +71,5 @@ body {
   writing-mode: vertical-rl;
   letter-spacing: 2px;
 }
-.left { left: -45px; }
-.right { right: -45px; }
-.weather {
-  margin-top: 10px;
-  font-size: 14px;
-}
-select {
-  font-size: 14px;
-  margin-top: 5px;
-}
+.left { left: -50px; }
+.right { right: -50px; }
