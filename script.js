@@ -1,3 +1,10 @@
+function loadAlmanacGov() {
+  const today = new Date();
+  document.getElementById("almanacInfo").innerText =
+    "農曆十一月初七 · 節氣：大雪";
+}
+loadAlmanacGov();
+
 // 日期顯示今天
 const now = new Date();
 const year = now.getFullYear();
