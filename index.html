@@ -1,24 +1,38 @@
-<div class="calendar-page">
-  <div class="top-row">
-    <div class="gregorian" id="gregorian"></div>
-    <div class="lunar" id="lunar"></div>
-    <div class="islamic">Rejab 27hb, 1447</div>
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <title>撕頁農民曆</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="calendar-sheet">
+    <div class="top-info">
+      <div class="gregorian" id="gregorian">2025年12月8日 · 星期一</div>
+      <div class="lunar" id="lunar">農曆乙巳年十月十九</div>
+      <div class="islamic" id="islamic">Rejab 27hb, 1447</div>
+    </div>
+
+    <div class="main-date">
+      <div class="digit">1<span class="zodiac">🐔</span></div>
+      <div class="digit">6<span class="zodiac">🔴</span></div>
+    </div>
+
+    <div class="middle-info">
+      <div class="solar-term" id="solarTerm">十九 · 無</div>
+      <div class="folk-info" id="folkInfo">三九第九天 · 九水</div>
+    </div>
+
+    <div class="yi-ji">
+      <div class="yi" id="yi">宜：祭祀・祈福・嫁娶</div>
+      <div class="ji" id="ji">忌：出行・安葬・動土</div>
+    </div>
+
+    <div class="bottom-info">
+      <div class="sun" id="sunInfo">日出 07:19 · 日落 17:43</div>
+      <div class="weather" id="weatherInfo">臺北市：陰短暫雨 · 20°C ~ 20°C · 降雨 60%</div>
+      <div class="clock" id="clock">23:28:22</div>
+    </div>
   </div>
-
-  <div class="main-date">
-    <div class="digit">1<span class="zodiac">🐭</span></div>
-    <div class="digit">6<span class="zodiac">🐔</span></div>
-  </div>
-
-  <div class="solar-term" id="solarTerm"></div>
-  <div class="folk-info">三九第九天 · 九水</div>
-
-  <div class="yi-ji">
-    <div class="yi">宜：祭祀、祈福、嫁娶</div>
-    <div class="ji">忌：出行、安葬、動土</div>
-  </div>
-
-  <div class="sun-time" id="sunInfo"></div>
-  <div class="weather" id="weatherInfo"></div>
-  <div class="clock" id="clock"></div>
-</div>
+</body>
+</html>
