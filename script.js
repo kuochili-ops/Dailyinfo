@@ -53,8 +53,14 @@ function loadAlmanacLunarCalendar() {
     today.getDate()
   );
 
+  const zodiacEmojiMap = {
+    鼠: "🐭", 牛: "🐮", 虎: "🐯", 兔: "🐰", 龍: "🐲",
+    蛇: "🐍", 馬: "🐴", 羊: "🐑", 猴: "🐵", 雞: "🐔",
+    狗: "🐶", 豬: "🐷"
+  };
+
   document.getElementById("almanacInfo").innerText =
-    `農曆${info.lunarMonthName}${info.lunarDayName} · 節氣：${info.term || "無"}`;
-  document.getElementById("shengxiao").innerText = info.zodiac;
+    `農曆${info.GanZhiYear}年${info.lunarMonthName}${info.lunarDayName} · 節氣：${info.term || "無"}`;
+  document.getElementById("shengxiao").innerText = zodiacEmojiMap[info.zodiac] || info.zodiac;
 }
 loadAlmanacLunarCalendar();
