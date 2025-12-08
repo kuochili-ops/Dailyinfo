@@ -1,12 +1,25 @@
-// 日期顯示今天
-const now = new Date();
-const year = now.getFullYear();
-const month = now.getMonth() + 1;
-const day = now.getDate();
-const weekday = ["星期日","星期一","星期二","星期三","星期四","星期五","星期六"][now.getDay()];
-document.getElementById("yearMonth").innerText = `${year} · ${month}月`;
+// 顯示今天日期
+const today = new Date();
+const year = today.getFullYear();
+const month = today.getMonth() + 1;
+const day = today.getDate();
+const weekday = ["星期日","星期一","星期二","星期三","星期四","星期五","星期六"][today.getDay()];
+document.getElementById("gregorian").innerText = `${year}年${month}月${day}日 · ${weekday}`;
 document.getElementById("dayNum").innerText = day;
-document.getElementById("todayInfo").innerText = `${year}年${month}月${day}日 · ${weekday}`;
+
+// 農曆日期 + 節氣
+const info = LunarCalendar.solarToLunar(year, month, day);
+const zodiacEmojiMap = {
+  鼠: "🐭", 牛: "🐮", 虎: "🐯", 兔: "🐰", 龍: "🐲",
+  蛇: "🐍", 馬: "🐴", 羊: "🐑", 猴: "🐵", 雞: "🐔",
+  狗: "🐶", 豬: "🐷"
+};
+document.getElementById("almanacInfo").innerText =
+  `農曆${info.GanZhiYear}年${info.lunarMonthName}${info.lunarDayName} · 節氣：${info.term || "無"}`;
+document.getElementById("shengxiao").innerText = zodiacEmojiMap[info.zodiac] || info.zodiac;
+
+// 日出日落（假資料，可換成中央氣象署 API）
+document.getElementById("sunInfo").innerText = "日出 07:19 · 日落 17:43";
 
 // 即時時鐘
 function updateClock() {
@@ -24,7 +37,7 @@ const API_KEY = "CWA-A6F3874E-27F3-4AA3-AF5A-96B365798F79";
 const API_URL = "https://opendata.cwa.gov.tw/api/v1/rest/datastore/F-C0032-001";
 
 async function loadWeather() {
-  const city = document.getElementById("city").value;
+  const city = "臺北市"; // 預設台北市
   const url = `${API_URL}?Authorization=${API_KEY}&locationName=${city}&format=JSON`;
   try {
     const res = await fetch(url);
@@ -43,24 +56,3 @@ async function loadWeather() {
   }
 }
 loadWeather();
-
-// 農曆日期 + 節氣（使用 LunarCalendar 函式庫）
-function loadAlmanacLunarCalendar() {
-  const today = new Date();
-  const info = LunarCalendar.solarToLunar(
-    today.getFullYear(),
-    today.getMonth() + 1,
-    today.getDate()
-  );
-
-  const zodiacEmojiMap = {
-    鼠: "🐭", 牛: "🐮", 虎: "🐯", 兔: "🐰", 龍: "🐲",
-    蛇: "🐍", 馬: "🐴", 羊: "🐑", 猴: "🐵", 雞: "🐔",
-    狗: "🐶", 豬: "🐷"
-  };
-
-  document.getElementById("almanacInfo").innerText =
-    `農曆${info.GanZhiYear}年${info.lunarMonthName}${info.lunarDayName} · 節氣：${info.term || "無"}`;
-  document.getElementById("shengxiao").innerText = zodiacEmojiMap[info.zodiac] || info.zodiac;
-}
-loadAlmanacLunarCalendar();
