@@ -6,43 +6,27 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div class="page">
+  <div class="calendar-page">
     <div class="header">
-      <span id="yearMonth"></span>
-      <span style="color:#d32f2f;font-weight:bold;">福</span>
-      <span>台灣行事曆</span>
+      <span id="gregorian"></span>
+      <span id="islamic">伊斯蘭曆 Rejab 27, 1447</span>
     </div>
 
-    <div class="banner">農民曆</div>
-
-    <div class="big-date" id="dayNum"></div>
-    <div class="zodiac" id="shengxiao">🐍</div>
-
-    <div class="sub-info" id="todayInfo"></div>
-    <div class="sub-info" id="almanacInfo">農曆資料載入中...</div>
-
-    <div class="sub-info" id="sunInfo">日出日落載入中...</div>
-
-    <div class="weather">
-      <label for="city">選擇地區：</label>
-      <select id="city" onchange="loadWeather()">
-        <option value="臺北市">台北市</option>
-        <option value="新北市">新北市</option>
-        <option value="桃園市">桃園市</option>
-        <option value="臺中市">台中市</option>
-        <option value="臺南市">台南市</option>
-        <option value="高雄市">高雄市</option>
-        <option value="宜蘭縣">宜蘭縣</option>
-        <option value="花蓮縣">花蓮縣</option>
-        <option value="臺東縣">台東縣</option>
-      </select>
-      <p id="weatherInfo">天氣載入中...</p>
+    <div class="main-date">
+      <div id="dayNum"></div>
+      <div id="shengxiao"></div>
     </div>
 
-    <div class="clock" id="clock"></div>
+    <div class="lunar-info" id="almanacInfo"></div>
 
-    <div class="side-text left">敬慎遵斋菜言忌宿</div>
-    <div class="side-text right">清旦祈参拜眷属病官</div>
+    <div class="extra-info">
+      <p id="sunInfo">日出日落載入中...</p>
+      <p id="yi">宜：祭祀、祈福、嫁娶</p>
+      <p id="ji">忌：出行、安葬</p>
+    </div>
+
+    <div class="side-text left">三九第九天</div>
+    <div class="side-text right">九水</div>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/lunar-calendar/lib/LunarCalendar.min.js"></script>
