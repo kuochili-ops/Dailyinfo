@@ -13,6 +13,9 @@ document.getElementById("lunar").innerText =
 document.getElementById("solarTerm").innerText =
   `${info.lunarDayName} · ${info.term || "無"}`;
 
+// 日出日落（假資料）
+document.getElementById("sunInfo").innerText = "日出 07:19 · 日落 17:43";
+
 // 即時時鐘
 function updateClock() {
   const now = new Date();
@@ -24,15 +27,12 @@ function updateClock() {
 setInterval(updateClock, 1000);
 updateClock();
 
-// 日出日落（假資料）
-document.getElementById("sunInfo").innerText = "日出 07:19 · 日落 17:43";
-
 // 天氣 API（中央氣象署）
 const API_KEY = "CWA-A6F3874E-27F3-4AA3-AF5A-96B365798F79";
 const API_URL = "https://opendata.cwa.gov.tw/api/v1/rest/datastore/F-C0032-001";
 
 async function loadWeather() {
-  const city = document.getElementById("city").value;
+  const city = "臺北市"; // 預設台北市
   const url = `${API_URL}?Authorization=${API_KEY}&locationName=${city}&format=JSON`;
   try {
     const res = await fetch(url);
