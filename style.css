@@ -1,10 +1,115 @@
+/* 全局設定 */
+body {
+  background: #fdfdf9;
+  font-family: "標楷體", "Noto Serif TC", serif;
+  margin: 0;
+  padding: 0;
+}
+
+/* 撕頁框架 */
+.calendar-page {
+  width: 480px;
+  margin: 20px auto;
+  padding: 20px;
+  border: 12px double #006400;
+  background: #fff url("https://www.transparenttextures.com/patterns/paper-fibers.png");
+  box-shadow: 0 0 15px rgba(0,0,0,0.3);
+  position: relative;
+}
+
+/* 頂部橫列：西曆、農曆、回教曆 */
+.top-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+  border-bottom: 2px solid #006400;
+  padding-bottom: 5px;
+}
+
+/* 中央大數字＋生肖 */
+.main-date {
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  margin: 15px 0;
+}
+
+.digit {
+  font-size: 160px;
+  font-weight: bold;
+  color: #2e7d32;
+  line-height: 1;
+  text-shadow: 2px 2px #ccc;
+  margin: 0 10px;
+  position: relative;
+}
+
+.zodiac {
+  font-size: 40px;
+  position: absolute;
+  bottom: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: #d32f2f;
+}
+
+/* 節氣、民俗資訊 */
+.solar-term {
+  font-size: 16px;
+  text-align: center;
+  color: #d32f2f;
+  margin: 5px 0;
+}
+
+.folk-info {
+  font-size: 14px;
+  text-align: center;
+  color: #006400;
+  margin-bottom: 10px;
+}
+
+/* 宜忌欄位 */
+.yi-ji {
+  font-size: 14px;
+  line-height: 1.6;
+  margin-bottom: 10px;
+  text-align: center;
+}
+
+.yi { color: #d32f2f; }
+.ji { color: #000; }
+
+/* 日出日落 */
+.sun-time {
+  font-size: 14px;
+  text-align: center;
+  color: #444;
+  margin-bottom: 10px;
+}
+
+/* 天氣區塊 */
 .weather {
   font-size: 14px;
   text-align: center;
   margin-top: 10px;
 }
 
+.weather label {
+  margin-right: 5px;
+}
+
 select {
   font-size: 14px;
   margin-top: 5px;
+  padding: 2px 5px;
+}
+
+/* 即時時鐘 */
+.clock {
+  font-size: 20px;
+  font-weight: bold;
+  text-align: center;
+  background: #f0f0f0;
+  padding: 5px;
+  margin-top: 10px;
 }
