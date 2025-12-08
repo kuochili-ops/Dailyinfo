@@ -44,28 +44,17 @@ async function loadWeather() {
 }
 loadWeather();
 
-// 農曆日期 + 節氣（政府開放資料）
-async function loadAlmanacGov() {
-  try {
-    const today = new Date();
-    const y = today.getFullYear();
-    const m = String(today.getMonth() + 1).padStart(2, '0');
-    const d = String(today.getDate()).padStart(2, '0');
-    const dateStr = `${y}-${m}-${d}`;
+// 農曆日期 + 節氣（使用 LunarCalendar 函式庫）
+function loadAlmanacLunarCalendar() {
+  const today = new Date();
+  const info = LunarCalendar.solarToLunar(
+    today.getFullYear(),
+    today.getMonth() + 1,
+    today.getDate()
+  );
 
-    // ⚠️ 請先下載政府資料集 JSON，命名為 lunar.json，放在同目錄
-    const res = await fetch("lunar.json");
-    const data = await res.json();
-
-    const record = data.find(item => item["西元日期"] === dateStr);
-    if (record) {
-      document.getElementById("almanacInfo").innerText =
-        `農曆${record["農曆月"]}${record["農曆日"]} · 節氣：${record["節氣"] || "無"}`;
-    } else {
-      document.getElementById("almanacInfo").innerText = "找不到農曆資料";
-    }
-  } catch (err) {
-    document.getElementById("almanacInfo").innerText = "農曆資料載入失敗";
-  }
+  document.getElementById("almanacInfo").innerText =
+    `農曆${info.lunarMonthName}${info.lunarDayName} · 節氣：${info.term || "無"}`;
+  document.getElementById("shengxiao").innerText = info.zodiac;
 }
-loadAlmanacGov();
+loadAlmanacLunarCalendar();
