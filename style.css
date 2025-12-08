@@ -1,0 +1,75 @@
+body {
+  font-family: "標楷體", "Noto Serif TC", serif;
+  background: #fdfdf9;
+  margin: 0;
+  padding: 0;
+}
+.page {
+  border: 10px double #006400;
+  width: 440px;
+  margin: 20px auto;
+  padding: 20px;
+  position: relative;
+  background: #fff url("https://www.transparenttextures.com/patterns/paper-fibers.png");
+  box-shadow: 0 0 12px rgba(0,0,0,0.25);
+  color: #006400;
+}
+.header {
+  display: flex;
+  justify-content: space-between;
+  font-size: 16px;
+  margin-bottom: 5px;
+  border-bottom: 2px solid #006400;
+  padding-bottom: 5px;
+}
+.banner {
+  font-size: 20px;
+  font-weight: bold;
+  color: #d32f2f;
+  border-top: 2px solid #d32f2f;
+  border-bottom: 2px solid #d32f2f;
+  margin: 10px 0;
+  padding: 5px 0;
+}
+.big-date {
+  font-size: 150px;
+  font-weight: bold;
+  color: #006400;
+  line-height: 1;
+  margin: 10px 0;
+}
+.zodiac {
+  font-size: 40px;
+  margin-top: -20px;
+  color: #d32f2f;
+}
+.sub-info {
+  font-size: 14px;
+  margin: 5px 0;
+}
+.clock {
+  margin-top: 15px;
+  font-size: 22px;
+  font-weight: bold;
+  color: #000;
+  background: #f0f0f0;
+  padding: 5px;
+}
+.side-text {
+  position: absolute;
+  top: 120px;
+  font-size: 12px;
+  color: #006400;
+  writing-mode: vertical-rl;
+  letter-spacing: 2px;
+}
+.left { left: -45px; }
+.right { right: -45px; }
+.weather {
+  margin-top: 10px;
+  font-size: 14px;
+}
+select {
+  font-size: 14px;
+  margin-top: 5px;
+}
