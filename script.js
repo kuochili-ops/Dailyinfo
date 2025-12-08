@@ -5,21 +5,13 @@ const month = today.getMonth() + 1;
 const day = today.getDate();
 const weekday = ["星期日","星期一","星期二","星期三","星期四","星期五","星期六"][today.getDay()];
 document.getElementById("gregorian").innerText = `${year}年${month}月${day}日 · ${weekday}`;
-document.getElementById("dayNum").innerText = day;
 
-// 農曆日期 + 節氣
+// 農曆資訊
 const info = LunarCalendar.solarToLunar(year, month, day);
-const zodiacEmojiMap = {
-  鼠: "🐭", 牛: "🐮", 虎: "🐯", 兔: "🐰", 龍: "🐲",
-  蛇: "🐍", 馬: "🐴", 羊: "🐑", 猴: "🐵", 雞: "🐔",
-  狗: "🐶", 豬: "🐷"
-};
-document.getElementById("almanacInfo").innerText =
-  `農曆${info.GanZhiYear}年${info.lunarMonthName}${info.lunarDayName} · 節氣：${info.term || "無"}`;
-document.getElementById("shengxiao").innerText = zodiacEmojiMap[info.zodiac] || info.zodiac;
-
-// 日出日落（假資料，可換成中央氣象署 API）
-document.getElementById("sunInfo").innerText = "日出 07:19 · 日落 17:43";
+document.getElementById("lunar").innerText =
+  `農曆${info.GanZhiYear}年${info.lunarMonthName}${info.lunarDayName}`;
+document.getElementById("solarTerm").innerText =
+  `${info.lunarDayName} · ${info.term || "無"}`;
 
 // 即時時鐘
 function updateClock() {
@@ -32,12 +24,15 @@ function updateClock() {
 setInterval(updateClock, 1000);
 updateClock();
 
+// 日出日落（假資料）
+document.getElementById("sunInfo").innerText = "日出 07:19 · 日落 17:43";
+
 // 天氣 API（中央氣象署）
 const API_KEY = "CWA-A6F3874E-27F3-4AA3-AF5A-96B365798F79";
 const API_URL = "https://opendata.cwa.gov.tw/api/v1/rest/datastore/F-C0032-001";
 
 async function loadWeather() {
-  const city = "臺北市"; // 預設台北市
+  const city = document.getElementById("city").value;
   const url = `${API_URL}?Authorization=${API_KEY}&locationName=${city}&format=JSON`;
   try {
     const res = await fetch(url);
