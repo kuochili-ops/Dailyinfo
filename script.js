@@ -55,3 +55,34 @@ function updateClock() {
 }
 setInterval(updateClock, 1000);
 updateClock();
+
+// ===== 天氣 API =====
+const API_KEY = "CWA-A6F3874E-27F3-4AA3-AF5A-96B365798F79";
+
+// 取得天氣資料
+async function fetchWeather(city) {
+  const url = `https://opendata.cwa.gov.tw/api/v1/rest/datastore/F-C0032-001?Authorization=${API_KEY}&locationName=${city}`;
+  try {
+    const res = await fetch(url);
+    const data = await res.json();
+    const location = data.records.location[0];
+    const wx = location.weatherElement.find(e => e.elementName === "Wx").time[0].parameter.parameterName;
+    const minT = location.weatherElement.find(e => e.elementName === "MinT").time[0].parameter.parameterName;
+    const maxT = location.weatherElement.find(e => e.elementName === "MaxT").time[0].parameter.parameterName;
+    const pop = location.weatherElement.find(e => e.elementName === "PoP").time[0].parameter.parameterName;
+
+    document.getElementById("weatherInfo").innerText =
+      `${city}：${wx} · ${minT}°C ~ ${maxT}°C · 降雨 ${pop}%`;
+  } catch (err) {
+    document.getElementById("weatherInfo").innerText = "天氣資料載入失敗";
+    console.error(err);
+  }
+}
+
+// 初始顯示
+fetchWeather("臺北市");
+
+// 監聽選單變化
+document.getElementById("city").addEventListener("change", function() {
+  fetchWeather(this.value);
+});
