@@ -5,7 +5,6 @@ const month = today.getMonth() + 1;
 const day = today.getDate();
 const weekday = ["星期日","星期一","星期二","星期三","星期四","星期五","星期六"][today.getDay()];
 
-// 西曆顯示
 document.getElementById("year").innerText = year;
 document.getElementById("month").innerText = `${month}月`;
 document.getElementById("gregorian").innerText = `${year}年${month}月${day}日 · ${weekday}`;
@@ -22,14 +21,13 @@ document.getElementById("solarTerm").innerText =
 // ===== 伊斯蘭曆（示範用） =====
 document.getElementById("islamic").innerText = "Rejab 27hb, 1447";
 
-// ===== 宜忌提醒（全年 JSON 範例生成） =====
+// ===== 宜忌提醒 =====
 function generateYiJiData() {
   const data = {};
   const start = new Date("2025-01-01");
   const end = new Date("2025-12-31");
   const yiOptions = ["祭祀", "祈福", "嫁娶", "開市", "交易", "納財", "出行", "赴任", "修造", "安門"];
   const jiOptions = ["動土", "安葬", "移徙", "入宅", "破土", "遠行", "置產"];
-
   for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
     const key = d.toISOString().slice(0,10);
     const yi = yiOptions[Math.floor(Math.random() * yiOptions.length)];
@@ -38,21 +36,11 @@ function generateYiJiData() {
   }
   return data;
 }
-
 const yiJiData = generateYiJiData();
 const dateKey = today.toISOString().slice(0,10);
 if (yiJiData[dateKey]) {
   document.getElementById("yi").innerText = `宜：${yiJiData[dateKey].yi}`;
   document.getElementById("ji").innerText = `忌：${yiJiData[dateKey].ji}`;
-
-  const notes = document.querySelector(".notes");
-  const reminder = document.createElement("div");
-  reminder.className = "reminder";
-  reminder.innerHTML = `
-    <div class="reminder-title">今日提醒</div>
-    <div class="reminder-text">宜：${yiJiData[dateKey].yi}<br>忌：${yiJiData[dateKey].ji}</div>
-  `;
-  notes.appendChild(reminder);
 }
 
 // ===== 時鐘 =====
@@ -89,15 +77,14 @@ async function fetchWeather(city) {
         const end = new Date(t.endTime);
         return now >= start && now < end;
       });
-      // 如果沒找到符合區段，就退回第一筆資料
       return match?.parameter?.parameterName || element.time[0]?.parameter?.parameterName || "--";
     }
 
-    const wx = pickTime("Wx");     // 天氣現象
-    const minT = pickTime("MinT"); // 最低溫
-    const maxT = pickTime("MaxT"); // 最高溫
-    const pop = pickTime("PoP");   // 降雨機率
-    const ci = pickTime("CI");     // 舒適度指數
+    const wx = pickTime("Wx");
+    const minT = pickTime("MinT");
+    const maxT = pickTime("MaxT");
+    const pop = pickTime("PoP");
+    const ci = pickTime("CI");
 
     document.getElementById("weatherInfo").innerText =
       `${city}：${wx} · ${minT}°C ~ ${maxT}°C · 降雨 ${pop}% · ${ci}`;
@@ -115,7 +102,7 @@ document.getElementById("city").addEventListener("change", function() {
   fetchWeather(this.value);
 });
 
-// ===== 自動更新天氣（每30分鐘） =====
+// 每30分鐘自動更新
 setInterval(() => {
   const city = document.getElementById("city").value;
   fetchWeather(city);
