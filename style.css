@@ -8,7 +8,6 @@ body {
 .calendar {
   width: 100vw;
   height: 100vh;
-  margin: 0 auto;
   display: flex;
   flex-direction: column;
   border: 1px solid #ccc;
@@ -73,7 +72,7 @@ body {
 
 .main-number {
   text-align: center;
-  font-size: 20vw; /* 主日期隨螢幕放大 */
+  font-size: 20vw;
   font-weight: bold;
   color: #2e7d32;
   position: relative;
@@ -121,11 +120,11 @@ body {
 .notes {
   flex: 1;
   background: #f9f9f9;
-  border-top: 1vw solid #b71c1c; /* 粗紅框 */
-  border-bottom: 0.5vw solid #b71c1c; /* 細紅框 */
+  border-top: 1vw solid #b71c1c;
+  border-bottom: 0.5vw solid #b71c1c;
   display: flex;
-  justify-content: center;
-  align-items: flex-start;
+  flex-direction: column;
+  align-items: center;
   padding-top: 2vw;
 }
 
@@ -133,4 +132,23 @@ body {
   font-size: 4vw;
   font-weight: bold;
   color: #b71c1c;
+}
+
+/* 宜忌提醒 */
+.reminder {
+  margin-top: 2vw;
+  text-align: center;
+}
+
+.reminder-title {
+  font-size: 4vw;
+  font-weight: bold;
+  color: #d32f2f;
+  margin-bottom: 1vw;
+}
+
+.reminder-text {
+  font-size: 3.5vw;
+  color: #333;
+  line-height: 1.6;
 }
