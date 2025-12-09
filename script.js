@@ -74,14 +74,28 @@ async function fetchWeather(city) {
   try {
     const res = await fetch(url);
     const data = await res.json();
-    const location = data.records.location[0];
-    const wx = location.weatherElement.find(e => e.elementName === "Wx").time[0].parameter.parameterName;
-    const minT = location.weatherElement.find(e => e.elementName === "MinT").time[0].parameter.parameterName;
-    const maxT = location.weatherElement.find(e => e.elementName === "MaxT").time[0].parameter.parameterName;
-    const pop = location.weatherElement.find(e => e.elementName === "PoP").time[0].parameter.parameterName;
+    const location = data.records.location[0].weatherElement;
+
+    // 找出當下時間區間
+    const now = new Date();
+    function pickTime(elementName) {
+      const element = location.find(e => e.elementName === elementName);
+      if (!element) return null;
+      return element.time.find(t => {
+        const start = new Date(t.startTime);
+        const end = new Date(t.endTime);
+        return now >= start && now < end;
+      })?.parameter?.parameterName || "--";
+    }
+
+    const wx = pickTime("Wx");   // 天氣現象
+    const minT = pickTime("MinT"); // 最低溫
+    const maxT = pickTime("MaxT"); // 最高溫
+    const pop = pickTime("PoP");   // 降雨機率
+    const ci = pickTime("CI");     // 舒適度指數
 
     document.getElementById("weatherInfo").innerText =
-      `${city}：${wx} · ${minT}°C ~ ${maxT}°C · 降雨 ${pop}%`;
+      `${city}：${wx} · ${minT}°C ~ ${maxT}°C · 降雨 ${pop}% · ${ci}`;
   } catch (err) {
     document.getElementById("weatherInfo").innerText = "天氣資料載入失敗";
     console.error(err);
