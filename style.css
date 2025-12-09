@@ -6,98 +6,98 @@ body {
 }
 
 .calendar {
-  width: 100vw; /* 放大到手機螢幕寬度 */
+  width: 100vw;
   height: 100vh;
   margin: 0 auto;
-  box-shadow: 0 0 10px rgba(0,0,0,0.2);
-  border: 1px solid #ccc;
   display: flex;
   flex-direction: column;
+  border: 1px solid #ccc;
+  box-shadow: 0 0 10px rgba(0,0,0,0.2);
 }
 
-/* 紅頭區塊 */
+/* 紅頭 */
 .header {
   background: #b71c1c;
   color: gold;
   text-align: center;
-  padding: 10px 0;
+  padding: 2vw 0;
   position: relative;
 }
 
 .header .title {
-  font-size: 24px;
-  letter-spacing: 10px;
+  font-size: 6vw;
+  letter-spacing: 1vw;
   font-weight: bold;
 }
 
 .header .hole {
-  width: 12px;
-  height: 12px;
+  width: 3vw;
+  height: 3vw;
   background: #900;
   border-radius: 50%;
   position: absolute;
-  top: 6px;
+  top: 1vw;
   left: 50%;
   transform: translateX(-50%);
 }
 
-/* 日曆主體 */
+/* 主體 */
 .calendar-body {
   flex: 2;
-  padding: 15px;
+  padding: 3vw;
   background: #fff;
 }
 
 .month-block {
   text-align: center;
-  margin: 10px 0;
+  margin: 2vw 0;
 }
 
 .month-block .year {
-  font-size: 16px;
+  font-size: 4vw;
   color: #444;
 }
 
 .month-block .month {
-  font-size: 20px;
+  font-size: 5vw;
   font-weight: bold;
   color: #2e7d32;
 }
 
 .date-block {
   text-align: center;
-  font-size: 14px;
+  font-size: 3.5vw;
   line-height: 1.6;
-  margin-bottom: 10px;
+  margin-bottom: 2vw;
 }
 
 .main-number {
   text-align: center;
-  font-size: 120px;
+  font-size: 20vw; /* 主日期隨螢幕放大 */
   font-weight: bold;
   color: #2e7d32;
   position: relative;
 }
 
 .zodiac {
-  font-size: 32px;
+  font-size: 6vw;
   color: #d32f2f;
   position: absolute;
-  top: 20px;
-  right: 30px;
+  top: 2vw;
+  right: 8vw;
 }
 
 .solar-term {
   text-align: center;
-  font-size: 16px;
+  font-size: 4vw;
   color: #d32f2f;
-  margin: 10px 0;
+  margin: 2vw 0;
 }
 
 .yi-ji {
-  font-size: 14px;
+  font-size: 3.5vw;
   line-height: 1.6;
-  margin-bottom: 10px;
+  margin-bottom: 2vw;
   text-align: center;
 }
 
@@ -105,32 +105,32 @@ body {
 .ji { color: #000; }
 
 .bottom-info {
-  font-size: 14px;
+  font-size: 3.5vw;
   text-align: center;
   line-height: 1.6;
   color: #444;
 }
 
 .clock {
-  font-size: 18px;
+  font-size: 4vw;
   font-weight: bold;
-  margin-top: 5px;
+  margin-top: 2vw;
 }
 
 /* 記事欄 */
 .notes {
   flex: 1;
   background: #f9f9f9;
-  border-top: 4px solid #b71c1c; /* 粗紅框 */
-  border-bottom: 2px solid #b71c1c; /* 細紅框 */
+  border-top: 1vw solid #b71c1c; /* 粗紅框 */
+  border-bottom: 0.5vw solid #b71c1c; /* 細紅框 */
   display: flex;
   justify-content: center;
   align-items: flex-start;
-  padding-top: 8px;
+  padding-top: 2vw;
 }
 
 .notes-title {
-  font-size: 16px;
+  font-size: 4vw;
   font-weight: bold;
   color: #b71c1c;
 }
