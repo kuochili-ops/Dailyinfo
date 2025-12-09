@@ -74,11 +74,15 @@ async function fetchWeather(city) {
   try {
     const res = await fetch(url);
     const data = await res.json();
-    const location = data.records.location[0].weatherElement;
+    const location = data.records.location.find(loc => loc.locationName === city);
+    if (!location) {
+      document.getElementById("weatherInfo").innerText = `${city}：找不到天氣資料`;
+      return;
+    }
 
     const now = new Date();
     function pickTime(elementName) {
-      const element = location.find(e => e.elementName === elementName);
+      const element = location.weatherElement.find(e => e.elementName === elementName);
       if (!element) return "--";
       const match = element.time.find(t => {
         const start = new Date(t.startTime);
@@ -110,3 +114,9 @@ fetchWeather("臺北市");
 document.getElementById("city").addEventListener("change", function() {
   fetchWeather(this.value);
 });
+
+// ===== 自動更新天氣（每30分鐘） =====
+setInterval(() => {
+  const city = document.getElementById("city").value;
+  fetchWeather(city);
+}, 30 * 60 * 1000);
