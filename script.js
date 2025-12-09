@@ -86,6 +86,21 @@ async function fetchWeather(city) {
     const pop = pickTime("PoP");
     const ci = pickTime("CI");
 
+    // 關鍵：一定要更新 weatherInfo
+    document.getElementById("weatherInfo").innerText =
+      `${city}：${wx} · ${minT}°C ~ ${maxT}°C · 降雨 ${pop}% · ${ci}`;
+  } catch (err) {
+    document.getElementById("weatherInfo").innerText = "天氣資料載入失敗";
+    console.error(err);
+  }
+}
+
+    const wx = pickTime("Wx");
+    const minT = pickTime("MinT");
+    const maxT = pickTime("MaxT");
+    const pop = pickTime("PoP");
+    const ci = pickTime("CI");
+
     document.getElementById("weatherInfo").innerText =
       `${city}：${wx} · ${minT}°C ~ ${maxT}°C · 降雨 ${pop}% · ${ci}`;
   } catch (err) {
