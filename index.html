@@ -3,8 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <title>紅頭撕頁農民曆</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="style.css">
-  <!-- 引入 solarlunar 農曆函式庫 CDN -->
+  <!-- 農曆函式庫 CDN -->
   <script src="https://cdn.jsdelivr.net/npm/solarlunar/solarlunar.min.js"></script>
   <script src="script.js" defer></script>
 </head>
@@ -16,7 +17,7 @@
       <div class="title">萬事如意</div>
     </div>
 
-    <!-- 日曆主體 -->
+    <!-- 主體 -->
     <div class="calendar-body">
       <div class="month-block">
         <div class="year" id="year"></div>
@@ -42,8 +43,8 @@
       </div>
 
       <div class="bottom-info">
-        <div class="sun" id="sunInfo"></div>
-        <div class="weather" id="weatherInfo"></div>
+        <div class="sun">日出 06:38 · 日落 17:08</div>
+        <div class="weather">臺北市：晴時多雲 · 18°C ~ 23°C · 降雨 10%</div>
         <div class="clock" id="clock"></div>
       </div>
     </div>
