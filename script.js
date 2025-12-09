@@ -5,7 +5,7 @@ const month = today.getMonth() + 1;
 const day = today.getDate();
 const weekday = ["星期日","星期一","星期二","星期三","星期四","星期五","星期六"][today.getDay()];
 
-// 西曆
+// 西曆顯示
 document.getElementById("year").innerText = year;
 document.getElementById("month").innerText = `${month}月`;
 document.getElementById("gregorian").innerText = `${year}年${month}月${day}日 · ${weekday}`;
@@ -13,19 +13,13 @@ document.getElementById("day").innerText = day;
 
 // 使用 solarlunar 轉換農曆
 const lunarInfo = solarlunar.solar2lunar(year, month, day);
-
-// 農曆日期
 document.getElementById("lunar").innerText =
   `農曆${lunarInfo.gzYear}年${lunarInfo.lMonth}月${lunarInfo.lDayName}`;
-
-// 生肖
 document.getElementById("zodiac").innerText = lunarInfo.animal;
-
-// 節氣
 document.getElementById("solarTerm").innerText =
   lunarInfo.term ? `節氣：${lunarInfo.term}` : "";
 
-// 假資料：伊斯蘭曆
+// 假資料：伊斯蘭曆（可替換成 API）
 document.getElementById("islamic").innerText = "Rejab 27hb, 1447";
 
 // 宜忌提醒（示範用，可接 API）
@@ -51,7 +45,7 @@ if (yiJiData[dateKey]) {
   notes.appendChild(reminder);
 }
 
-// 時鐘
+// 時鐘功能
 function updateClock() {
   const now = new Date();
   const h = String(now.getHours()).padStart(2, '0');
