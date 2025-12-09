@@ -1,20 +1,15 @@
 body {
-  background: #fefef8;
-  font-family: "標楷體", "Noto Serif TC", serif;
   margin: 0;
-  padding: 0;
+  font-family: "標楷體", "Noto Serif TC", serif;
+  background: #fefef8;
 }
 
 .calendar {
-  width: 100vw;
-  height: 100vh;
   display: flex;
   flex-direction: column;
-  border: 1px solid #ccc;
-  box-shadow: 0 0 10px rgba(0,0,0,0.2);
+  height: 100vh;
 }
 
-/* 紅頭 */
 .header {
   background: #b71c1c;
   color: gold;
@@ -23,13 +18,7 @@ body {
   position: relative;
 }
 
-.header .title {
-  font-size: 6vw;
-  letter-spacing: 1vw;
-  font-weight: bold;
-}
-
-.header .hole {
+.hole {
   width: 3vw;
   height: 3vw;
   background: #900;
@@ -40,11 +29,15 @@ body {
   transform: translateX(-50%);
 }
 
-/* 主體 */
+.title {
+  font-size: 6vw;
+  font-weight: bold;
+  letter-spacing: 1vw;
+}
+
 .calendar-body {
   flex: 2;
   padding: 3vw;
-  background: #fff;
   overflow-y: auto;
 }
 
@@ -53,12 +46,12 @@ body {
   margin: 2vw 0;
 }
 
-.month-block .year {
+.year {
   font-size: 4vw;
   color: #444;
 }
 
-.month-block .month {
+.month {
   font-size: 5vw;
   font-weight: bold;
   color: #2e7d32;
@@ -97,9 +90,9 @@ body {
 
 .yi-ji {
   font-size: 3.5vw;
+  text-align: center;
   line-height: 1.6;
   margin-bottom: 2vw;
-  text-align: center;
 }
 
 .yi { color: #d32f2f; }
@@ -118,28 +111,17 @@ body {
   margin-top: 2vw;
 }
 
-/* 縣市選單 */
 .city-select {
   margin-top: 2vw;
-  text-align: center;
   font-size: 3.5vw;
 }
 
-.city-select select {
-  font-size: 3.5vw;
-  padding: 0.5vw;
-}
-
-/* 記事欄 */
 .notes {
   flex: 1;
   background: #f9f9f9;
   border-top: 1vw solid #b71c1c;
-  border-bottom: 0.5vw solid #b71c1c;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
   padding-top: 2vw;
+  text-align: center;
 }
 
 .notes-title {
@@ -148,17 +130,14 @@ body {
   color: #b71c1c;
 }
 
-/* 宜忌提醒 */
 .reminder {
   margin-top: 2vw;
-  text-align: center;
 }
 
 .reminder-title {
   font-size: 4vw;
   font-weight: bold;
   color: #d32f2f;
-  margin-bottom: 1vw;
 }
 
 .reminder-text {
