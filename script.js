@@ -1,4 +1,4 @@
-// 今天日期
+// ===== 日期與時間 =====
 const today = new Date();
 const year = today.getFullYear();
 const month = today.getMonth() + 1;
@@ -11,7 +11,7 @@ document.getElementById("month").innerText = `${month}月`;
 document.getElementById("gregorian").innerText = `${year}年${month}月${day}日 · ${weekday}`;
 document.getElementById("day").innerText = day;
 
-// 使用 solarlunar 轉換農曆
+// ===== 農曆、生肖、節氣 =====
 const lunarInfo = solarlunar.solar2lunar(year, month, day);
 document.getElementById("lunar").innerText =
   `農曆${lunarInfo.gzYear}年${lunarInfo.lMonth}月${lunarInfo.lDayName}`;
@@ -19,10 +19,10 @@ document.getElementById("zodiac").innerText = lunarInfo.animal;
 document.getElementById("solarTerm").innerText =
   lunarInfo.term ? `節氣：${lunarInfo.term}` : "";
 
-// 假資料：伊斯蘭曆（可替換成 API）
+// ===== 伊斯蘭曆（示範用，可接 API） =====
 document.getElementById("islamic").innerText = "Rejab 27hb, 1447";
 
-// 宜忌提醒（示範用，可接 API）
+// ===== 宜忌提醒（示範用，可接 API） =====
 const yiJiData = {
   "2025-12-09": {
     yi: "祭祀・祈福・嫁娶",
@@ -45,7 +45,7 @@ if (yiJiData[dateKey]) {
   notes.appendChild(reminder);
 }
 
-// 時鐘功能
+// ===== 時鐘 =====
 function updateClock() {
   const now = new Date();
   const h = String(now.getHours()).padStart(2, '0');
