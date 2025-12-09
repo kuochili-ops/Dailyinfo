@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <title>紅頭撕頁農民曆</title>
   <link rel="stylesheet" href="style.css">
+  <script src="script.js" defer></script>
 </head>
 <body>
   <div class="calendar">
@@ -13,39 +14,47 @@
       <div class="title">萬事如意</div>
     </div>
 
-    <!-- 月份區塊 -->
-    <div class="month-block">
-      <div class="year">2025</div>
-      <div class="month">12月 DEC</div>
-    </div>
+    <!-- 主體分成兩欄：日曆 + 記事欄 -->
+    <div class="content">
+      <!-- 日曆區塊 (佔 2/3) -->
+      <div class="calendar-body">
+        <div class="month-block">
+          <div class="year">2025</div>
+          <div class="month">12月 DEC</div>
+        </div>
 
-    <!-- 日期與曆法 -->
-    <div class="date-block">
-      <div class="gregorian">2025年12月8日 · 星期一</div>
-      <div class="lunar">農曆乙巳年十月十九</div>
-      <div class="islamic">Rejab 27hb, 1447</div>
-    </div>
+        <div class="date-block">
+          <div class="gregorian" id="gregorian"></div>
+          <div class="lunar" id="lunar"></div>
+          <div class="islamic">Rejab 27hb, 1447</div>
+        </div>
 
-    <!-- 主日期 -->
-    <div class="main-number">
-      <span class="digit">16</span>
-      <span class="zodiac">🐔</span>
-    </div>
+        <div class="main-number">
+          <span class="digit">16</span>
+          <span class="zodiac">🐔</span>
+        </div>
 
-    <!-- 節氣 -->
-    <div class="solar-term">節氣：大雪</div>
+        <div class="solar-term" id="solarTerm"></div>
 
-    <!-- 宜忌 -->
-    <div class="yi-ji">
-      <div class="yi">宜：祭祀・祈福・嫁娶</div>
-      <div class="ji">忌：出行・安葬・動土</div>
-    </div>
+        <div class="yi-ji">
+          <div class="yi">宜：祭祀・祈福・嫁娶</div>
+          <div class="ji">忌：出行・安葬・動土</div>
+        </div>
 
-    <!-- 底部資訊 -->
-    <div class="bottom-info">
-      <div class="sun">日出 07:19 · 日落 17:43</div>
-      <div class="weather">臺北市：陰短暫雨 · 20°C ~ 20°C · 降雨 60%</div>
-      <div class="clock">23:28:22</div>
+        <div class="bottom-info">
+          <div class="sun">日出 07:19 · 日落 17:43</div>
+          <div class="weather">臺北市：陰短暫雨 · 20°C ~ 20°C · 降雨 60%</div>
+          <div class="clock" id="clock"></div>
+        </div>
+      </div>
+
+      <!-- 記事欄 (佔 1/3) -->
+      <div class="notes">
+        <div class="notes-title">記事欄</div>
+        <div class="notes-content">
+          <p>（這裡可以寫備忘錄、廣告或每日提醒）</p>
+        </div>
+      </div>
     </div>
   </div>
 </body>
