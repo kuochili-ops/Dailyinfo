@@ -38,13 +38,24 @@ body {
   transform: translateX(-50%);
 }
 
-/* 主體區塊 */
-.content {
-  background: #fff;
-  padding: 15px;
-  border-top: 1px solid #ccc;
+/* 月份區塊 */
+.month-block {
+  text-align: center;
+  margin: 10px 0;
 }
 
+.month-block .year {
+  font-size: 16px;
+  color: #444;
+}
+
+.month-block .month {
+  font-size: 20px;
+  font-weight: bold;
+  color: #2e7d32;
+}
+
+/* 日期與曆法 */
 .date-block {
   text-align: center;
   font-size: 14px;
@@ -52,6 +63,7 @@ body {
   margin-bottom: 10px;
 }
 
+/* 主日期 */
 .main-number {
   text-align: center;
   font-size: 120px;
@@ -68,19 +80,20 @@ body {
   right: 30px;
 }
 
-.info-block {
-  font-size: 14px;
-  line-height: 1.8;
-  text-align: center;
-  margin-top: 10px;
-}
-
+/* 節氣 */
 .solar-term {
+  text-align: center;
+  font-size: 16px;
   color: #d32f2f;
+  margin: 10px 0;
 }
 
-.folk {
-  color: #006400;
+/* 宜忌 */
+.yi-ji {
+  font-size: 14px;
+  line-height: 1.6;
+  margin-bottom: 10px;
+  text-align: center;
 }
 
 .yi {
@@ -89,6 +102,14 @@ body {
 
 .ji {
   color: #000;
+}
+
+/* 底部資訊 */
+.bottom-info {
+  font-size: 14px;
+  text-align: center;
+  line-height: 1.6;
+  color: #444;
 }
 
 .clock {
