@@ -76,19 +76,20 @@ async function fetchWeather(city) {
     const data = await res.json();
     const location = data.records.location[0].weatherElement;
 
-    // 找出當下時間區間
     const now = new Date();
     function pickTime(elementName) {
       const element = location.find(e => e.elementName === elementName);
-      if (!element) return null;
-      return element.time.find(t => {
+      if (!element) return "--";
+      const match = element.time.find(t => {
         const start = new Date(t.startTime);
         const end = new Date(t.endTime);
         return now >= start && now < end;
-      })?.parameter?.parameterName || "--";
+      });
+      // 如果沒找到符合區段，就退回第一筆資料
+      return match?.parameter?.parameterName || element.time[0]?.parameter?.parameterName || "--";
     }
 
-    const wx = pickTime("Wx");   // 天氣現象
+    const wx = pickTime("Wx");     // 天氣現象
     const minT = pickTime("MinT"); // 最低溫
     const maxT = pickTime("MaxT"); // 最高溫
     const pop = pickTime("PoP");   // 降雨機率
