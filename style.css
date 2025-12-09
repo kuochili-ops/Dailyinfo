@@ -116,6 +116,18 @@ body {
   margin-top: 2vw;
 }
 
+/* 縣市選單 */
+.city-select {
+  margin-top: 2vw;
+  text-align: center;
+  font-size: 3.5vw;
+}
+
+.city-select select {
+  font-size: 3.5vw;
+  padding: 0.5vw;
+}
+
 /* 記事欄 */
 .notes {
   flex: 1;
