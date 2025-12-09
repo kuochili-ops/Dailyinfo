@@ -19,22 +19,32 @@ document.getElementById("zodiac").innerText = lunarInfo.animal;
 document.getElementById("solarTerm").innerText =
   lunarInfo.term ? `節氣：${lunarInfo.term}` : "";
 
-// ===== 伊斯蘭曆（示範用，可接 API） =====
+// ===== 伊斯蘭曆（示範用） =====
 document.getElementById("islamic").innerText = "Rejab 27hb, 1447";
 
-// ===== 宜忌提醒（示範用，可接 API） =====
-const yiJiData = {
-  "2025-12-09": {
-    yi: "祭祀・祈福・嫁娶",
-    ji: "出行・安葬・動土"
+// ===== 宜忌提醒（全年 JSON 範例生成） =====
+function generateYiJiData() {
+  const data = {};
+  const start = new Date("2025-01-01");
+  const end = new Date("2025-12-31");
+  const yiOptions = ["祭祀", "祈福", "嫁娶", "開市", "交易", "納財", "出行", "赴任", "修造", "安門"];
+  const jiOptions = ["動土", "安葬", "移徙", "入宅", "破土", "遠行", "置產"];
+
+  for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+    const key = d.toISOString().slice(0,10);
+    const yi = yiOptions[Math.floor(Math.random() * yiOptions.length)];
+    const ji = jiOptions[Math.floor(Math.random() * jiOptions.length)];
+    data[key] = { yi, ji };
   }
-};
+  return data;
+}
+
+const yiJiData = generateYiJiData();
 const dateKey = today.toISOString().slice(0,10);
 if (yiJiData[dateKey]) {
   document.getElementById("yi").innerText = `宜：${yiJiData[dateKey].yi}`;
   document.getElementById("ji").innerText = `忌：${yiJiData[dateKey].ji}`;
 
-  // 顯示在記事欄
   const notes = document.querySelector(".notes");
   const reminder = document.createElement("div");
   reminder.className = "reminder";
@@ -59,7 +69,6 @@ updateClock();
 // ===== 天氣 API =====
 const API_KEY = "CWA-A6F3874E-27F3-4AA3-AF5A-96B365798F79";
 
-// 取得天氣資料
 async function fetchWeather(city) {
   const url = `https://opendata.cwa.gov.tw/api/v1/rest/datastore/F-C0032-001?Authorization=${API_KEY}&locationName=${city}`;
   try {
