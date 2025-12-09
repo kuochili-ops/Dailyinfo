@@ -1,6 +1,3 @@
-// 使用 chinese-lunar CDN 提供的全域物件
-const { getLunar } = window.chineseLunar;
-
 // 今天日期
 const today = new Date();
 const year = today.getFullYear();
@@ -14,11 +11,19 @@ document.getElementById("month").innerText = `${month}月`;
 document.getElementById("gregorian").innerText = `${year}年${month}月${day}日 · ${weekday}`;
 document.getElementById("day").innerText = day;
 
-// 農曆資訊
-const lunarInfo = getLunar(today);
-document.getElementById("lunar").innerText = `農曆${lunarInfo.lunarYearName}年${lunarInfo.lunarMonthName}${lunarInfo.lunarDayName}`;
-document.getElementById("zodiac").innerText = lunarInfo.zodiacEmoji;
-document.getElementById("solarTerm").innerText = lunarInfo.solarTerm ? `節氣：${lunarInfo.solarTerm}` : "";
+// 使用 solarlunar 轉換農曆
+const lunarInfo = solarlunar.solar2lunar(year, month, day);
+
+// 農曆日期
+document.getElementById("lunar").innerText =
+  `農曆${lunarInfo.gzYear}年${lunarInfo.lMonth}月${lunarInfo.lDayName}`;
+
+// 生肖
+document.getElementById("zodiac").innerText = lunarInfo.animal;
+
+// 節氣
+document.getElementById("solarTerm").innerText =
+  lunarInfo.term ? `節氣：${lunarInfo.term}` : "";
 
 // 假資料：伊斯蘭曆
 document.getElementById("islamic").innerText = "Rejab 27hb, 1447";
