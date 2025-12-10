@@ -1,7 +1,7 @@
 // ====================================================================
 // 專案名稱：極簡日曆儀表板
 // 功能：顯示天氣、農民曆宜忌、每日語錄，並支持城市切換
-// 特點：使用靜態宜忌數據確保穩定性；優化排版至最終版本
+// 特點：農曆分三行顯示；移除底部廣告空間標示
 // ====================================================================
 
 const PAGE_CONTAINER = document.getElementById('calendar-page-container');
@@ -9,7 +9,7 @@ const CITY_SELECTOR = document.getElementById('city-selector');
 // 請替換成您自己的 OpenWeatherMap API Key
 const API_KEY = 'Dcd113bba5675965ccf9e60a7e6d06e5'; 
 
-// 臺灣主要縣市列表及其經緯度
+// 臺灣主要縣市列表及其經緯度 (不變)
 const TAIWAN_CITIES = [
     { name: '臺北市', lat: 25.0330, lon: 121.5654 }, 
     { name: '新北市', lat: 25.0139, lon: 121.4552 }, 
@@ -26,9 +26,9 @@ const TAIWAN_CITIES = [
     { name: '臺東縣', lat: 22.7505, lon: 121.1518 }  
 ];
 
-// 【靜態宜忌清單】 (請在此更新當前日期和農曆資訊)
+// 【靜態宜忌清單】
 const YIJIS = {
-    // 格式：'YYYY-M-D': { yi: '宜做事項', ji: '忌做事項', lunar: '農曆日期' }
+    // 格式：'YYYY-M-D': { yi: '宜做事項', ji: '忌做事項', lunar: '農曆十一月 廿一' }
     '2025-12-11': { 
         yi: '祭祀, 納財, 開市', 
         ji: '動土, 安床, 移徙', 
@@ -135,6 +135,10 @@ function renderPageContent(date, weather, quote) {
     const yiItems = yijiData.yi.split(/[,|]/).map(s => s.trim()).filter(s => s);
     const jiItems = yijiData.ji.split(/[,|]/).map(s => s.trim()).filter(s => s);
     
+    // 將農曆資訊分割成三行：['農曆', '十一月', '廿一']
+    const lunarParts = yijiData.lunar.split(' ');
+    const lunarHtml = lunarParts.map(part => `<div>${part}</div>`).join('');
+    
     // 廣告區域高度
     const AD_HEIGHT_PX = 90; 
     
@@ -150,9 +154,9 @@ function renderPageContent(date, weather, quote) {
     // 2. 主體內容：農曆、大日期、月份 (三欄分列，日期居中)
     content += `<div style="clear: both; display: flex; align-items: flex-start; margin-top: 15px;">`; 
 
-    // 左側：農曆紅條 (寬度 80px)
-    content += `<div style="width: 80px; background-color: #cc0000; color: white; padding: 5px; font-size: 0.9em; text-align: center; margin-right: 15px; flex-shrink: 0; box-shadow: 2px 2px 5px rgba(0,0,0,0.1);">
-        ${yijiData.lunar}
+    // 左側：農曆紅條 (分三行顯示)
+    content += `<div style="width: 80px; background-color: #cc0000; color: white; padding: 5px; font-size: 0.9em; text-align: center; margin-right: 15px; flex-shrink: 0; box-shadow: 2px 2px 5px rgba(0,0,0,0.1); line-height: 1.2;">
+        ${lunarHtml}
     </div>`;
 
     // 中央區：大日期、月份 (flex-grow: 1, 確保內容居中)
@@ -209,10 +213,9 @@ function renderPageContent(date, weather, quote) {
         <span style="font-weight: bold; color: #e60000;">(${weather.temperature})</span>
     </div>`;
     
-    // 7. 底部廣告空間 (90px 高度)
-    content += `<div style="position: absolute; bottom: 0; left: 0; width: 100%; height: ${AD_HEIGHT_PX}px; background-color: #ddd; text-align: center; line-height: ${AD_HEIGHT_PX}px; font-size: 1.2em; color: #555;">
-        底部廣告空間
-    </div>`;
+    // 7. 底部廣告空間 (90px 高度, 移除標示文字)
+    content += `<div style="position: absolute; bottom: 0; left: 0; width: 100%; height: ${AD_HEIGHT_PX}px; background-color: #ddd;">
+        </div>`;
 
 
     content += `</div>`; // 容器結束
@@ -221,7 +224,7 @@ function renderPageContent(date, weather, quote) {
 }
 
 // ------------------------------------------
-// IV. 應用程式啟動與事件處理
+// IV. 應用程式啟動與事件處理 (不變)
 // ------------------------------------------
 
 async function updateCalendar(lat, lon, cityName) {
