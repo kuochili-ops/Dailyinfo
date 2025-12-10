@@ -1,42 +1,51 @@
 const PAGE_CONTAINER = document.getElementById('calendar-page-container');
-const API_KEY = 'CWA-A6F3874E-27F3-4AA3-AF5A-96B365798F79'; // <--- 已使用您提供的金鑰
-const LOCATION_NAME = '臺北市'; // 預設查詢地點
+
+// ⚠️ API 金鑰已植入：Dcd113bba5675965ccf9e60a7e6d06e5
+const API_KEY = 'Dcd113bba5675965ccf9e60a7e6d06e5'; 
+
+// 臺北市的經緯度
+const LATITUDE = 25.033;
+const LONGITUDE = 121.565;
+const LOCATION_DISPLAY_NAME = '臺北市'; 
 
 // ------------------------------------------
-// I. 天氣 API 擷取邏輯
+// I. 天氣 API 擷取邏輯 (OpenWeatherMap)
 // ------------------------------------------
 
 async function fetchWeatherForecast() {
     
-    // 使用 F-C0032-001 (一般天氣預報-今明36小時天氣預報)
-    const url = `https://opendata.cwa.gov.tw/api/v1/rest/datastore/F-C0032-001?Authorization=${API_KEY}&format=JSON&locationName=${LOCATION_NAME}`;
+    // 使用 One Call API 3.0，查詢當前天氣
+    // &units=metric 確保溫度單位為攝氏度
+    // &lang=zh_tw 確保天氣描述為中文
+    const url = `https://api.openweathermap.org/data/3.0/onecall?lat=${LATITUDE}&lon=${LONGITUDE}&appid=${API_KEY}&units=metric&lang=zh_tw`;
     
     try {
         const response = await fetch(url);
         const data = await response.json();
 
-        if (data.success !== 'true') {
-            console.error("CWA API Error:", data.message);
-            return { description: "天氣資訊載入失敗 (" + data.message + ")", temperature: "??° ~ ??°", city: LOCATION_NAME };
+        // 檢查 API 是否返回錯誤代碼
+        if (data.cod && data.cod != 200) {
+            console.error("OpenWeatherMap API Error:", data.message);
+            return { description: "API 查詢失敗: " + data.message, temperature: "??° ~ ??°", city: LOCATION_DISPLAY_NAME };
         }
 
-        const locationData = data.records.location[0];
-        const weatherElements = locationData.weatherElement;
+        const current = data.current;
+        const todayForecast = data.daily[0]; // 獲取今日預報
         
-        // 獲取今天的第一個預報時段
-        const targetTime = weatherElements.find(e => e.elementName === 'Wx').time[0];
-        const tempMax = weatherElements.find(e => e.elementName === 'MaxT').time[0].elementValue[0].value;
-        const tempMin = weatherElements.find(e => e.elementName === 'MinT').time[0].elementValue[0].value;
+        // 獲取今日的最高/最低溫
+        const tempMax = Math.round(todayForecast.temp.max);
+        const tempMin = Math.round(todayForecast.temp.min);
         
         return {
-            description: targetTime.elementValue[0].value,
+            description: current.weather[0].description,
             temperature: `${tempMin}°C ~ ${tempMax}°C`,
-            city: locationData.locationName
+            city: LOCATION_DISPLAY_NAME
         };
 
     } catch (error) {
+        // 這通常是網路連線錯誤，非 API 錯誤
         console.error("Fetch Error:", error);
-        return { description: "網路連線錯誤", temperature: "??° ~ ??°", city: LOCATION_NAME };
+        return { description: "網路連線錯誤", temperature: "??° ~ ??°", city: LOCATION_DISPLAY_NAME };
     }
 }
 
@@ -45,12 +54,13 @@ async function fetchWeatherForecast() {
 // ------------------------------------------
 
 function renderPageContent(date, weather) {
+    // 設置日期為當日 (2025/12/10)
     const dayNumber = date.getDate();
     const weekdayName = date.toLocaleString('zh-Hant', { weekday: 'long' });
     const month = date.getMonth() + 1;
     
-    // 模擬農曆和宜忌 (保持靜態)
-    const lunarDate = "十月二十八"; 
+    // 模擬農曆和宜忌 (使用目前時間 2025/12/10 對應的農曆)
+    const lunarDate = "農曆十月 二十"; 
     
     let content = '<div style="height: 100%;">';
 
@@ -65,7 +75,7 @@ function renderPageContent(date, weather) {
 
     // 左側：農曆紅條 (僅能水平顯示)
     content += `<div style="float: left; width: 80px; background-color: #cc0000; color: white; padding: 5px; font-size: 0.9em; text-align: center; margin-right: 10px;">
-        農曆 ${lunarDate}
+        ${lunarDate}
     </div>`;
 
     // 中間：大日期數字
@@ -75,7 +85,7 @@ function renderPageContent(date, weather) {
     
     // 右側：天氣資訊
     content += `<div style="float: left; padding: 5px; font-size: 0.8em; text-align: left; border: 1px solid #eee; width: 80px;">
-        <div style="font-weight: bold;">${month}月 NOV</div>
+        <div style="font-weight: bold;">${month}月 ${date.toLocaleDateString('en-US', { month: 'short' }).toUpperCase()}</div>
         <div style="margin-top: 10px; font-size: 1.1em; color: #333;">${weather.city}</div>
         <div>${weather.description}</div>
         <div style="font-weight: bold; color: #e60000;">${weather.temperature}</div>
@@ -99,13 +109,8 @@ function renderPageContent(date, weather) {
 // ------------------------------------------
 
 async function initApp() {
-    // 1. 獲取當前日期
     const today = new Date();
-    
-    // 2. 獲取天氣資訊
     const weatherData = await fetchWeatherForecast();
-    
-    // 3. 渲染頁面
     renderPageContent(today, weatherData);
 }
 
