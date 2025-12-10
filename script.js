@@ -1,7 +1,7 @@
 // ====================================================================
 // 專案名稱：極簡日曆儀表板
 // 功能：顯示天氣、農民曆宜忌、每日語錄，並支持城市切換
-// 特點：重新加入每日英文語錄；農曆三行垂直顯示；農曆紅條寬度貼合內容；移除所有不需要的廣告區塊。
+// 特點：月份欄位靠右對齊；農曆三行垂直顯示；農曆紅條寬度貼合內容；移除中間灰色廣告區塊；保留每日英文語錄。
 // ====================================================================
 
 const PAGE_CONTAINER = document.getElementById('calendar-page-container');
@@ -28,6 +28,7 @@ const TAIWAN_CITIES = [
 
 // 【靜態宜忌清單】
 const YIJIS = {
+    // 由於當前日期是 2025/12/11，我使用此日期作為演示
     '2025-12-11': { 
         yi: '祭祀, 納財, 開市', 
         ji: '動土, 安床, 移徙', 
@@ -46,7 +47,7 @@ const YIJIS = {
 };
 
 // ------------------------------------------
-// I. 每日語錄 API 擷取邏輯 (確保保留)
+// I. 每日語錄 API 擷取邏輯 (保留)
 // ------------------------------------------
 
 async function fetchQuote() {
@@ -154,7 +155,7 @@ function renderPageContent(date, weather, quote) {
 
     // 1. 頂部資訊 (年與生肖)
     content += `<div style="overflow: auto; border-bottom: 1px solid #eee; padding-bottom: 5px;">
-        <span style="float: left; font-size: 0.8em;">114年 兔年</span>
+        <span style="float: left; font-size: 0.8em;">${date.getFullYear() + 1911}年 兔年</span>
         <span style="float: right; font-size: 0.8em;">${date.getFullYear()}</span>
     </div>`;
     
@@ -169,12 +170,12 @@ function renderPageContent(date, weather, quote) {
     // 中央區：大日期、月份
     content += `<div style="flex-grow: 1; display: flex; align-items: center; justify-content: center;">
         
-        <div style="display: flex; align-items: center;">
-            <div style="font-size: 6em; font-weight: 900; color: #004d99; line-height: 1.0; margin-right: 10px;">
+        <div style="display: flex; align-items: center; width: 100%;">
+            <div style="font-size: 6em; font-weight: 900; color: #004d99; line-height: 1.0; margin-right: auto;">
                 ${dayNumber}
             </div>
             
-            <div style="font-size: 1.5em; font-weight: bold; color: #cc0000; line-height: 1.1;">
+            <div style="font-size: 1.5em; font-weight: bold; color: #cc0000; line-height: 1.1; text-align: right;">
                 <div>${monthShort}</div>
                 <div style="font-size: 0.8em; color: #333;">${month}月</div>
             </div>
@@ -208,7 +209,6 @@ function renderPageContent(date, weather, quote) {
         </div>
     </div>`;
     
-    // 【修正：重新加入每日語錄】
     // 5. 每日語錄 
     content += `<div style="margin-top: 15px; padding: 5px 10px; border: 1px dashed #ccc; background-color: #f9f9f9; font-size: 0.8em; color: #555; height: 60px; overflow: hidden; display: flex; align-items: center; justify-content: center; text-align: center;">
         ${quote}
