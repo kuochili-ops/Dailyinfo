@@ -2,21 +2,21 @@ const PAGE_CONTAINER = document.getElementById('calendar-page-container');
 const CITY_SELECTOR = document.getElementById('city-selector');
 const API_KEY = 'Dcd113bba5675965ccf9e60a7e6d06e5'; 
 
-// 臺灣主要縣市列表及其 OpenWeatherMap ID (適用於免費 2.5 版本 API)
+// 臺灣主要縣市列表及其經緯度 (適用於免費 2.5 版本 API，更穩定)
 const TAIWAN_CITIES = [
-    { name: '臺北市', id: 1668341 },
-    { name: '新北市', id: 1673812 },
-    { name: '桃園市', id: 1679093 },
-    { name: '臺中市', id: 1679080 },
-    { name: '臺南市', id: 1679075 },
-    { name: '高雄市', id: 1679070 },
-    { name: '基隆市', id: 1677334 },
-    { name: '新竹市', id: 1673874 },
-    { name: '嘉義市', id: 1676679 },
-    { name: '宜蘭縣', id: 1668270 },
-    { name: '花蓮縣', id: 1678125 },
-    { name: '屏東縣', id: 1673994 },
-    { name: '臺東縣', id: 1679073 }
+    { name: '臺北市', lat: 25.0330, lon: 121.5654 }, // 臺北站前
+    { name: '新北市', lat: 25.0139, lon: 121.4552 }, // 板橋區
+    { name: '桃園市', lat: 24.9961, lon: 121.3129 }, // 桃園區
+    { name: '臺中市', lat: 24.1478, lon: 120.6728 }, // 臺中火車站
+    { name: '臺南市', lat: 22.9909, lon: 120.2132 }, // 臺南中西區
+    { name: '高雄市', lat: 22.6273, lon: 120.3014 }, // 高雄前金區
+    { name: '基隆市', lat: 25.1276, lon: 121.7392 }, // 基隆港
+    { name: '新竹市', lat: 24.8037, lon: 120.9669 }, // 新竹北區
+    { name: '嘉義市', lat: 23.4841, lon: 120.4497 }, // 嘉義西區
+    { name: '宜蘭縣', lat: 24.7577, lon: 121.7533 }, // 宜蘭市
+    { name: '花蓮縣', lat: 23.9730, lon: 121.6030 }, // 花蓮市
+    { name: '屏東縣', lat: 22.6738, lon: 120.4851 }, // 屏東市
+    { name: '臺東縣', lat: 22.7505, lon: 121.1518 }  // 臺東市
 ];
 
 // ------------------------------------------
@@ -24,25 +24,27 @@ const TAIWAN_CITIES = [
 // ------------------------------------------
 
 function loadCitySelector() {
-    TAIWAN_CITIES.forEach(city => {
+    TAIWAN_CITIES.forEach((city, index) => {
         const option = document.createElement('option');
-        option.value = city.id;
+        // value 儲存經緯度，方便查詢
+        option.value = `${city.lat},${city.lon}`; 
         option.textContent = city.name;
         CITY_SELECTOR.appendChild(option);
     });
     // 預設選擇臺北市
-    CITY_SELECTOR.value = TAIWAN_CITIES[0].id;
+    CITY_SELECTOR.value = `${TAIWAN_CITIES[0].lat},${TAIWAN_CITIES[0].lon}`;
 }
 
 
 // ------------------------------------------
-// II. 天氣 API 擷取邏輯 (OpenWeatherMap 2.5 免費版)
+// II. 天氣 API 擷取邏輯 (OpenWeatherMap 2.5 - 使用經緯度)
 // ------------------------------------------
 
-async function fetchWeatherForecast(cityId, cityName) {
+async function fetchWeatherForecast(lat, lon, cityName) {
     
     // 使用 5 Day / 3 Hour Forecast API (免費版) 
-    const forecast_url = `https://api.openweathermap.org/data/2.5/forecast?id=${cityId}&appid=${API_KEY}&units=metric&lang=zh_tw`;
+    // endpoint 變更為 lat/lon 查詢
+    const forecast_url = `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=metric&lang=zh_tw`;
     
     try {
         const response = await fetch(forecast_url);
@@ -50,7 +52,8 @@ async function fetchWeatherForecast(cityId, cityName) {
 
         if (data.cod != 200) {
             console.error("OpenWeatherMap 2.5 API 錯誤:", data.message);
-            return { description: "API 查詢失敗: " + data.message, temperature: "??° ~ ??°", city: cityName };
+            // 由於已經使用經緯度，如果仍失敗，很可能是 API 金鑰問題
+            return { description: "API 查詢失敗 (請檢查金鑰狀態)", temperature: "??° ~ ??°", city: cityName };
         }
 
         // 獲取當日天氣描述
@@ -65,7 +68,6 @@ async function fetchWeatherForecast(cityId, cityName) {
         for (const item of data.list) {
             const itemDate = new Date(item.dt_txt).toDateString();
             
-            // 只考慮今天的預報時段
             if (itemDate === today) {
                 maxT = Math.max(maxT, item.main.temp_max);
                 minT = Math.min(minT, item.main.temp_min);
@@ -96,7 +98,7 @@ function renderPageContent(date, weather) {
     const weekdayName = date.toLocaleString('zh-Hant', { weekday: 'long' });
     const month = date.getMonth() + 1;
     
-    // 模擬農曆和宜忌 (保持靜態，與先前版本一致)
+    // 根據當前時間 2025/12/10 設置農曆
     const lunarDate = "農曆十月 二十"; 
     
     let content = '<div style="height: 100%;">';
@@ -110,7 +112,7 @@ function renderPageContent(date, weather) {
     // 2. 主體內容
     content += `<div style="height: calc(100% - 100px); padding: 10px 0; overflow: auto;">`; 
 
-    // 左側：農曆紅條 (僅能水平顯示)
+    // 左側：農曆紅條
     content += `<div style="float: left; width: 80px; background-color: #cc0000; color: white; padding: 5px; font-size: 0.9em; text-align: center; margin-right: 10px;">
         ${lunarDate}
     </div>`;
@@ -146,12 +148,12 @@ function renderPageContent(date, weather) {
 // ------------------------------------------
 
 // 核心啟動和更新邏輯
-async function updateCalendar(cityId, cityName) {
+async function updateCalendar(lat, lon, cityName) {
     const today = new Date();
-    // 顯示載入狀態 
+    // 顯示載入狀態
     PAGE_CONTAINER.innerHTML = '<div style="text-align: center; margin-top: 150px; color: #666;">獲取 ' + cityName + ' 天氣中...</div>';
     
-    const weatherData = await fetchWeatherForecast(cityId, cityName);
+    const weatherData = await fetchWeatherForecast(lat, lon, cityName);
     renderPageContent(today, weatherData);
 }
 
@@ -161,14 +163,14 @@ function initApp() {
     
     // 2. 設定選單變更事件
     CITY_SELECTOR.addEventListener('change', (event) => {
-        const selectedId = event.target.value;
-        const selectedCity = TAIWAN_CITIES.find(c => c.id == selectedId);
-        updateCalendar(selectedCity.id, selectedCity.name);
+        const [lat, lon] = event.target.value.split(',');
+        const cityName = event.target.options[event.target.selectedIndex].textContent;
+        updateCalendar(lat, lon, cityName);
     });
     
     // 3. 初始載入 (預設臺北市)
     const defaultCity = TAIWAN_CITIES[0];
-    updateCalendar(defaultCity.id, defaultCity.name);
+    updateCalendar(defaultCity.lat, defaultCity.lon, defaultCity.name);
 }
 
 initApp();
