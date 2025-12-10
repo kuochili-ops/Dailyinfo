@@ -1,40 +1,186 @@
-/* ... (A, B, C 部分保持不變) ... */
+/* --- A. 基礎與整體佈局 --- */
+body {
+    font-family: 'Arial', sans-serif;
+    background-color: #f0f0f0;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    min-height: 100vh;
+    margin: 0;
+    padding: 20px 0; /* 調整外邊距 */
+}
 
-/* --- D. 新版面 Grid 佈局 (核心修正) --- */
+.app-container {
+    text-align: center;
+    max-width: 320px; 
+    width: 100%;
+    margin: 0 auto;
+}
+
+/* --- B. 固定頂部和底部樣式 --- */
+.calendar-fixed-header {
+    width: 300px;
+    margin: 0 auto;
+    background-color: #cc0000; /* 紅色橫幅 */
+    color: white;
+    padding: 10px 0;
+    border-top-left-radius: 5px;
+    border-top-right-radius: 5px;
+}
+
+.header-banner {
+    font-size: 1.5em; /* 調整字體大小，避免溢出 */
+    font-weight: bold;
+}
+.header-banner .small-text {
+    font-size: 0.5em;
+    display: block;
+}
+
+.calendar-fixed-footer {
+    width: 300px;
+    margin: 0 auto;
+    padding: 10px 0 20px 0;
+    background-color: white; 
+    border-bottom-left-radius: 5px;
+    border-bottom-right-radius: 5px;
+    box-shadow: 0 5px 10px rgba(0, 0, 0, 0.1); /* 讓整體看起來更完整 */
+}
+.ad-area {
+    border: 1px solid #ccc;
+    height: 80px;
+    line-height: 80px;
+    font-size: 0.9em;
+    color: #666;
+    margin: 10px 20px;
+}
+button#tear-button {
+    padding: 10px 20px;
+    font-size: 1em;
+    cursor: pointer;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    margin-top: 20px;
+    transition: background-color 0.3s;
+}
+button#tear-button:hover {
+    background-color: #0056b3;
+}
+
+
+/* --- C. 可撕頁面堆疊與動畫 --- */
+.calendar-stack {
+    position: relative;
+    width: 300px;
+    height: 420px; 
+    margin: 0 auto;
+}
+
+.calendar-page {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    box-sizing: border-box;
+    border-radius: 0;
+    background-color: #fefdfb; 
+    box-shadow: 0 5px 10px rgba(0, 0, 0, 0.1);  
+    transition: transform 0.6s ease-in-out, opacity 0.6s ease-in-out;
+}
+
+.calendar-page.next-page { 
+    z-index: 1; 
+    transform: translate(1px, 1px) rotate(0.5deg); 
+    opacity: 0.98; 
+}
+.calendar-page.current-page { 
+    z-index: 2; 
+    transform: rotate(0deg); 
+}
+.calendar-page.is-torn { 
+    z-index: 100; 
+    opacity: 0; 
+    transform: translate(350px, 450px) rotate(45deg) scale(0.4); 
+}
+
+
+/* --- D. 傳統版面 Grid 佈局 --- */
 
 .page-content-grid {
-    /* 保持 Grid 結構不變 */
     height: 100%;
+    padding: 10px; /* 內邊距，讓內容不貼邊 */
     display: grid;
+    /* 定義列: 小資訊(左) | 農曆紅條 | 大數字/主體 | 小資訊(右) */
     grid-template-columns: 60px 20px 1fr 60px; 
+    /* 定義行: 頂部月份 | 主體內容 | 底部星期/宜忌 */
     grid-template-rows: 40px 1fr 80px;
 }
 
 .grid-area {
     padding: 5px;
-    border: 1px solid #eee; /* 保持邊框以協助觀察佈局 */
-    background-color: white; 
+    border: 1px solid #eee; 
     box-sizing: border-box; 
-    color: black; /* 確保文字顏色可見 */
+    background-color: white; 
+    color: black;
+    overflow: hidden; /* 防止內容溢出 */
 }
 
-/* 確保大數字區域有足夠的字體大小和顏色 */
+/* 頂部資訊 */
+.header-info {
+    grid-column: 1 / span 4;
+    background-color: #f9f9f9;
+    font-size: 0.8em;
+    text-align: left;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: #333;
+}
+
+/* 農曆資訊 (直排) */
+.lunar-area {
+    grid-column: 2 / span 1;
+    grid-row: 2 / span 1;
+    background-color: #cc0000;
+    color: white;
+    padding: 5px 0;
+    writing-mode: vertical-rl; /* 實現直排文字 */
+    text-orientation: mixed;
+    font-size: 1em;
+    line-height: 1.5;
+    display: flex; /* 垂直居中 */
+    align-items: center;
+    justify-content: center;
+}
+
+/* 大日期數字 */
 .main-date {
-    /* ... 保持 Grid 位置不變 ... */
-    color: #004d99;
-    font-size: 10em; /* 確保字體夠大，不會被忽略 */
-    font-weight: 900;
-    /* 確保文字居中 */
+    grid-column: 3 / span 1;
+    grid-row: 2 / span 1;
     display: flex;
     justify-content: center;
     align-items: center;
+    font-size: 10em;
+    font-weight: 900;
+    color: #004d99;
+    padding-top: 0;
 }
 
-/* 確保農曆紅條有背景色和白色文字 */
-.lunar-area {
-    background-color: #cc0000;
-    color: white; 
+/* 底部星期/宜忌 */
+.footer-info {
+    grid-column: 1 / span 4;
+    background-color: #f9f9f9;
+    font-size: 0.9em;
+    display: flex;
+    flex-direction: column; /* 改為垂直排列 */
+    justify-content: center;
+    align-items: center;
 }
-
-/* 其他 Grid 樣式保持不變 */
-/* ... */
+.weekday-display {
+    font-size: 1.5em;
+    color: #333;
+    margin-bottom: 5px;
+}
