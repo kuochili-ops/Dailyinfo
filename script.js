@@ -40,7 +40,6 @@ const YIJIS = {
 
 // 【簡繁轉換函式】 (保留)
 function toTraditionalChinese(text) {
-    // 由於我們恢復了靜態繁體中文數據，此函式不再對宜忌生效，但保留以防未來使用簡體源
     return text;
 }
 
@@ -79,7 +78,7 @@ async function fetchWeatherForecast(lat, lon, cityName) {
     try {
         const response = await fetch(forecast_url);
         const data = await response.json();
-        
+
         if (data.cod != 200) {
             return { description: "API 查詢失敗", temperature: "??° ~ ??°", city: cityName };
         }
@@ -135,7 +134,6 @@ function renderPageContent(date, weather, quote) {
     const yiItems = yijiData.yi.split(/[,|]/).map(s => s.trim()).filter(s => s);
     const jiItems = yijiData.ji.split(/[,|]/).map(s => s.trim()).filter(s => s);
     
-    // 確保日曆容器內元素能佈局在頂部
     let content = '<div style="height: 100%; position: relative;">';
 
     // 1. 頂部資訊 (年與生肖)
@@ -144,7 +142,7 @@ function renderPageContent(date, weather, quote) {
         <span style="float: right; font-size: 0.8em;">${date.getFullYear()}</span>
     </div>`;
     
-    // 2. 主體內容：農曆、大日期、月份、天氣
+    // 2. 主體內容：農曆、大日期、月份
     content += `<div style="clear: both; display: flex; align-items: flex-start; margin-top: 15px;">`; 
 
     // 左側：農曆紅條 
@@ -165,22 +163,20 @@ function renderPageContent(date, weather, quote) {
         </div>
     </div>`;
 
-    // 右側：天氣資訊
-    content += `<div style="width: 80px; padding: 5px; font-size: 0.75em; text-align: left; border: 1px solid #eee; flex-shrink: 0; margin-left: 15px;">
-        <div style="font-weight: bold; color: #333;">${weather.city}</div>
-        <div>${weather.description}</div>
-        <div style="font-weight: bold; color: #e60000; margin-top: 5px;">${weather.temperature}</div>
-    </div>`;
+    // 右側保持空白，因為天氣已移到下方
+    content += `<div style="width: 80px; flex-shrink: 0; margin-left: 15px;"></div>`; 
 
-    content += `</div>`; // 主體內容結束 (農曆, 日期, 天氣)
+    content += `</div>`; // 主體內容結束 (農曆, 日期, 月份)
     
-    // 3. 星期、宜、忌 (移到日期下方)
-    content += `<div style="clear: both; margin-top: 15px; padding: 10px 0; text-align: center; border-top: 1px dashed #ccc; border-bottom: 1px dashed #ccc;">
-        
+    // 3. 星期 (移到宜忌虛線框外面)
+    content += `<div style="clear: both; margin-top: 15px; text-align: center;">
         <div style="font-size: 1.3em; font-weight: bold; color: #333; margin-bottom: 10px;">
             ${weekdayName}
         </div>
-        
+    </div>`;
+    
+    // 4. 宜/忌 (帶虛線框)
+    content += `<div style="margin: 0 10px; padding: 10px 0; text-align: center; border-top: 1px dashed #ccc; border-bottom: 1px dashed #ccc;">
         <div style="display: flex; justify-content: space-around; text-align: center; font-size: 0.8em; line-height: 1.5;">
             <div style="width: 48%; border-right: 1px solid #eee;">
                 <div style="font-weight: bold; color: green; margin-bottom: 5px;">**宜：**</div>
@@ -194,11 +190,25 @@ function renderPageContent(date, weather, quote) {
         </div>
     </div>`;
     
-    // 4. 每日語錄 (位於底部上方)
+    // 5. 每日語錄
     content += `<div style="margin-top: 15px; padding: 5px 10px; border: 1px dashed #ccc; background-color: #f9f9f9; font-size: 0.8em; color: #555; height: 60px; overflow: hidden; display: flex; align-items: center; justify-content: center; text-align: center;">
         ${quote}
     </div>`;
+
+    // 6. 縣市天氣 (移到語錄下方)
+    content += `<div style="padding: 10px; text-align: center; font-size: 0.85em; color: #666; background-color: #f0f0f0; margin-top: 10px;">
+        <span style="font-weight: bold; color: #333;">${weather.city} 天氣:</span> 
+        ${weather.description} 
+        <span style="font-weight: bold; color: #e60000;">(${weather.temperature})</span>
+    </div>`;
     
+    // 底部廣告預留空間 (使用絕對定位或預留高度，確保在最下方)
+    // 設置一個底部填充，以便廣告區域不會被其他內容遮擋
+    content += `<div style="position: absolute; bottom: 0; left: 0; width: 100%; height: 50px; background-color: #ddd; text-align: center; line-height: 50px; font-size: 0.7em; color: #555;">
+        底部廣告位 (728x90 或 970x90 響應式)
+    </div>`;
+
+
     content += `</div>`; // 容器結束
     
     PAGE_CONTAINER.innerHTML = content;
