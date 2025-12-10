@@ -1,7 +1,7 @@
 // ====================================================================
 // 專案名稱：極簡日曆儀表板
 // 功能：顯示天氣、農民曆宜忌、每日語錄，並支持城市切換
-// 特點：農曆分三行顯示；移除底部廣告空間標示
+// 特點：農曆三行垂直顯示；移除天氣資訊灰色背景
 // ====================================================================
 
 const PAGE_CONTAINER = document.getElementById('calendar-page-container');
@@ -135,10 +135,20 @@ function renderPageContent(date, weather, quote) {
     const yiItems = yijiData.yi.split(/[,|]/).map(s => s.trim()).filter(s => s);
     const jiItems = yijiData.ji.split(/[,|]/).map(s => s.trim()).filter(s => s);
     
-    // 將農曆資訊分割成三行：['農曆', '十一月', '廿一']
-    const lunarParts = yijiData.lunar.split(' ');
-    const lunarHtml = lunarParts.map(part => `<div>${part}</div>`).join('');
-    
+    // 【修正 1：農曆三行垂直顯示】
+    // 假設農曆格式總是 "農曆XX月 YY日"
+    const lunarRaw = yijiData.lunar;
+    let lunarHtml = '<div>農曆</div><div>資訊不足</div>'; // 預設值
+    if (lunarRaw.includes('月') && lunarRaw.includes(' ')) {
+        const monthPart = lunarRaw.substring(lunarRaw.indexOf('月') - 2, lunarRaw.indexOf('月') + 1).trim();
+        const dayPart = lunarRaw.substring(lunarRaw.lastIndexOf(' ') + 1).trim();
+        lunarHtml = `<div>農曆</div><div>${monthPart}</div><div>${dayPart}</div>`;
+    } else {
+        // 如果格式不符，則使用原始分割邏輯
+        const lunarParts = lunarRaw.split(' ');
+        lunarHtml = lunarParts.map(part => `<div>${part}</div>`).join('');
+    }
+
     // 廣告區域高度
     const AD_HEIGHT_PX = 90; 
     
@@ -151,15 +161,15 @@ function renderPageContent(date, weather, quote) {
         <span style="float: right; font-size: 0.8em;">${date.getFullYear()}</span>
     </div>`;
     
-    // 2. 主體內容：農曆、大日期、月份 (三欄分列，日期居中)
+    // 2. 主體內容：農曆、大日期、月份
     content += `<div style="clear: both; display: flex; align-items: flex-start; margin-top: 15px;">`; 
 
-    // 左側：農曆紅條 (分三行顯示)
+    // 左側：農曆紅條 (三行顯示)
     content += `<div style="width: 80px; background-color: #cc0000; color: white; padding: 5px; font-size: 0.9em; text-align: center; margin-right: 15px; flex-shrink: 0; box-shadow: 2px 2px 5px rgba(0,0,0,0.1); line-height: 1.2;">
         ${lunarHtml}
     </div>`;
 
-    // 中央區：大日期、月份 (flex-grow: 1, 確保內容居中)
+    // 中央區：大日期、月份
     content += `<div style="flex-grow: 1; display: flex; align-items: center; justify-content: center;">
         
         <div style="display: flex; align-items: center;">
@@ -174,7 +184,7 @@ function renderPageContent(date, weather, quote) {
         </div>
     </div>`;
 
-    // 右側：佔位符 (寬度 80px)，確保對稱
+    // 右側：佔位符 (寬度 80px)
     content += `<div style="width: 80px; flex-shrink: 0; margin-left: 15px;"></div>`; 
 
     content += `</div>`; // 主體內容結束
@@ -207,13 +217,14 @@ function renderPageContent(date, weather, quote) {
     </div>`;
 
     // 6. 縣市天氣 (語錄下方)
-    content += `<div style="padding: 10px; text-align: center; font-size: 0.85em; color: #666; background-color: #f0f0f0; margin-top: 10px;">
+    // 【修正 2：移除灰色背景】
+    content += `<div style="padding: 10px; text-align: center; font-size: 0.85em; color: #666; margin-top: 10px;">
         <span style="font-weight: bold; color: #333;">${weather.city} 天氣:</span> 
         ${weather.description} 
         <span style="font-weight: bold; color: #e60000;">(${weather.temperature})</span>
     </div>`;
     
-    // 7. 底部廣告空間 (90px 高度, 移除標示文字)
+    // 7. 底部廣告空間 (90px 高度, 無標示文字)
     content += `<div style="position: absolute; bottom: 0; left: 0; width: 100%; height: ${AD_HEIGHT_PX}px; background-color: #ddd;">
         </div>`;
 
