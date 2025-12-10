@@ -3,52 +3,38 @@
 /* --- D. 新版面 Grid 佈局 (核心修正) --- */
 
 .page-content-grid {
+    /* 保持 Grid 結構不變 */
     height: 100%;
     display: grid;
-    /* 保持 Grid 結構不變 */
     grid-template-columns: 60px 20px 1fr 60px; 
     grid-template-rows: 40px 1fr 80px;
 }
 
 .grid-area {
     padding: 5px;
-    border: 1px solid #eee; /* 模擬區塊分隔線 */
-    /* 修正：為內容區塊添加背景，以確保邊界可見 */
+    border: 1px solid #eee; /* 保持邊框以協助觀察佈局 */
     background-color: white; 
     box-sizing: border-box; 
     color: black; /* 確保文字顏色可見 */
 }
 
-/* 頂部資訊 */
-.header-info {
-    grid-column: 1 / span 4;
-    background-color: #f9f9f9;
-    color: #333; /* 確保文字可見 */
-    /* ... 保持其他樣式 ... */
-}
-
-/* 農曆資訊 (直排) */
-.lunar-area {
-    /* ... 保持 Grid 位置不變 ... */
-    background-color: #cc0000;
-    color: white; /* 確保文字可見 */
-    /* ... 保持其他樣式 ... */
-}
-
-/* 關鍵修正：大日期數字 */
+/* 確保大數字區域有足夠的字體大小和顏色 */
 .main-date {
     /* ... 保持 Grid 位置不變 ... */
     color: #004d99;
-    /* 確保數字不會被擠壓 */
-    padding-top: 20px; 
+    font-size: 10em; /* 確保字體夠大，不會被忽略 */
+    font-weight: 900;
+    /* 確保文字居中 */
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
-/* 底部星期/宜忌 */
-.footer-info {
-    /* ... 保持 Grid 位置不變 ... */
-    background-color: #f9f9f9;
+/* 確保農曆紅條有背景色和白色文字 */
+.lunar-area {
+    background-color: #cc0000;
+    color: white; 
 }
-.weekday-display {
-    color: #333;
-    /* ... 保持其他樣式 ... */
-}
+
+/* 其他 Grid 樣式保持不變 */
+/* ... */
