@@ -148,7 +148,7 @@ function renderPageContent(date, weather) {
 // 核心啟動和更新邏輯
 async function updateCalendar(cityId, cityName) {
     const today = new Date();
-    // 顯示載入狀態
+    // 顯示載入狀態 
     PAGE_CONTAINER.innerHTML = '<div style="text-align: center; margin-top: 150px; color: #666;">獲取 ' + cityName + ' 天氣中...</div>';
     
     const weatherData = await fetchWeatherForecast(cityId, cityName);
