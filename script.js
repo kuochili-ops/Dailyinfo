@@ -1,7 +1,7 @@
 // ====================================================================
 // 專案名稱：極簡日曆儀表板
 // 功能：顯示天氣、農民曆宜忌、每日語錄，並支持城市切換
-// 特點：農曆三行垂直顯示；農曆紅條寬度貼合內容；移除天氣資訊灰色背景
+// 特點：農曆三行垂直顯示；農曆紅條寬度貼合內容；移除中間灰色廣告區塊；保留每日英文語錄。
 // ====================================================================
 
 const PAGE_CONTAINER = document.getElementById('calendar-page-container');
@@ -26,7 +26,7 @@ const TAIWAN_CITIES = [
     { name: '臺東縣', lat: 22.7505, lon: 121.1518 }  
 ];
 
-// 【靜態宜忌清單】 (請在此更新當前日期和農曆資訊)
+// 【靜態宜忌清單】
 const YIJIS = {
     '2025-12-11': { 
         yi: '祭祀, 納財, 開市', 
@@ -46,7 +46,7 @@ const YIJIS = {
 };
 
 // ------------------------------------------
-// I. 每日語錄 API 擷取邏輯
+// I. 每日語錄 API 擷取邏輯 (保留)
 // ------------------------------------------
 
 async function fetchQuote() {
@@ -70,7 +70,7 @@ async function fetchQuote() {
 
 
 // ------------------------------------------
-// II. 天氣 API 擷取邏輯 (OpenWeatherMap)
+// II. 天氣 API 擷取邏輯 (不變)
 // ------------------------------------------
 
 async function fetchWeatherForecast(lat, lon, cityName) {
@@ -158,11 +158,10 @@ function renderPageContent(date, weather, quote) {
         <span style="float: right; font-size: 0.8em;">${date.getFullYear()}</span>
     </div>`;
     
-    // 2. 主體內容：農曆、大日期、月份 (三欄分列，日期居中)
+    // 2. 主體內容：農曆、大日期、月份
     content += `<div style="clear: both; display: flex; align-items: flex-start; margin-top: 15px;">`; 
 
-    // 左側：農曆紅條 (寬度縮減至貼合內容, 移除 width: 屬性)
-    // 由於寬度不固定，為了居中，我們需要讓右側佔位符也保持與紅條約略相等的視覺寬度。
+    // 左側：農曆紅條 (寬度貼合內容)
     content += `<div style="background-color: #cc0000; color: white; padding: 5px; font-size: 0.9em; text-align: center; margin-right: 15px; flex-shrink: 0; box-shadow: 2px 2px 5px rgba(0,0,0,0.1); line-height: 1.2;">
         ${lunarHtml}
     </div>`;
@@ -182,13 +181,12 @@ function renderPageContent(date, weather, quote) {
         </div>
     </div>`;
 
-    // 右側：佔位符 (為了居中，我們仍然需要一個寬度來平衡農曆紅條的空間，但將其背景移除)
-    // 這裡使用約 45px 的寬度來平衡貼合文字的紅條 (約 50px 寬)
+    // 右側：佔位符 (約 45px 寬度，平衡左側農曆紅條)
     content += `<div style="width: 45px; flex-shrink: 0; margin-left: 15px;"></div>`; 
 
     content += `</div>`; // 主體內容結束
     
-    // 3. 星期 (在宜忌虛線框外)
+    // 3. 星期 
     content += `<div style="clear: both; margin-top: 15px; text-align: center;">
         <div style="font-size: 1.3em; font-weight: bold; color: #333; margin-bottom: 10px;">
             ${weekdayName}
@@ -210,7 +208,8 @@ function renderPageContent(date, weather, quote) {
         </div>
     </div>`;
     
-    // 5. 每日語錄 (保留英文一句)
+    // 5. 每日語錄 (保留英文一句, 緊接在宜忌之後)
+    // 這是您希望保留的英文語錄區塊
     content += `<div style="margin-top: 15px; padding: 5px 10px; border: 1px dashed #ccc; background-color: #f9f9f9; font-size: 0.8em; color: #555; height: 60px; overflow: hidden; display: flex; align-items: center; justify-content: center; text-align: center;">
         ${quote}
     </div>`;
