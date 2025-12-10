@@ -1,7 +1,7 @@
 // ====================================================================
 // 專案名稱：極簡日曆儀表板
 // 功能：顯示天氣、農民曆宜忌、每日語錄，並支持城市切換
-// 特點：農曆紅條寬度縮減至貼合內容；保留英文每日語錄
+// 特點：農曆三行垂直顯示；農曆紅條寬度貼合內容；移除天氣資訊灰色背景
 // ====================================================================
 
 const PAGE_CONTAINER = document.getElementById('calendar-page-container');
@@ -26,9 +26,8 @@ const TAIWAN_CITIES = [
     { name: '臺東縣', lat: 22.7505, lon: 121.1518 }  
 ];
 
-// 【靜態宜忌清單】
+// 【靜態宜忌清單】 (請在此更新當前日期和農曆資訊)
 const YIJIS = {
-    // 格式：'YYYY-M-D': { yi: '宜做事項', ji: '忌做事項', lunar: '農曆十一月 廿一' }
     '2025-12-11': { 
         yi: '祭祀, 納財, 開市', 
         ji: '動土, 安床, 移徙', 
@@ -135,14 +134,12 @@ function renderPageContent(date, weather, quote) {
     const yiItems = yijiData.yi.split(/[,|]/).map(s => s.trim()).filter(s => s);
     const jiItems = yijiData.ji.split(/[,|]/).map(s => s.trim()).filter(s => s);
     
-    // 【修正 1：農曆三行垂直顯示】
-    // 假設農曆格式總是 "農曆十一月 廿一"
+    // 農曆三行垂直顯示的邏輯
     const lunarRaw = yijiData.lunar;
     let lunarHtml = '<div>農曆</div><div>資訊不足</div>'; 
     if (lunarRaw.includes('月') && lunarRaw.includes(' ')) {
         const monthPart = lunarRaw.substring(lunarRaw.indexOf('月') - 2, lunarRaw.indexOf('月') + 1).trim();
         const dayPart = lunarRaw.substring(lunarRaw.lastIndexOf(' ') + 1).trim();
-        // 確保農曆/十一月/廿一分三行
         lunarHtml = `<div>農曆</div><div>${monthPart}</div><div>${dayPart}</div>`;
     } else {
         const lunarParts = lunarRaw.split(' ');
@@ -164,7 +161,8 @@ function renderPageContent(date, weather, quote) {
     // 2. 主體內容：農曆、大日期、月份 (三欄分列，日期居中)
     content += `<div style="clear: both; display: flex; align-items: flex-start; margin-top: 15px;">`; 
 
-    // 左側：農曆紅條 (寬度縮減至貼合內容, 移除 width: 80px)
+    // 左側：農曆紅條 (寬度縮減至貼合內容, 移除 width: 屬性)
+    // 由於寬度不固定，為了居中，我們需要讓右側佔位符也保持與紅條約略相等的視覺寬度。
     content += `<div style="background-color: #cc0000; color: white; padding: 5px; font-size: 0.9em; text-align: center; margin-right: 15px; flex-shrink: 0; box-shadow: 2px 2px 5px rgba(0,0,0,0.1); line-height: 1.2;">
         ${lunarHtml}
     </div>`;
@@ -184,8 +182,9 @@ function renderPageContent(date, weather, quote) {
         </div>
     </div>`;
 
-    // 右側：佔位符 (保持 80px 寬度，以確保中央區域居中對齊)
-    content += `<div style="width: 80px; flex-shrink: 0; margin-left: 15px;"></div>`; 
+    // 右側：佔位符 (為了居中，我們仍然需要一個寬度來平衡農曆紅條的空間，但將其背景移除)
+    // 這裡使用約 45px 的寬度來平衡貼合文字的紅條 (約 50px 寬)
+    content += `<div style="width: 45px; flex-shrink: 0; margin-left: 15px;"></div>`; 
 
     content += `</div>`; // 主體內容結束
     
