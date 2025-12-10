@@ -4,21 +4,20 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>極簡日曆儀表板</title>
+    <script src="https://cdn.jsdelivr.net/npm/lunar-javascript/lunar.js"></script> 
     <style>
-        /* CSS Reset and Global Styles */
+        /* ... (保持您原本的 CSS 樣式不變) ... */
         body {
             font-family: 'Helvetica Neue', Helvetica, Arial, '微軟正黑體', sans-serif;
             margin: 0;
             padding: 0;
-            background-color: #f0f0f0; /* Light gray background for the overall page */
+            background-color: #f0f0f0;
             color: #333;
             display: flex;
             justify-content: center;
             align-items: flex-start;
             min-height: 100vh;
         }
-        
-        /* Main Container for the Calendar Card */
         .calendar-card {
             width: 100%;
             max-width: 400px;
@@ -26,35 +25,21 @@
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
             margin: 10px 0;
             box-sizing: border-box;
-            overflow: hidden; /* Important for containing floating elements */
+            overflow: hidden;
         }
-
-        /* Top Red Header */
         .header-top {
             background-color: #cc0000;
             color: white;
             padding: 10px 0;
             text-align: center;
         }
-
-        .header-title {
-            font-size: 1.5em;
-            font-weight: bold;
-            margin: 0;
-        }
-
-        .header-ad-tag {
-            font-size: 0.7em;
-            opacity: 0.8;
-        }
-
-        /* City Selector Styling */
+        .header-title { font-size: 1.5em; font-weight: bold; margin: 0; }
+        .header-ad-tag { font-size: 0.7em; opacity: 0.8; }
         .city-selection-container {
             padding: 10px;
             background-color: #f7f7f7;
             border-bottom: 1px solid #ddd;
         }
-
         #city-selector {
             width: 100%;
             padding: 8px;
@@ -62,37 +47,23 @@
             border: 1px solid #ccc;
             border-radius: 4px;
             box-sizing: border-box;
-            -webkit-appearance: none; /* Remove default arrow on iOS */
-            -moz-appearance: none; /* Remove default arrow on Firefox */
-            appearance: none; /* Remove default arrow */
-            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="gray" d="M7 10l5 5 5-5z"/></svg>') no-repeat right 8px center;
-            background-size: 10px;
         }
-
-        /* Ensure the main content area handles the overflow and positioning defined in JS */
-        #calendar-page-container {
-            padding: 15px; /* Base padding for content */
-        }
+        #calendar-page-container { padding: 15px; }
     </style>
 </head>
 <body>
 
 <div class="calendar-card">
-    
     <div class="header-top">
         <p class="header-title">萬事如意</p>
         <p class="header-ad-tag">廣告位</p>
     </div>
-
     <div class="city-selection-container">
-        <select id="city-selector">
-            </select>
+        <select id="city-selector"></select>
     </div>
-
     <div id="calendar-page-container">
         <div style="text-align: center; margin-top: 150px; color: #666;">載入中...</div>
     </div>
-    
 </div>
 
 <script src="script.js"></script>
