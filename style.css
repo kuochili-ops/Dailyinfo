@@ -15,11 +15,12 @@ body {
     text-align: center;
     max-width: 400px;
     width: 100%;
-    /* 輕微投影，模擬底座 */
-    box-shadow: 0 0 15px rgba(0, 0, 0, 0.1); 
-    padding: 20px;
-    background-color: #fff;
-    border-radius: 8px;
+    padding: 20px 0; /* 調整 padding，讓內容不至於太貼邊 */
+}
+
+/* 確保按鈕和訊息在日曆容器下方 */
+h1, .info {
+    margin: 10px 0;
 }
 
 .calendar-stack {
@@ -31,39 +32,37 @@ body {
 
 /* --- B. 紙張立體感與堆疊 --- */
 .calendar-page {
+    /* 修正關鍵：絕對定位才能堆疊 */
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    padding: 20px;
+    padding: 30px; /* 增加 padding，讓內容不貼邊 */
     box-sizing: border-box;
     border-radius: 4px;
     
-    /* 紋理和顏色 (假設您有 paper-texture.jpg 檔案) */
-    background-color: #fefdfb; /* 略帶米白的顏色 */
-    /* 如果沒有圖片，請註解下一行 */
-    /* background-image: url('paper-texture.jpg'); 
-    background-repeat: repeat; */
+    background-color: #fefdfb; 
     
-    /* 關鍵：立體陰影 */
+    /* 關鍵修正：立體陰影 */
     box-shadow: 
-        0 8px 15px rgba(0, 0, 0, 0.2), /* 較大的投影 */
-        0 4px 5px rgba(0, 0, 0, 0.1);  /* 較銳利的投影 */
+        0 8px 15px rgba(0, 0, 0, 0.2), 
+        0 4px 5px rgba(0, 0, 0, 0.1);  
         
-    /* 動畫過渡 */
     transition: transform 0.6s ease-in-out, opacity 0.6s ease-in-out;
 }
 
 /* 堆疊錯開效果 */
 .calendar-page.next-page {
-    z-index: 1; /* 比當前頁低 */
-    transform: translate(3px, 3px) rotate(1deg);
+    z-index: 1; 
+    /* 讓底層紙張看起來偏移一點點 */
+    transform: translate(2px, 2px) rotate(1deg);
     opacity: 0.95;
 }
 
 .calendar-page.current-page {
-    z-index: 2; /* 在最上面 */
+    z-index: 2; /* 確保在最上面 */
+    /* 讓頂層紙張看起來輕微旋轉 */
     transform: rotate(-1deg);
 }
 
@@ -71,7 +70,6 @@ body {
 .calendar-page.is-torn {
     z-index: 100;
     opacity: 0; 
-    /* 飛走並旋轉 */
     transform: translate(350px, 450px) rotate(45deg) scale(0.4); 
 }
 
@@ -89,7 +87,7 @@ body {
 .month-year {
     font-size: 1.5em;
     color: #888;
-    margin-top: -10px;
+    margin-top: 10px; /* 調整間距 */
     margin-bottom: 20px;
 }
 .holiday {
@@ -104,6 +102,7 @@ body {
 }
 
 button#tear-button {
+    /* ... 樣式不變 ... */
     padding: 10px 20px;
     font-size: 1em;
     cursor: pointer;
