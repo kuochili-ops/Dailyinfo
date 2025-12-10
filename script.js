@@ -113,7 +113,7 @@ async function fetchWeatherForecast(lat, lon, cityName) {
 }
 
 // ------------------------------------------
-// III. 渲染邏輯 (已完全重構排版)
+// III. 渲染邏輯 
 // ------------------------------------------
 
 function renderPageContent(date, weather, quote) { 
@@ -134,7 +134,10 @@ function renderPageContent(date, weather, quote) {
     const yiItems = yijiData.yi.split(/[,|]/).map(s => s.trim()).filter(s => s);
     const jiItems = yijiData.ji.split(/[,|]/).map(s => s.trim()).filter(s => s);
     
-    let content = '<div style="height: 100%; position: relative;">';
+    // 設置容器總高度，為廣告空間預留底部空間（使用常見的 90px 高度）
+    const AD_HEIGHT_PX = 90; 
+    
+    let content = `<div style="height: 100%; position: relative; padding-bottom: ${AD_HEIGHT_PX + 20}px;">`; // 底部多加 20px 邊距
 
     // 1. 頂部資訊 (年與生肖)
     content += `<div style="overflow: auto; border-bottom: 1px solid #eee; padding-bottom: 5px;">
@@ -163,12 +166,12 @@ function renderPageContent(date, weather, quote) {
         </div>
     </div>`;
 
-    // 右側保持空白，因為天氣已移到下方
+    // 右側保持空白
     content += `<div style="width: 80px; flex-shrink: 0; margin-left: 15px;"></div>`; 
 
     content += `</div>`; // 主體內容結束 (農曆, 日期, 月份)
     
-    // 3. 星期 (移到宜忌虛線框外面)
+    // 3. 星期 (在虛線框外)
     content += `<div style="clear: both; margin-top: 15px; text-align: center;">
         <div style="font-size: 1.3em; font-weight: bold; color: #333; margin-bottom: 10px;">
             ${weekdayName}
@@ -195,17 +198,16 @@ function renderPageContent(date, weather, quote) {
         ${quote}
     </div>`;
 
-    // 6. 縣市天氣 (移到語錄下方)
+    // 6. 縣市天氣 (語錄下方)
     content += `<div style="padding: 10px; text-align: center; font-size: 0.85em; color: #666; background-color: #f0f0f0; margin-top: 10px;">
         <span style="font-weight: bold; color: #333;">${weather.city} 天氣:</span> 
         ${weather.description} 
         <span style="font-weight: bold; color: #e60000;">(${weather.temperature})</span>
     </div>`;
     
-    // 底部廣告預留空間 (使用絕對定位或預留高度，確保在最下方)
-    // 設置一個底部填充，以便廣告區域不會被其他內容遮擋
-    content += `<div style="position: absolute; bottom: 0; left: 0; width: 100%; height: 50px; background-color: #ddd; text-align: center; line-height: 50px; font-size: 0.7em; color: #555;">
-        底部廣告位 (728x90 或 970x90 響應式)
+    // 底部廣告空間 (簡化為標籤和標準高度)
+    content += `<div style="position: absolute; bottom: 0; left: 0; width: 100%; height: ${AD_HEIGHT_PX}px; background-color: #ddd; text-align: center; line-height: ${AD_HEIGHT_PX}px; font-size: 1.2em; color: #555;">
+        底部廣告空間
     </div>`;
 
 
