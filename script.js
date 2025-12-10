@@ -4,29 +4,51 @@ const API_KEY = 'Dcd113bba5675965ccf9e60a7e6d06e5';
 
 // 臺灣主要縣市列表及其經緯度 (適用於免費 2.5 版本 API，更穩定)
 const TAIWAN_CITIES = [
-    { name: '臺北市', lat: 25.0330, lon: 121.5654 }, // 臺北站前
-    { name: '新北市', lat: 25.0139, lon: 121.4552 }, // 板橋區
-    { name: '桃園市', lat: 24.9961, lon: 121.3129 }, // 桃園區
-    { name: '臺中市', lat: 24.1478, lon: 120.6728 }, // 臺中火車站
-    { name: '臺南市', lat: 22.9909, lon: 120.2132 }, // 臺南中西區
-    { name: '高雄市', lat: 22.6273, lon: 120.3014 }, // 高雄前金區
-    { name: '基隆市', lat: 25.1276, lon: 121.7392 }, // 基隆港
-    { name: '新竹市', lat: 24.8037, lon: 120.9669 }, // 新竹北區
-    { name: '嘉義市', lat: 23.4841, lon: 120.4497 }, // 嘉義西區
-    { name: '宜蘭縣', lat: 24.7577, lon: 121.7533 }, // 宜蘭市
-    { name: '花蓮縣', lat: 23.9730, lon: 121.6030 }, // 花蓮市
-    { name: '屏東縣', lat: 22.6738, lon: 120.4851 }, // 屏東市
-    { name: '臺東縣', lat: 22.7505, lon: 121.1518 }  // 臺東市
+    { name: '臺北市', lat: 25.0330, lon: 121.5654 }, 
+    { name: '新北市', lat: 25.0139, lon: 121.4552 }, 
+    { name: '桃園市', lat: 24.9961, lon: 121.3129 }, 
+    { name: '臺中市', lat: 24.1478, lon: 120.6728 }, 
+    { name: '臺南市', lat: 22.9909, lon: 120.2132 }, 
+    { name: '高雄市', lat: 22.6273, lon: 120.3014 }, 
+    { name: '基隆市', lat: 25.1276, lon: 121.7392 }, 
+    { name: '新竹市', lat: 24.8037, lon: 120.9669 }, 
+    { name: '嘉義市', lat: 23.4841, lon: 120.4497 }, 
+    { name: '宜蘭縣', lat: 24.7577, lon: 121.7533 }, 
+    { name: '花蓮縣', lat: 23.9730, lon: 121.6030 }, 
+    { name: '屏東縣', lat: 22.6738, lon: 120.4851 }, 
+    { name: '臺東縣', lat: 22.7505, lon: 121.1518 }  
 ];
+
+// 【新增】手動維護的宜忌和農曆清單
+const YIJIS = {
+    // 格式：'YYYY-M-D': { yi: '宜做事項', ji: '忌做事項', lunar: '農曆日期' }
+    // 由於當前時間是 2025/12/11，我提供今日及明日的模擬數據
+    '2025-12-11': { 
+        yi: '祭祀, 納財, 開市', 
+        ji: '動土, 安床, 移徙', 
+        lunar: '農曆十一月 廿一' 
+    },
+    '2025-12-12': { 
+        yi: '嫁娶, 訂盟, 祈福', 
+        ji: '入宅, 安門, 蓋屋', 
+        lunar: '農曆十一月 廿二' 
+    },
+    '2025-12-13': { 
+        yi: '出行, 簽約, 求醫', 
+        ji: '破土, 交易, 納畜', 
+        lunar: '農曆十一月 廿三' 
+    },
+    // 當清單中沒有對應的日期時，將使用預設值
+};
+
 
 // ------------------------------------------
 // I. 輔助函式：載入城市選單
 // ------------------------------------------
 
 function loadCitySelector() {
-    TAIWAN_CITIES.forEach((city, index) => {
+    TAIWAN_CITIES.forEach((city) => {
         const option = document.createElement('option');
-        // value 儲存經緯度，方便查詢
         option.value = `${city.lat},${city.lon}`; 
         option.textContent = city.name;
         CITY_SELECTOR.appendChild(option);
@@ -41,9 +63,6 @@ function loadCitySelector() {
 // ------------------------------------------
 
 async function fetchWeatherForecast(lat, lon, cityName) {
-    
-    // 使用 5 Day / 3 Hour Forecast API (免費版) 
-    // endpoint 變更為 lat/lon 查詢
     const forecast_url = `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=metric&lang=zh_tw`;
     
     try {
@@ -52,15 +71,12 @@ async function fetchWeatherForecast(lat, lon, cityName) {
 
         if (data.cod != 200) {
             console.error("OpenWeatherMap 2.5 API 錯誤:", data.message);
-            // 由於已經使用經緯度，如果仍失敗，很可能是 API 金鑰問題
-            return { description: "API 查詢失敗 (請檢查金鑰狀態)", temperature: "??° ~ ??°", city: cityName };
+            return { description: "API 查詢失敗", temperature: "??° ~ ??°", city: cityName };
         }
 
-        // 獲取當日天氣描述
         const todayList = data.list[0];
         const description = todayList.weather[0].description;
         
-        // 計算當日最高和最低溫
         const today = new Date().toDateString();
         let maxT = -Infinity;
         let minT = Infinity;
@@ -90,7 +106,7 @@ async function fetchWeatherForecast(lat, lon, cityName) {
 }
 
 // ------------------------------------------
-// III. 渲染邏輯 (保持不變)
+// III. 渲染邏輯 (已修改：讀取宜忌數據)
 // ------------------------------------------
 
 function renderPageContent(date, weather) {
@@ -98,8 +114,13 @@ function renderPageContent(date, weather) {
     const weekdayName = date.toLocaleString('zh-Hant', { weekday: 'long' });
     const month = date.getMonth() + 1;
     
-    // 根據當前時間 2025/12/10 設置農曆
-    const lunarDate = "農曆十月 二十"; 
+    // 【修改】從 YIJIS 清單中獲取宜忌和農曆數據
+    const dateKey = `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
+    const yijiData = YIJIS[dateKey] || { 
+        yi: '無', 
+        ji: '無', 
+        lunar: '農曆資訊不足' 
+    };
     
     let content = '<div style="height: 100%;">';
 
@@ -112,9 +133,9 @@ function renderPageContent(date, weather) {
     // 2. 主體內容
     content += `<div style="height: calc(100% - 100px); padding: 10px 0; overflow: auto;">`; 
 
-    // 左側：農曆紅條
+    // 左側：農曆紅條 (使用動態農曆)
     content += `<div style="float: left; width: 80px; background-color: #cc0000; color: white; padding: 5px; font-size: 0.9em; text-align: center; margin-right: 10px;">
-        ${lunarDate}
+        ${yijiData.lunar}
     </div>`;
 
     // 中間：大日期數字
@@ -132,10 +153,10 @@ function renderPageContent(date, weather) {
 
     content += `</div>`; // 主體內容結束
 
-    // 3. 底部星期/宜忌
+    // 3. 底部星期/宜忌 (使用動態宜忌)
     content += `<div style="clear: both; border-top: 1px solid #eee; padding-top: 10px; text-align: center; position: absolute; bottom: 10px; width: 95%;">
         <div style="font-size: 1.5em; color: #333; margin-bottom: 5px;">${weekdayName}</div>
-        <div>宜：嫁娶 | 忌：動土</div>
+        <div>**宜：** ${yijiData.yi} | **忌：** ${yijiData.ji}</div>
     </div>`;
 
     content += `</div>`; 
