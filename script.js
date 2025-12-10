@@ -1,21 +1,48 @@
 const PAGE_CONTAINER = document.getElementById('calendar-page-container');
-
-// ⚠️ API 金鑰保持不變 (Dcd113bba5675965ccf9e60a7e6d06e5)
+const CITY_SELECTOR = document.getElementById('city-selector');
 const API_KEY = 'Dcd113bba5675965ccf9e60a7e6d06e5'; 
 
-// 使用臺北市的城市 ID，這是免費 API 2.5 版本的標準查詢方式
-const CITY_ID = 1668341; // 臺北市的 OpenWeatherMap ID
-const LOCATION_DISPLAY_NAME = '臺北市'; 
+// 臺灣主要縣市列表及其 OpenWeatherMap ID (適用於免費 2.5 版本 API)
+const TAIWAN_CITIES = [
+    { name: '臺北市', id: 1668341 },
+    { name: '新北市', id: 1673812 },
+    { name: '桃園市', id: 1679093 },
+    { name: '臺中市', id: 1679080 },
+    { name: '臺南市', id: 1679075 },
+    { name: '高雄市', id: 1679070 },
+    { name: '基隆市', id: 1677334 },
+    { name: '新竹市', id: 1673874 },
+    { name: '嘉義市', id: 1676679 },
+    { name: '宜蘭縣', id: 1668270 },
+    { name: '花蓮縣', id: 1678125 },
+    { name: '屏東縣', id: 1673994 },
+    { name: '臺東縣', id: 1679073 }
+];
 
 // ------------------------------------------
-// I. 天氣 API 擷取邏輯 (OpenWeatherMap 2.5 免費版)
+// I. 輔助函式：載入城市選單
 // ------------------------------------------
 
-async function fetchWeatherForecast() {
+function loadCitySelector() {
+    TAIWAN_CITIES.forEach(city => {
+        const option = document.createElement('option');
+        option.value = city.id;
+        option.textContent = city.name;
+        CITY_SELECTOR.appendChild(option);
+    });
+    // 預設選擇臺北市
+    CITY_SELECTOR.value = TAIWAN_CITIES[0].id;
+}
+
+
+// ------------------------------------------
+// II. 天氣 API 擷取邏輯 (OpenWeatherMap 2.5 免費版)
+// ------------------------------------------
+
+async function fetchWeatherForecast(cityId, cityName) {
     
-    // 使用 5 Day / 3 Hour Forecast API (免費版) 獲取未來幾日的溫度資訊
-    // 雖然是 5 天/3 小時，但我們可以從中提取今日的最高/最低溫
-    const forecast_url = `https://api.openweathermap.org/data/2.5/forecast?id=${CITY_ID}&appid=${API_KEY}&units=metric&lang=zh_tw`;
+    // 使用 5 Day / 3 Hour Forecast API (免費版) 
+    const forecast_url = `https://api.openweathermap.org/data/2.5/forecast?id=${cityId}&appid=${API_KEY}&units=metric&lang=zh_tw`;
     
     try {
         const response = await fetch(forecast_url);
@@ -23,15 +50,14 @@ async function fetchWeatherForecast() {
 
         if (data.cod != 200) {
             console.error("OpenWeatherMap 2.5 API 錯誤:", data.message);
-            // 如果連這個免費 API 都失敗，則可能是金鑰本身還未生效或網路連線問題
-            return { description: "API 查詢失敗 (請檢查金鑰狀態)", temperature: "??° ~ ??°", city: LOCATION_DISPLAY_NAME };
+            return { description: "API 查詢失敗: " + data.message, temperature: "??° ~ ??°", city: cityName };
         }
 
-        // 獲取當日天氣描述 (我們將使用第一個預報時段的描述)
+        // 獲取當日天氣描述
         const todayList = data.list[0];
         const description = todayList.weather[0].description;
         
-        // 遍歷當日的所有預報時段 (每 3 小時一次) 來找到今日真正的最高和最低溫
+        // 計算當日最高和最低溫
         const today = new Date().toDateString();
         let maxT = -Infinity;
         let minT = Infinity;
@@ -39,31 +65,30 @@ async function fetchWeatherForecast() {
         for (const item of data.list) {
             const itemDate = new Date(item.dt_txt).toDateString();
             
-            // 只有今天或剛過午夜的數據才納入計算
+            // 只考慮今天的預報時段
             if (itemDate === today) {
                 maxT = Math.max(maxT, item.main.temp_max);
                 minT = Math.min(minT, item.main.temp_min);
             }
         }
         
-        // 確保至少有一個數據點被處理
         const tempMax = maxT === -Infinity ? '??' : Math.round(maxT);
         const tempMin = minT === Infinity ? '??' : Math.round(minT);
         
         return {
             description: description,
             temperature: `${tempMin}°C ~ ${tempMax}°C`,
-            city: LOCATION_DISPLAY_NAME
+            city: cityName
         };
 
     } catch (error) {
         console.error("Fetch Error:", error);
-        return { description: "網路連線錯誤", temperature: "??° ~ ??°", city: LOCATION_DISPLAY_NAME };
+        return { description: "網路連線錯誤", temperature: "??° ~ ??°", city: cityName };
     }
 }
 
 // ------------------------------------------
-// II. 日期與內容渲染 (保持不變)
+// III. 渲染邏輯 (保持不變)
 // ------------------------------------------
 
 function renderPageContent(date, weather) {
@@ -71,7 +96,7 @@ function renderPageContent(date, weather) {
     const weekdayName = date.toLocaleString('zh-Hant', { weekday: 'long' });
     const month = date.getMonth() + 1;
     
-    // 模擬農曆和宜忌 (使用目前時間 2025/12/10 對應的農曆)
+    // 模擬農曆和宜忌 (保持靜態，與先前版本一致)
     const lunarDate = "農曆十月 二十"; 
     
     let content = '<div style="height: 100%;">';
@@ -117,16 +142,33 @@ function renderPageContent(date, weather) {
 }
 
 // ------------------------------------------
-// III. 啟動應用程式
+// IV. 應用程式啟動與事件處理
 // ------------------------------------------
 
-async function initApp() {
+// 核心啟動和更新邏輯
+async function updateCalendar(cityId, cityName) {
     const today = new Date();
-    // 渲染頁面時，先顯示 "載入中..." 讓使用者知道正在處理
-    PAGE_CONTAINER.innerHTML = '<div style="text-align: center; margin-top: 150px; color: #666;">獲取天氣中...</div>';
+    // 顯示載入狀態
+    PAGE_CONTAINER.innerHTML = '<div style="text-align: center; margin-top: 150px; color: #666;">獲取 ' + cityName + ' 天氣中...</div>';
     
-    const weatherData = await fetchWeatherForecast();
+    const weatherData = await fetchWeatherForecast(cityId, cityName);
     renderPageContent(today, weatherData);
+}
+
+function initApp() {
+    // 1. 載入城市選單
+    loadCitySelector();
+    
+    // 2. 設定選單變更事件
+    CITY_SELECTOR.addEventListener('change', (event) => {
+        const selectedId = event.target.value;
+        const selectedCity = TAIWAN_CITIES.find(c => c.id == selectedId);
+        updateCalendar(selectedCity.id, selectedCity.name);
+    });
+    
+    // 3. 初始載入 (預設臺北市)
+    const defaultCity = TAIWAN_CITIES[0];
+    updateCalendar(defaultCity.id, defaultCity.name);
 }
 
 initApp();
