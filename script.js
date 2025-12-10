@@ -1,8 +1,15 @@
+// ====================================================================
+// 專案名稱：極簡日曆儀表板
+// 功能：顯示天氣、農民曆宜忌、每日語錄，並支持城市切換
+// 特點：使用靜態宜忌數據確保穩定性；優化排版至最終版本
+// ====================================================================
+
 const PAGE_CONTAINER = document.getElementById('calendar-page-container');
 const CITY_SELECTOR = document.getElementById('city-selector');
+// 請替換成您自己的 OpenWeatherMap API Key
 const API_KEY = 'Dcd113bba5675965ccf9e60a7e6d06e5'; 
 
-// 臺灣主要縣市列表及其經緯度 (不變)
+// 臺灣主要縣市列表及其經緯度
 const TAIWAN_CITIES = [
     { name: '臺北市', lat: 25.0330, lon: 121.5654 }, 
     { name: '新北市', lat: 25.0139, lon: 121.4552 }, 
@@ -19,8 +26,9 @@ const TAIWAN_CITIES = [
     { name: '臺東縣', lat: 22.7505, lon: 121.1518 }  
 ];
 
-// 【靜態宜忌清單】
+// 【靜態宜忌清單】 (請在此更新當前日期和農曆資訊)
 const YIJIS = {
+    // 格式：'YYYY-M-D': { yi: '宜做事項', ji: '忌做事項', lunar: '農曆日期' }
     '2025-12-11': { 
         yi: '祭祀, 納財, 開市', 
         ji: '動土, 安床, 移徙', 
@@ -38,14 +46,8 @@ const YIJIS = {
     },
 };
 
-// 【簡繁轉換函式】 (保留)
-function toTraditionalChinese(text) {
-    return text;
-}
-
-
 // ------------------------------------------
-// I. 每日語錄 API 擷取邏輯 (英文語錄 API)
+// I. 每日語錄 API 擷取邏輯
 // ------------------------------------------
 
 async function fetchQuote() {
@@ -113,7 +115,7 @@ async function fetchWeatherForecast(lat, lon, cityName) {
 }
 
 // ------------------------------------------
-// III. 渲染邏輯 
+// III. 渲染邏輯 (應用最終排版)
 // ------------------------------------------
 
 function renderPageContent(date, weather, quote) { 
@@ -130,14 +132,14 @@ function renderPageContent(date, weather, quote) {
         lunar: '農曆資訊不足' 
     };
     
-    // 將宜忌項目分割成陣列，以便左右排版
     const yiItems = yijiData.yi.split(/[,|]/).map(s => s.trim()).filter(s => s);
     const jiItems = yijiData.ji.split(/[,|]/).map(s => s.trim()).filter(s => s);
     
-    // 設置容器總高度，為廣告空間預留底部空間（使用常見的 90px 高度）
+    // 廣告區域高度
     const AD_HEIGHT_PX = 90; 
     
-    let content = `<div style="height: 100%; position: relative; padding-bottom: ${AD_HEIGHT_PX + 20}px;">`; // 底部多加 20px 邊距
+    // 容器設置底部填充，為廣告留出空間
+    let content = `<div style="height: 100%; position: relative; padding-bottom: ${AD_HEIGHT_PX + 20}px; max-width: 400px; margin: 0 auto; box-sizing: border-box;">`;
 
     // 1. 頂部資訊 (年與生肖)
     content += `<div style="overflow: auto; border-bottom: 1px solid #eee; padding-bottom: 5px;">
@@ -145,33 +147,35 @@ function renderPageContent(date, weather, quote) {
         <span style="float: right; font-size: 0.8em;">${date.getFullYear()}</span>
     </div>`;
     
-    // 2. 主體內容：農曆、大日期、月份
+    // 2. 主體內容：農曆、大日期、月份 (三欄分列，日期居中)
     content += `<div style="clear: both; display: flex; align-items: flex-start; margin-top: 15px;">`; 
 
-    // 左側：農曆紅條 
+    // 左側：農曆紅條 (寬度 80px)
     content += `<div style="width: 80px; background-color: #cc0000; color: white; padding: 5px; font-size: 0.9em; text-align: center; margin-right: 15px; flex-shrink: 0; box-shadow: 2px 2px 5px rgba(0,0,0,0.1);">
         ${yijiData.lunar}
     </div>`;
 
-    // 中央區：大日期、月份
-    content += `<div style="flex-grow: 1; text-align: center; display: flex; align-items: center; justify-content: center;">
+    // 中央區：大日期、月份 (flex-grow: 1, 確保內容居中)
+    content += `<div style="flex-grow: 1; display: flex; align-items: center; justify-content: center;">
         
-        <div style="font-size: 6em; font-weight: 900; color: #004d99; line-height: 1.0; margin-right: 10px;">
-            ${dayNumber}
-        </div>
-        
-        <div style="font-size: 1.5em; font-weight: bold; color: #cc0000; line-height: 1.1;">
-            <div>${monthShort}</div>
-            <div style="font-size: 0.8em; color: #333;">${month}月</div>
+        <div style="display: flex; align-items: center;">
+            <div style="font-size: 6em; font-weight: 900; color: #004d99; line-height: 1.0; margin-right: 10px;">
+                ${dayNumber}
+            </div>
+            
+            <div style="font-size: 1.5em; font-weight: bold; color: #cc0000; line-height: 1.1;">
+                <div>${monthShort}</div>
+                <div style="font-size: 0.8em; color: #333;">${month}月</div>
+            </div>
         </div>
     </div>`;
 
-    // 右側保持空白
+    // 右側：佔位符 (寬度 80px)，確保對稱
     content += `<div style="width: 80px; flex-shrink: 0; margin-left: 15px;"></div>`; 
 
-    content += `</div>`; // 主體內容結束 (農曆, 日期, 月份)
+    content += `</div>`; // 主體內容結束
     
-    // 3. 星期 (在虛線框外)
+    // 3. 星期 (在宜忌虛線框外)
     content += `<div style="clear: both; margin-top: 15px; text-align: center;">
         <div style="font-size: 1.3em; font-weight: bold; color: #333; margin-bottom: 10px;">
             ${weekdayName}
@@ -205,7 +209,7 @@ function renderPageContent(date, weather, quote) {
         <span style="font-weight: bold; color: #e60000;">(${weather.temperature})</span>
     </div>`;
     
-    // 底部廣告空間 (簡化為標籤和標準高度)
+    // 7. 底部廣告空間 (90px 高度)
     content += `<div style="position: absolute; bottom: 0; left: 0; width: 100%; height: ${AD_HEIGHT_PX}px; background-color: #ddd; text-align: center; line-height: ${AD_HEIGHT_PX}px; font-size: 1.2em; color: #555;">
         底部廣告空間
     </div>`;
@@ -217,7 +221,7 @@ function renderPageContent(date, weather, quote) {
 }
 
 // ------------------------------------------
-// IV. 應用程式啟動與事件處理 (不變)
+// IV. 應用程式啟動與事件處理
 // ------------------------------------------
 
 async function updateCalendar(lat, lon, cityName) {
@@ -239,6 +243,7 @@ function loadCitySelector() {
         option.textContent = city.name;
         CITY_SELECTOR.appendChild(option);
     });
+    // 預設選擇第一個城市
     CITY_SELECTOR.value = `${TAIWAN_CITIES[0].lat},${TAIWAN_CITIES[0].lon}`;
 }
 
