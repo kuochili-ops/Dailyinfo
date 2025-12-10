@@ -19,9 +19,8 @@ const TAIWAN_CITIES = [
     { name: '臺東縣', lat: 22.7505, lon: 121.1518 }  
 ];
 
-// 【恢復】手動維護的宜忌和農曆清單
+// 【靜態宜忌清單】
 const YIJIS = {
-    // 格式：'YYYY-M-D': { yi: '宜做事項', ji: '忌做事項', lunar: '農曆日期' }
     '2025-12-11': { 
         yi: '祭祀, 納財, 開市', 
         ji: '動土, 安床, 移徙', 
@@ -37,10 +36,9 @@ const YIJIS = {
         ji: '破土, 交易, 納畜', 
         lunar: '農曆十一月 廿三' 
     },
-    // 您可以手動添加更多日期，以維持日曆功能
 };
 
-// 【簡繁轉換函式】保留 (但目前不再用於宜忌，僅供備用)
+// 【簡繁轉換函式】 (保留)
 function toTraditionalChinese(text) {
     // 由於我們恢復了靜態繁體中文數據，此函式不再對宜忌生效，但保留以防未來使用簡體源
     return text;
@@ -56,10 +54,6 @@ async function fetchQuote() {
     try {
         const response = await fetch(url);
         const data = await response.json(); 
-
-        if (!data || data.length === 0) {
-            throw new Error("API 未返回語錄");
-        }
         
         const randomIndex = Math.floor(Math.random() * data.length);
         const randomQuote = data[randomIndex];
@@ -70,14 +64,13 @@ async function fetchQuote() {
         return `${quoteText} — ${author}`;
         
     } catch (error) {
-        console.error("Quote Fetch Error:", error);
         return 'Daily Quote: Error fetching quote from API. (Quotes are in English)';
     }
 }
 
 
 // ------------------------------------------
-// II. 天氣 API 擷取邏輯 (不變)
+// II. 天氣 API 擷取邏輯 (OpenWeatherMap)
 // ------------------------------------------
 
 async function fetchWeatherForecast(lat, lon, cityName) {
@@ -86,7 +79,7 @@ async function fetchWeatherForecast(lat, lon, cityName) {
     try {
         const response = await fetch(forecast_url);
         const data = await response.json();
-
+        
         if (data.cod != 200) {
             return { description: "API 查詢失敗", temperature: "??° ~ ??°", city: cityName };
         }
@@ -121,15 +114,16 @@ async function fetchWeatherForecast(lat, lon, cityName) {
 }
 
 // ------------------------------------------
-// III. 渲染邏輯
+// III. 渲染邏輯 (已完全重構排版)
 // ------------------------------------------
 
 function renderPageContent(date, weather, quote) { 
     const dayNumber = date.getDate();
     const weekdayName = date.toLocaleString('zh-Hant', { weekday: 'long' });
     const month = date.getMonth() + 1;
+    const monthShort = date.toLocaleDateString('en-US', { month: 'short' }).toUpperCase();
     
-    // 【修改】從靜態清單中獲取宜忌數據
+    // 從靜態清單中獲取宜忌數據
     const dateKey = `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
     const yijiData = YIJIS[dateKey] || { 
         yi: '無（請更新清單）', 
@@ -137,68 +131,92 @@ function renderPageContent(date, weather, quote) {
         lunar: '農曆資訊不足' 
     };
     
-    let content = '<div style="height: 100%;">';
+    // 將宜忌項目分割成陣列，以便左右排版
+    const yiItems = yijiData.yi.split(/[,|]/).map(s => s.trim()).filter(s => s);
+    const jiItems = yijiData.ji.split(/[,|]/).map(s => s.trim()).filter(s => s);
+    
+    // 確保日曆容器內元素能佈局在頂部
+    let content = '<div style="height: 100%; position: relative;">';
 
-    // 1. 頂部資訊
+    // 1. 頂部資訊 (年與生肖)
     content += `<div style="overflow: auto; border-bottom: 1px solid #eee; padding-bottom: 5px;">
         <span style="float: left; font-size: 0.8em;">114年 兔年</span>
         <span style="float: right; font-size: 0.8em;">${date.getFullYear()}</span>
     </div>`;
     
-    // 2. 主體內容
-    content += `<div style="height: calc(100% - 100px); padding: 10px 0; overflow: auto;">`; 
+    // 2. 主體內容：農曆、大日期、月份、天氣
+    content += `<div style="clear: both; display: flex; align-items: flex-start; margin-top: 15px;">`; 
 
     // 左側：農曆紅條 
-    content += `<div style="float: left; width: 80px; background-color: #cc0000; color: white; padding: 5px; font-size: 0.9em; text-align: center; margin-right: 10px;">
+    content += `<div style="width: 80px; background-color: #cc0000; color: white; padding: 5px; font-size: 0.9em; text-align: center; margin-right: 15px; flex-shrink: 0; box-shadow: 2px 2px 5px rgba(0,0,0,0.1);">
         ${yijiData.lunar}
     </div>`;
 
-    // 中間：大日期數字
-    content += `<div style="float: left; width: 100px; font-size: 5em; font-weight: 900; color: #004d99; text-align: center; line-height: 1.2;">
-        ${dayNumber}
-    </div>`;
-    
-    // 右側：天氣資訊
-    content += `<div style="float: left; padding: 5px; font-size: 0.8em; text-align: left; border: 1px solid #eee; width: 80px;">
-        <div style="font-weight: bold;">${month}月 ${date.toLocaleDateString('en-US', { month: 'short' }).toUpperCase()}</div>
-        <div style="margin-top: 10px; font-size: 1.1em; color: #333;">${weather.city}</div>
-        <div>${weather.description}</div>
-        <div style="font-weight: bold; color: #e60000;">${weather.temperature}</div>
+    // 中央區：大日期、月份
+    content += `<div style="flex-grow: 1; text-align: center; display: flex; align-items: center; justify-content: center;">
+        
+        <div style="font-size: 6em; font-weight: 900; color: #004d99; line-height: 1.0; margin-right: 10px;">
+            ${dayNumber}
+        </div>
+        
+        <div style="font-size: 1.5em; font-weight: bold; color: #cc0000; line-height: 1.1;">
+            <div>${monthShort}</div>
+            <div style="font-size: 0.8em; color: #333;">${month}月</div>
+        </div>
     </div>`;
 
-    content += `</div>`; // 主體內容結束
+    // 右側：天氣資訊
+    content += `<div style="width: 80px; padding: 5px; font-size: 0.75em; text-align: left; border: 1px solid #eee; flex-shrink: 0; margin-left: 15px;">
+        <div style="font-weight: bold; color: #333;">${weather.city}</div>
+        <div>${weather.description}</div>
+        <div style="font-weight: bold; color: #e60000; margin-top: 5px;">${weather.temperature}</div>
+    </div>`;
+
+    content += `</div>`; // 主體內容結束 (農曆, 日期, 天氣)
     
-    // 2.5 每日語錄
-    content += `<div style="clear: both; margin-top: 10px; padding: 5px; border: 1px dashed #ccc; background-color: #f9f9f9; font-size: 0.75em; color: #555; height: 50px; overflow: hidden; display: flex; align-items: center; justify-content: center; text-align: center;">
+    // 3. 星期、宜、忌 (移到日期下方)
+    content += `<div style="clear: both; margin-top: 15px; padding: 10px 0; text-align: center; border-top: 1px dashed #ccc; border-bottom: 1px dashed #ccc;">
+        
+        <div style="font-size: 1.3em; font-weight: bold; color: #333; margin-bottom: 10px;">
+            ${weekdayName}
+        </div>
+        
+        <div style="display: flex; justify-content: space-around; text-align: center; font-size: 0.8em; line-height: 1.5;">
+            <div style="width: 48%; border-right: 1px solid #eee;">
+                <div style="font-weight: bold; color: green; margin-bottom: 5px;">**宜：**</div>
+                ${yiItems.length > 0 ? yiItems.map(item => `<div>${item}</div>`).join('') : '<div>無</div>'}
+            </div>
+            
+            <div style="width: 48%;">
+                <div style="font-weight: bold; color: #cc0000; margin-bottom: 5px;">**忌：**</div>
+                ${jiItems.length > 0 ? jiItems.map(item => `<div>${item}</div>`).join('') : '<div>無</div>'}
+            </div>
+        </div>
+    </div>`;
+    
+    // 4. 每日語錄 (位於底部上方)
+    content += `<div style="margin-top: 15px; padding: 5px 10px; border: 1px dashed #ccc; background-color: #f9f9f9; font-size: 0.8em; color: #555; height: 60px; overflow: hidden; display: flex; align-items: center; justify-content: center; text-align: center;">
         ${quote}
     </div>`;
-
-    // 3. 底部星期/宜忌 (使用靜態宜忌)
-    content += `<div style="clear: both; border-top: 1px solid #eee; padding-top: 10px; text-align: center; position: absolute; bottom: 10px; width: 95%;">
-        <div style="font-size: 1.5em; color: #333; margin-bottom: 5px;">${weekdayName}</div>
-        <div>**宜：** ${yijiData.yi} | **忌：** ${yijiData.ji}</div>
-    </div>`;
-
-    content += `</div>`; 
+    
+    content += `</div>`; // 容器結束
     
     PAGE_CONTAINER.innerHTML = content;
 }
 
 // ------------------------------------------
-// IV. 應用程式啟動與事件處理
+// IV. 應用程式啟動與事件處理 (不變)
 // ------------------------------------------
 
 async function updateCalendar(lat, lon, cityName) {
     const today = new Date();
     PAGE_CONTAINER.innerHTML = '<div style="text-align: center; margin-top: 150px; color: #666;">獲取 ' + cityName + ' 天氣與今日語錄中...</div>';
     
-    // 現在只需請求兩個 API
     const [weatherData, quoteData] = await Promise.all([
         fetchWeatherForecast(lat, lon, cityName),
         fetchQuote() 
     ]);
     
-    // 靜態宜忌數據直接在 renderPageContent 內計算
     renderPageContent(today, weatherData, quoteData); 
 }
 
