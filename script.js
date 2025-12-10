@@ -2,7 +2,7 @@ const PAGE_CONTAINER = document.getElementById('calendar-page-container');
 const CITY_SELECTOR = document.getElementById('city-selector');
 const API_KEY = 'Dcd113bba5675965ccf9e60a7e6d06e5'; 
 
-// 臺灣主要縣市列表及其經緯度 (適用於免費 2.5 版本 API，更穩定)
+// 臺灣主要縣市列表及其經緯度
 const TAIWAN_CITIES = [
     { name: '臺北市', lat: 25.0330, lon: 121.5654 }, 
     { name: '新北市', lat: 25.0139, lon: 121.4552 }, 
@@ -19,10 +19,8 @@ const TAIWAN_CITIES = [
     { name: '臺東縣', lat: 22.7505, lon: 121.1518 }  
 ];
 
-// 【新增】手動維護的宜忌和農曆清單
+// 手動維護的宜忌和農曆清單 (僅供演示，需您自行填充更多日期)
 const YIJIS = {
-    // 格式：'YYYY-M-D': { yi: '宜做事項', ji: '忌做事項', lunar: '農曆日期' }
-    // 由於當前時間是 2025/12/11，我提供今日及明日的模擬數據
     '2025-12-11': { 
         yi: '祭祀, 納財, 開市', 
         ji: '動土, 安床, 移徙', 
@@ -38,23 +36,25 @@ const YIJIS = {
         ji: '破土, 交易, 納畜', 
         lunar: '農曆十一月 廿三' 
     },
-    // 當清單中沒有對應的日期時，將使用預設值
 };
 
 
 // ------------------------------------------
-// I. 輔助函式：載入城市選單
+// I. 每日語錄 API 擷取邏輯 (一言 API)
 // ------------------------------------------
 
-function loadCitySelector() {
-    TAIWAN_CITIES.forEach((city) => {
-        const option = document.createElement('option');
-        option.value = `${city.lat},${city.lon}`; 
-        option.textContent = city.name;
-        CITY_SELECTOR.appendChild(option);
-    });
-    // 預設選擇臺北市
-    CITY_SELECTOR.value = `${TAIWAN_CITIES[0].lat},${TAIWAN_CITIES[0].lon}`;
+async function fetchQuote() {
+    // 查詢一句隨機語錄 (二次元, 小說, 動畫類)
+    const url = 'https://v1.hitokoto.cn/?encode=json&charset=utf-8&select=hitokoto&c=a&c=d&c=e&c=f';
+    try {
+        const response = await fetch(url);
+        const data = await response.json();
+        const from = data.from || '未知來源';
+        return `${data.hitokoto} — ${from}`;
+    } catch (error) {
+        console.error("Quote Fetch Error:", error);
+        return '今日一句：讀萬卷書，行萬里路。';
+    }
 }
 
 
@@ -106,15 +106,15 @@ async function fetchWeatherForecast(lat, lon, cityName) {
 }
 
 // ------------------------------------------
-// III. 渲染邏輯 (已修改：讀取宜忌數據)
+// III. 渲染邏輯 (已修改：讀取宜忌和語錄數據)
 // ------------------------------------------
 
-function renderPageContent(date, weather) {
+function renderPageContent(date, weather, quote) { // 接收 quote 參數
     const dayNumber = date.getDate();
     const weekdayName = date.toLocaleString('zh-Hant', { weekday: 'long' });
     const month = date.getMonth() + 1;
     
-    // 【修改】從 YIJIS 清單中獲取宜忌和農曆數據
+    // 獲取宜忌和農曆數據
     const dateKey = `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
     const yijiData = YIJIS[dateKey] || { 
         yi: '無', 
@@ -152,8 +152,14 @@ function renderPageContent(date, weather) {
     </div>`;
 
     content += `</div>`; // 主體內容結束
+    
+    // 2.5 每日語錄 (新增區塊)
+    content += `<div style="clear: both; margin-top: 10px; padding: 5px; border: 1px dashed #ccc; background-color: #f9f9f9; font-size: 0.75em; color: #555; height: 50px; overflow: hidden; display: flex; align-items: center; justify-content: center; text-align: center;">
+        ${quote}
+    </div>`;
 
     // 3. 底部星期/宜忌 (使用動態宜忌)
+    // 調整定位，以便為語錄留出空間
     content += `<div style="clear: both; border-top: 1px solid #eee; padding-top: 10px; text-align: center; position: absolute; bottom: 10px; width: 95%;">
         <div style="font-size: 1.5em; color: #333; margin-bottom: 5px;">${weekdayName}</div>
         <div>**宜：** ${yijiData.yi} | **忌：** ${yijiData.ji}</div>
@@ -172,24 +178,37 @@ function renderPageContent(date, weather) {
 async function updateCalendar(lat, lon, cityName) {
     const today = new Date();
     // 顯示載入狀態
-    PAGE_CONTAINER.innerHTML = '<div style="text-align: center; margin-top: 150px; color: #666;">獲取 ' + cityName + ' 天氣中...</div>';
+    PAGE_CONTAINER.innerHTML = '<div style="text-align: center; margin-top: 150px; color: #666;">獲取 ' + cityName + ' 天氣與今日語錄中...</div>';
     
-    const weatherData = await fetchWeatherForecast(lat, lon, cityName);
-    renderPageContent(today, weatherData);
+    // 同時請求天氣和語錄
+    const [weatherData, quoteData] = await Promise.all([
+        fetchWeatherForecast(lat, lon, cityName),
+        fetchQuote()
+    ]);
+    
+    renderPageContent(today, weatherData, quoteData);
+}
+
+// 載入城市選單 (保持不變)
+function loadCitySelector() {
+    TAIWAN_CITIES.forEach((city) => {
+        const option = document.createElement('option');
+        option.value = `${city.lat},${city.lon}`; 
+        option.textContent = city.name;
+        CITY_SELECTOR.appendChild(option);
+    });
+    CITY_SELECTOR.value = `${TAIWAN_CITIES[0].lat},${TAIWAN_CITIES[0].lon}`;
 }
 
 function initApp() {
-    // 1. 載入城市選單
     loadCitySelector();
     
-    // 2. 設定選單變更事件
     CITY_SELECTOR.addEventListener('change', (event) => {
         const [lat, lon] = event.target.value.split(',');
         const cityName = event.target.options[event.target.selectedIndex].textContent;
         updateCalendar(lat, lon, cityName);
     });
     
-    // 3. 初始載入 (預設臺北市)
     const defaultCity = TAIWAN_CITIES[0];
     updateCalendar(defaultCity.lat, defaultCity.lon, defaultCity.name);
 }
