@@ -2,7 +2,7 @@ const PAGE_CONTAINER = document.getElementById('calendar-page-container');
 const CITY_SELECTOR = document.getElementById('city-selector');
 const API_KEY = 'Dcd113bba5675965ccf9e60a7e6d06e5'; 
 
-// 臺灣主要縣市列表及其經緯度
+// 臺灣主要縣市列表及其經緯度 (不變)
 const TAIWAN_CITIES = [
     { name: '臺北市', lat: 25.0330, lon: 121.5654 }, 
     { name: '新北市', lat: 25.0139, lon: 121.4552 }, 
@@ -19,7 +19,7 @@ const TAIWAN_CITIES = [
     { name: '臺東縣', lat: 22.7505, lon: 121.1518 }  
 ];
 
-// 手動維護的宜忌和農曆清單 (僅供演示，需您自行填充更多日期)
+// 手動維護的宜忌和農曆清單 (不變)
 const YIJIS = {
     '2025-12-11': { 
         yi: '祭祀, 納財, 開市', 
@@ -38,19 +38,94 @@ const YIJIS = {
     },
 };
 
+// 【新增】簡體字到繁體字的基礎對應表
+const SIMPLIFIED_TO_TRADITIONAL = {
+    '个': '個', '们': '們', '与': '與', '乐': '樂', '书': '書', 
+    '买': '買', '丽': '麗', '产': '產', '亲': '親', '亿': '億',
+    '从': '從', '会': '會', '体': '體', '來': '來', '价': '價',
+    '兒': '兒', '關': '關', '劃': '劃', '劉': '劉', '區': '區',
+    '卻': '卻', '圓': '圓', '團': '團', '國': '國', '圖': '圖',
+    '場': '場', '寧': '寧', '廣': '廣', '應': '應', '廠': '廠',
+    '開': '開', '戶': '戶', '態': '態', '愛': '愛', '懷': '懷',
+    '憂': '憂', '戶': '戶', '報': '報', '擁': '擁', '應': '應',
+    '戰': '戰', '才': '才', '掃': '掃', '戶': '戶', '揚': '揚',
+    '時': '時', '書': '書', '會': '會', '來': '來', '長': '長',
+    '間': '間', '問': '問', '點': '點', '邊': '邊', '風': '風',
+    '飛': '飛', '馬': '馬', '麗': '麗', '黃': '黃', '黨': '黨',
+    '發': '發', '門': '門', '無': '無', '話': '話', '讓': '讓',
+    '頭': '頭', '對': '對', '對': '對', '幾': '幾', '機': '機',
+    '業': '業', '萬': '萬', '與': '與', '專': '專', '種': '種',
+    '確': '確', '視': '視', '覺': '覺', '讓': '讓', '難': '難',
+    '體': '體', '藝': '藝', '術': '術', '語': '語', '論': '論',
+    '說': '說', '這': '這', '邊': '邊', '過': '過', '進': '進',
+    '還': '還', '郵': '郵', '錢': '錢', '鐘': '鐘', '針': '針',
+    '長': '長', '門': '門', '開': '開', '閉': '閉', '關': '關',
+    '間': '間', '聞': '聞', '問': '問', '門': '門', '簡': '簡',
+    '寫': '寫', '為': '為', '東': '東', '習': '習', '認': '認',
+    '論': '論', '說': '說', '這': '這', '遠': '遠', '雙': '雙',
+    '雖': '雖', '裡': '裏', '里': '裏', '面': '麵', '麵': '麵',
+    '點': '點', '帶': '帶', '當': '當', '總': '總', '幾': '幾',
+    '歲': '歲', '強': '強', '張': '張', '愛': '愛', '學': '學',
+    '幫': '幫', '應': '應', '樣': '樣', '個': '個', '們': '們',
+    '無': '無', '話': '話', '讓': '讓', '頭': '頭', '對': '對',
+    '幾': '幾', '機': '機', '業': '業', '萬': '萬', '與': '與',
+    '專': '專', '種': '種', '確': '確', '視': '視', '覺': '覺',
+    '難': '難', '體': '體', '藝': '藝', '術': '術', '語': '語',
+    '論': '論', '說': '說', '這': '這', '遠': '遠', '雙': '雙',
+    '雖': '雖', '裏': '裡', '點': '點', '帶': '帶', '當': '當',
+    '總': '總', '幾': '幾', '歲': '歲', '強': '強', '張': '張',
+    '愛': '愛', '學': '學', '幫': '幫', '應': '應', '樣': '樣',
+    '麼': '麼', '隻': '隻', '裡': '裡', '幹': '乾', '才': '纔',
+    '面': '麵', '后': '後', '发': '發', '国': '國', '系': '係',
+    '只': '隻', '见': '見', '个': '個', '这': '這', '们': '們',
+    '为': '為', '来': '來', '过': '過', '时': '時', '间': '間',
+    '里': '裡', '边': '邊', '风': '風', '飞': '飛', '马': '馬',
+    '丽': '麗', '黄': '黃', '党': '黨', '门': '門', '无': '無',
+    '话': '話', '让': '讓', '头': '頭', '对': '對', '几': '幾',
+    '机': '機', '业': '業', '万': '萬', '与': '與', '专': '專',
+    '种': '種', '确': '確', '视': '視', '觉': '覺', '难': '難',
+    '体': '體', '艺': '藝', '术': '術', '语': '語', '论': '論',
+    '说': '說', '远': '遠', '双': '雙', '虽': '雖', '带': '帶',
+    '当': '當', '总': '總', '岁': '歲', '强': '強', '张': '張',
+    '爱': '愛', '学': '學', '帮': '幫', '应': '應', '样': '樣',
+    '么': '麼', '只': '隻', '干': '乾', '才': '纔', '面': '麵',
+    '后': '後'
+};
+
+/**
+ * 簡易簡體中文到繁體中文的轉換函式
+ * @param {string} text 簡體中文文本
+ * @returns {string} 轉換後的繁體中文文本
+ */
+function toTraditionalChinese(text) {
+    let result = '';
+    for (const char of text) {
+        // 如果字元在對應表中，則替換；否則保持原樣
+        result += SIMPLIFIED_TO_TRADITIONAL[char] || char;
+    }
+    return result;
+}
+
 
 // ------------------------------------------
 // I. 每日語錄 API 擷取邏輯 (一言 API)
 // ------------------------------------------
 
 async function fetchQuote() {
-    // 查詢一句隨機語錄 (二次元, 小說, 動畫類)
     const url = 'https://v1.hitokoto.cn/?encode=json&charset=utf-8&select=hitokoto&c=a&c=d&c=e&c=f';
     try {
         const response = await fetch(url);
         const data = await response.json();
-        const from = data.from || '未知來源';
-        return `${data.hitokoto} — ${from}`;
+        
+        const simplifiedQuote = data.hitokoto || '讀萬卷書，行萬里路。';
+        const simplifiedFrom = data.from || '未知來源';
+        
+        // 【新增】執行簡體到繁體的轉換
+        const traditionalQuote = toTraditionalChinese(simplifiedQuote);
+        const traditionalFrom = toTraditionalChinese(simplifiedFrom);
+        
+        return `${traditionalQuote} — ${traditionalFrom}`;
+        
     } catch (error) {
         console.error("Quote Fetch Error:", error);
         return '今日一句：讀萬卷書，行萬里路。';
@@ -59,7 +134,7 @@ async function fetchQuote() {
 
 
 // ------------------------------------------
-// II. 天氣 API 擷取邏輯 (OpenWeatherMap 2.5 - 使用經緯度)
+// II. 天氣 API 擷取邏輯 (不變)
 // ------------------------------------------
 
 async function fetchWeatherForecast(lat, lon, cityName) {
@@ -106,15 +181,14 @@ async function fetchWeatherForecast(lat, lon, cityName) {
 }
 
 // ------------------------------------------
-// III. 渲染邏輯 (已修改：讀取宜忌和語錄數據)
+// III. 渲染邏輯 (不變)
 // ------------------------------------------
 
-function renderPageContent(date, weather, quote) { // 接收 quote 參數
+function renderPageContent(date, weather, quote) { 
     const dayNumber = date.getDate();
     const weekdayName = date.toLocaleString('zh-Hant', { weekday: 'long' });
     const month = date.getMonth() + 1;
     
-    // 獲取宜忌和農曆數據
     const dateKey = `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
     const yijiData = YIJIS[dateKey] || { 
         yi: '無', 
@@ -133,7 +207,7 @@ function renderPageContent(date, weather, quote) { // 接收 quote 參數
     // 2. 主體內容
     content += `<div style="height: calc(100% - 100px); padding: 10px 0; overflow: auto;">`; 
 
-    // 左側：農曆紅條 (使用動態農曆)
+    // 左側：農曆紅條
     content += `<div style="float: left; width: 80px; background-color: #cc0000; color: white; padding: 5px; font-size: 0.9em; text-align: center; margin-right: 10px;">
         ${yijiData.lunar}
     </div>`;
@@ -153,13 +227,12 @@ function renderPageContent(date, weather, quote) { // 接收 quote 參數
 
     content += `</div>`; // 主體內容結束
     
-    // 2.5 每日語錄 (新增區塊)
+    // 2.5 每日語錄
     content += `<div style="clear: both; margin-top: 10px; padding: 5px; border: 1px dashed #ccc; background-color: #f9f9f9; font-size: 0.75em; color: #555; height: 50px; overflow: hidden; display: flex; align-items: center; justify-content: center; text-align: center;">
         ${quote}
     </div>`;
 
-    // 3. 底部星期/宜忌 (使用動態宜忌)
-    // 調整定位，以便為語錄留出空間
+    // 3. 底部星期/宜忌
     content += `<div style="clear: both; border-top: 1px solid #eee; padding-top: 10px; text-align: center; position: absolute; bottom: 10px; width: 95%;">
         <div style="font-size: 1.5em; color: #333; margin-bottom: 5px;">${weekdayName}</div>
         <div>**宜：** ${yijiData.yi} | **忌：** ${yijiData.ji}</div>
@@ -171,25 +244,21 @@ function renderPageContent(date, weather, quote) { // 接收 quote 參數
 }
 
 // ------------------------------------------
-// IV. 應用程式啟動與事件處理
+// IV. 應用程式啟動與事件處理 (不變)
 // ------------------------------------------
 
-// 核心啟動和更新邏輯
 async function updateCalendar(lat, lon, cityName) {
     const today = new Date();
-    // 顯示載入狀態
     PAGE_CONTAINER.innerHTML = '<div style="text-align: center; margin-top: 150px; color: #666;">獲取 ' + cityName + ' 天氣與今日語錄中...</div>';
     
-    // 同時請求天氣和語錄
     const [weatherData, quoteData] = await Promise.all([
         fetchWeatherForecast(lat, lon, cityName),
-        fetchQuote()
+        fetchQuote() // 將獲取到的繁體語錄
     ]);
     
-    renderPageContent(today, weatherData, quoteData);
+    renderPageContent(today, weatherData, quoteData); // 傳遞給渲染函式
 }
 
-// 載入城市選單 (保持不變)
 function loadCitySelector() {
     TAIWAN_CITIES.forEach((city) => {
         const option = document.createElement('option');
