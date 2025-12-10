@@ -1,60 +1,72 @@
 const PAGE_CONTAINER = document.getElementById('calendar-page-container');
 
-// ⚠️ API 金鑰已植入：Dcd113bba5675965ccf9e60a7e6d06e5
+// ⚠️ API 金鑰保持不變 (Dcd113bba5675965ccf9e60a7e6d06e5)
 const API_KEY = 'Dcd113bba5675965ccf9e60a7e6d06e5'; 
 
-// 臺北市的經緯度
-const LATITUDE = 25.033;
-const LONGITUDE = 121.565;
+// 使用臺北市的城市 ID，這是免費 API 2.5 版本的標準查詢方式
+const CITY_ID = 1668341; // 臺北市的 OpenWeatherMap ID
 const LOCATION_DISPLAY_NAME = '臺北市'; 
 
 // ------------------------------------------
-// I. 天氣 API 擷取邏輯 (OpenWeatherMap)
+// I. 天氣 API 擷取邏輯 (OpenWeatherMap 2.5 免費版)
 // ------------------------------------------
 
 async function fetchWeatherForecast() {
     
-    // 使用 One Call API 3.0，查詢當前天氣
-    // &units=metric 確保溫度單位為攝氏度
-    // &lang=zh_tw 確保天氣描述為中文
-    const url = `https://api.openweathermap.org/data/3.0/onecall?lat=${LATITUDE}&lon=${LONGITUDE}&appid=${API_KEY}&units=metric&lang=zh_tw`;
+    // 使用 5 Day / 3 Hour Forecast API (免費版) 獲取未來幾日的溫度資訊
+    // 雖然是 5 天/3 小時，但我們可以從中提取今日的最高/最低溫
+    const forecast_url = `https://api.openweathermap.org/data/2.5/forecast?id=${CITY_ID}&appid=${API_KEY}&units=metric&lang=zh_tw`;
     
     try {
-        const response = await fetch(url);
+        const response = await fetch(forecast_url);
         const data = await response.json();
 
-        // 檢查 API 是否返回錯誤代碼
-        if (data.cod && data.cod != 200) {
-            console.error("OpenWeatherMap API Error:", data.message);
-            return { description: "API 查詢失敗: " + data.message, temperature: "??° ~ ??°", city: LOCATION_DISPLAY_NAME };
+        if (data.cod != 200) {
+            console.error("OpenWeatherMap 2.5 API 錯誤:", data.message);
+            // 如果連這個免費 API 都失敗，則可能是金鑰本身還未生效或網路連線問題
+            return { description: "API 查詢失敗 (請檢查金鑰狀態)", temperature: "??° ~ ??°", city: LOCATION_DISPLAY_NAME };
         }
 
-        const current = data.current;
-        const todayForecast = data.daily[0]; // 獲取今日預報
+        // 獲取當日天氣描述 (我們將使用第一個預報時段的描述)
+        const todayList = data.list[0];
+        const description = todayList.weather[0].description;
         
-        // 獲取今日的最高/最低溫
-        const tempMax = Math.round(todayForecast.temp.max);
-        const tempMin = Math.round(todayForecast.temp.min);
+        // 遍歷當日的所有預報時段 (每 3 小時一次) 來找到今日真正的最高和最低溫
+        const today = new Date().toDateString();
+        let maxT = -Infinity;
+        let minT = Infinity;
+
+        for (const item of data.list) {
+            const itemDate = new Date(item.dt_txt).toDateString();
+            
+            // 只有今天或剛過午夜的數據才納入計算
+            if (itemDate === today) {
+                maxT = Math.max(maxT, item.main.temp_max);
+                minT = Math.min(minT, item.main.temp_min);
+            }
+        }
+        
+        // 確保至少有一個數據點被處理
+        const tempMax = maxT === -Infinity ? '??' : Math.round(maxT);
+        const tempMin = minT === Infinity ? '??' : Math.round(minT);
         
         return {
-            description: current.weather[0].description,
+            description: description,
             temperature: `${tempMin}°C ~ ${tempMax}°C`,
             city: LOCATION_DISPLAY_NAME
         };
 
     } catch (error) {
-        // 這通常是網路連線錯誤，非 API 錯誤
         console.error("Fetch Error:", error);
         return { description: "網路連線錯誤", temperature: "??° ~ ??°", city: LOCATION_DISPLAY_NAME };
     }
 }
 
 // ------------------------------------------
-// II. 日期與內容渲染 (使用行內樣式)
+// II. 日期與內容渲染 (保持不變)
 // ------------------------------------------
 
 function renderPageContent(date, weather) {
-    // 設置日期為當日 (2025/12/10)
     const dayNumber = date.getDate();
     const weekdayName = date.toLocaleString('zh-Hant', { weekday: 'long' });
     const month = date.getMonth() + 1;
@@ -110,6 +122,9 @@ function renderPageContent(date, weather) {
 
 async function initApp() {
     const today = new Date();
+    // 渲染頁面時，先顯示 "載入中..." 讓使用者知道正在處理
+    PAGE_CONTAINER.innerHTML = '<div style="text-align: center; margin-top: 150px; color: #666;">獲取天氣中...</div>';
+    
     const weatherData = await fetchWeatherForecast();
     renderPageContent(today, weatherData);
 }
