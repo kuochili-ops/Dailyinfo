@@ -1,62 +1,63 @@
-const STACK_CONTAINER = document.getElementById('calendar-stack');
-const TEAR_BUTTON = document.getElementById('tear-button');
-const STORAGE_KEY = 'activeDate';
+const PAGE_CONTAINER = document.getElementById('calendar-page-container');
+const API_KEY = 'YOUR_CWA_API_KEY'; // ⚠️【重要】請替換為您從氣象署申請的 API 授權碼
+const LOCATION_NAME = '臺北市'; // 預設查詢地點
 
-// I. Local Storage 處理 (保持不變)
-function getInitialDate() {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    const now = new Date();
-    if (saved) {
-        try {
-            const dateObj = JSON.parse(saved);
-            return new Date(dateObj.year, dateObj.month, dateObj.day);
-        } catch (e) {
-            localStorage.removeItem(STORAGE_KEY);
-            return now;
-        }
+// ------------------------------------------
+// I. 天氣 API 擷取邏輯
+// ------------------------------------------
+
+async function fetchWeatherForecast() {
+    if (API_KEY === 'YOUR_CWA_API_KEY') {
+        return {
+            description: "請插入 API 金鑰",
+            temperature: "??° ~ ??°",
+            city: LOCATION_NAME
+        };
     }
-    return now;
+    
+    // 使用 F-C0032-001 (一般天氣預報-今明36小時天氣預報)
+    const url = `https://opendata.cwa.gov.tw/api/v1/rest/datastore/F-C0032-001?Authorization=${API_KEY}&format=JSON&locationName=${LOCATION_NAME}`;
+    
+    try {
+        const response = await fetch(url);
+        const data = await response.json();
+
+        if (data.success !== 'true') {
+            console.error("CWA API Error:", data.message);
+            return { description: "天氣資訊載入失敗", temperature: "", city: LOCATION_NAME };
+        }
+
+        const locationData = data.records.location[0];
+        const weatherElements = locationData.weatherElement;
+        
+        // 獲取今天的第一個預報時段
+        const targetTime = weatherElements.find(e => e.elementName === 'Wx').time[0];
+        const tempMax = weatherElements.find(e => e.elementName === 'MaxT').time[0].elementValue[0].value;
+        const tempMin = weatherElements.find(e => e.elementName === 'MinT').time[0].elementValue[0].value;
+        
+        return {
+            description: targetTime.elementValue[0].value,
+            temperature: `${tempMin}°C ~ ${tempMax}°C`,
+            city: locationData.locationName
+        };
+
+    } catch (error) {
+        console.error("Fetch Error:", error);
+        return { description: "網路連線錯誤", temperature: "", city: LOCATION_NAME };
+    }
 }
 
-function saveCurrentDate(date) {
-    const dateObj = {
-        year: date.getFullYear(),
-        month: date.getMonth(),
-        day: date.getDate()
-    };
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(dateObj));
-}
+// ------------------------------------------
+// II. 日期與內容渲染 (使用行內樣式)
+// ------------------------------------------
 
-
-// II. 日期邏輯與渲染 (簡化為 DIV + FLOAT)
-const LUNAR_DATES = {
-    "2025-12-10": "十月初十", "2025-12-11": "十月十一", "2025-12-12": "十月十二"
-};
-
-function formatDateKey(date) {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
-}
-
-function renderPageContent(element, date) {
+function renderPageContent(date, weather) {
     const dayNumber = date.getDate();
-    const dateKey = formatDateKey(date);
-    const lunarDate = LUNAR_DATES[dateKey] || "農曆資訊";
     const weekdayName = date.toLocaleString('zh-Hant', { weekday: 'long' });
-
-    // 設定日曆頁面的基礎行內樣式
-    element.className = 'calendar-page';
-    element.style.cssText = `
-        position: absolute; 
-        top: 0; left: 0; 
-        width: 100%; height: 100%; 
-        box-sizing: border-box; 
-        background-color: #fefdfb; 
-        box-shadow: 0 5px 10px rgba(0, 0, 0, 0.1); 
-        padding: 10px;
-    `;
+    const month = date.getMonth() + 1;
+    
+    // 模擬農曆和宜忌 (保持靜態)
+    const lunarDate = "十月二十八"; 
     
     // ----------------------------------------------------
     // 使用 DIV 和 FLOAT 實現簡單排版
@@ -71,7 +72,7 @@ function renderPageContent(element, date) {
     </div>`;
     
     // 2. 主體內容
-    content += `<div style="height: calc(100% - 100px); padding: 10px 0;">`; // 留空間給頂部和底部
+    content += `<div style="height: calc(100% - 100px); padding: 10px 0; overflow: auto;">`; 
 
     // 左側：農曆紅條 (僅能水平顯示)
     content += `<div style="float: left; width: 80px; background-color: #cc0000; color: white; padding: 5px; font-size: 0.9em; text-align: center; margin-right: 10px;">
@@ -83,14 +84,17 @@ function renderPageContent(element, date) {
         ${dayNumber}
     </div>`;
     
-    // 右側：小資訊
-    content += `<div style="float: left; padding: 5px; font-size: 0.8em;">
-        ${date.getMonth() + 1}月 NOV
+    // 右側：天氣資訊 (新功能)
+    content += `<div style="float: left; padding: 5px; font-size: 0.8em; text-align: left; border: 1px solid #eee; width: 80px;">
+        <div style="font-weight: bold;">${month}月 NOV</div>
+        <div style="margin-top: 10px; font-size: 1.1em; color: #333;">${weather.city}</div>
+        <div>${weather.description}</div>
+        <div style="font-weight: bold; color: #e60000;">${weather.temperature}</div>
     </div>`;
 
     content += `</div>`; // 主體內容結束
 
-    // 3. 底部星期/宜忌 (使用 CLEAR FIX 確保在底部)
+    // 3. 底部星期/宜忌
     content += `<div style="clear: both; border-top: 1px solid #eee; padding-top: 10px; text-align: center; position: absolute; bottom: 10px; width: 95%;">
         <div style="font-size: 1.5em; color: #333; margin-bottom: 5px;">${weekdayName}</div>
         <div>宜：嫁娶 | 忌：動土</div>
@@ -98,80 +102,26 @@ function renderPageContent(element, date) {
 
     content += `</div>`; 
     
-    element.innerHTML = content;
+    PAGE_CONTAINER.innerHTML = content;
 }
 
-// III. 堆疊與切換控制 (無動畫，純行內樣式)
-let currentDate = getInitialDate();
+// ------------------------------------------
+// III. 啟動應用程式
+// ------------------------------------------
 
-function renderInitialStack() {
-    STACK_CONTAINER.innerHTML = ''; 
+async function initApp() {
+    // 1. 獲取當前日期 (忽略 Local Storage)
+    const today = new Date();
     
-    // 1. 渲染下一張紙 (底層)
-    const tomorrow = new Date(currentDate);
-    tomorrow.setDate(tomorrow.getDate() + 1);
+    // 2. 獲取天氣資訊
+    const weatherData = await fetchWeatherForecast();
     
-    const nextPage = document.createElement('div');
-    renderPageContent(nextPage, tomorrow);
-    nextPage.classList.add('next-page'); 
-    
-    // 行內樣式實現堆疊錯開效果
-    nextPage.style.zIndex = 1; 
-    nextPage.style.transform = 'translate(1px, 1px)'; 
-    nextPage.style.opacity = 0.98;
-    
-    STACK_CONTAINER.appendChild(nextPage);
-
-    // 2. 渲染當前紙張 (頂層)
-    const currentPage = document.createElement('div');
-    renderPageContent(currentPage, currentDate);
-    currentPage.classList.add('current-page');
-    
-    // 行內樣式實現頂層效果
-    currentPage.style.zIndex = 2; 
-    
-    STACK_CONTAINER.appendChild(currentPage);
-    
-    saveCurrentDate(currentDate); 
+    // 3. 渲染頁面
+    renderPageContent(today, weatherData);
 }
 
-function handleTearSequence() {
-    const currentPage = document.querySelector('#calendar-stack .calendar-page.current-page');
-    
-    if (!currentPage) return;
-    
-    // 舊頁面即時消失 (無動畫)
-    currentPage.remove(); 
-    
-    // 更新日期狀態
-    currentDate.setDate(currentDate.getDate() + 1); 
-    saveCurrentDate(currentDate); 
+initApp();
 
-    // 渲染新的下一張紙
-    const newNextPage = document.createElement('div');
-    const dayAfterTomorrow = new Date(currentDate);
-    dayAfterTomorrow.setDate(dayAfterTomorrow.getDate() + 1);
-    renderPageContent(newNextPage, dayAfterTomorrow);
-    newNextPage.classList.add('next-page'); 
-    
-    newNextPage.style.zIndex = 1; 
-    newNextPage.style.transform = 'translate(1px, 1px)'; 
-    newNextPage.style.opacity = 0.98;
-
-    STACK_CONTAINER.appendChild(newNextPage);
-    
-    // 提升當前頁
-    const newCurrentPage = document.querySelector('#calendar-stack .calendar-page.next-page');
-    if (newCurrentPage) {
-         newCurrentPage.classList.remove('next-page');
-         newCurrentPage.classList.add('current-page');
-         
-         newCurrentPage.style.zIndex = 2; 
-         newCurrentPage.style.transform = ''; 
-         newCurrentPage.style.opacity = 1;
-    }
-}
-
-// IV. 啟動應用程式
-renderInitialStack();
-TEAR_BUTTON.addEventListener('click', handleTearSequence);
+// ------------------------------------------
+// 注意：所有關於 Local Storage 和撕紙的邏輯已移除。
+// ------------------------------------------
