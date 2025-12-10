@@ -9,59 +9,20 @@
   <script src="script.js" defer></script>
 </head>
 <body>
-  <div class="calendar">
-    <div class="header">
-      <div class="hole"></div>
-      <div class="title">萬事如意</div>
-    </div>
+  <h2>📅 今日日期</h2>
+  <div id="gregorian">載入中...</div>
+  <div id="lunar">載入中...</div>
 
-    <div class="calendar-body">
-      <div class="month-block">
-        <div class="year" id="year"></div>
-        <div class="month" id="month"></div>
-      </div>
-
-      <div class="date-block">
-        <div class="gregorian" id="gregorian"></div>
-        <div class="lunar" id="lunar"></div>
-        <div class="islamic" id="islamic"></div>
-      </div>
-
-      <div class="main-number">
-        <span class="digit" id="day"></span>
-        <span class="zodiac" id="zodiac"></span>
-      </div>
-
-      <div class="solar-term" id="solarTerm"></div>
-
-      <div class="yi-ji">
-        <div class="yi" id="yi"></div>
-        <div class="ji" id="ji"></div>
-      </div>
-
-      <div class="bottom-info">
-        <div class="sun">日出 06:38 · 日落 17:08</div>
-        <div class="weather" id="weatherInfo">載入中...</div>
-        <div class="clock" id="clock"></div>
-        <div class="city-select">
-          <label for="city">選擇縣市：</label>
-          <select id="city">
-            <option value="臺北市" selected>臺北市</option>
-            <option value="新北市">新北市</option>
-            <option value="桃園市">桃園市</option>
-            <option value="臺中市">臺中市</option>
-            <option value="臺南市">臺南市</option>
-            <option value="高雄市">高雄市</option>
-            <option value="花蓮縣">花蓮縣</option>
-            <option value="臺東縣">臺東縣</option>
-          </select>
-        </div>
-      </div>
-    </div>
-
-    <div class="notes">
-      <div class="notes-title">記事欄</div>
-    </div>
-  </div>
+  <h2>🌤 天氣預報</h2>
+  <label for="city">選擇縣市：</label>
+  <select id="city">
+    <option value="臺北市" selected>臺北市</option>
+    <option value="新北市">新北市</option>
+    <option value="桃園市">桃園市</option>
+    <option value="臺中市">臺中市</option>
+    <option value="高雄市">高雄市</option>
+  </select>
+  <button onclick="fetchWeather()">更新天氣</button>
+  <div id="weatherInfo">載入中...</div>
 </body>
 </html>
