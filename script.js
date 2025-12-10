@@ -1,5 +1,5 @@
 const PAGE_CONTAINER = document.getElementById('calendar-page-container');
-const API_KEY = 'CWA-A6F3874E-27F3-4AA3-AF5A-96B365798F79'; // ⚠️【重要】請替換為您從氣象署申請的 API 授權碼
+const API_KEY = 'CWA-A6F3874E-27F3-4AA3-AF5A-96B365798F79'; // <--- 已使用您提供的金鑰
 const LOCATION_NAME = '臺北市'; // 預設查詢地點
 
 // ------------------------------------------
@@ -7,13 +7,6 @@ const LOCATION_NAME = '臺北市'; // 預設查詢地點
 // ------------------------------------------
 
 async function fetchWeatherForecast() {
-    if (API_KEY === 'CWA-A6F3874E-27F3-4AA3-AF5A-96B365798F79') {
-        return {
-            description: "請插入 API 金鑰",
-            temperature: "??° ~ ??°",
-            city: LOCATION_NAME
-        };
-    }
     
     // 使用 F-C0032-001 (一般天氣預報-今明36小時天氣預報)
     const url = `https://opendata.cwa.gov.tw/api/v1/rest/datastore/F-C0032-001?Authorization=${API_KEY}&format=JSON&locationName=${LOCATION_NAME}`;
@@ -24,7 +17,7 @@ async function fetchWeatherForecast() {
 
         if (data.success !== 'true') {
             console.error("CWA API Error:", data.message);
-            return { description: "天氣資訊載入失敗", temperature: "", city: LOCATION_NAME };
+            return { description: "天氣資訊載入失敗 (" + data.message + ")", temperature: "??° ~ ??°", city: LOCATION_NAME };
         }
 
         const locationData = data.records.location[0];
@@ -43,7 +36,7 @@ async function fetchWeatherForecast() {
 
     } catch (error) {
         console.error("Fetch Error:", error);
-        return { description: "網路連線錯誤", temperature: "", city: LOCATION_NAME };
+        return { description: "網路連線錯誤", temperature: "??° ~ ??°", city: LOCATION_NAME };
     }
 }
 
@@ -59,13 +52,9 @@ function renderPageContent(date, weather) {
     // 模擬農曆和宜忌 (保持靜態)
     const lunarDate = "十月二十八"; 
     
-    // ----------------------------------------------------
-    // 使用 DIV 和 FLOAT 實現簡單排版
-    // ----------------------------------------------------
-    
     let content = '<div style="height: 100%;">';
 
-    // 1. 頂部資訊 (使用 FLOAT 分左右)
+    // 1. 頂部資訊
     content += `<div style="overflow: auto; border-bottom: 1px solid #eee; padding-bottom: 5px;">
         <span style="float: left; font-size: 0.8em;">114年 兔年</span>
         <span style="float: right; font-size: 0.8em;">${date.getFullYear()}</span>
@@ -84,7 +73,7 @@ function renderPageContent(date, weather) {
         ${dayNumber}
     </div>`;
     
-    // 右側：天氣資訊 (新功能)
+    // 右側：天氣資訊
     content += `<div style="float: left; padding: 5px; font-size: 0.8em; text-align: left; border: 1px solid #eee; width: 80px;">
         <div style="font-weight: bold;">${month}月 NOV</div>
         <div style="margin-top: 10px; font-size: 1.1em; color: #333;">${weather.city}</div>
@@ -110,7 +99,7 @@ function renderPageContent(date, weather) {
 // ------------------------------------------
 
 async function initApp() {
-    // 1. 獲取當前日期 (忽略 Local Storage)
+    // 1. 獲取當前日期
     const today = new Date();
     
     // 2. 獲取天氣資訊
@@ -121,7 +110,3 @@ async function initApp() {
 }
 
 initApp();
-
-// ------------------------------------------
-// 注意：所有關於 Local Storage 和撕紙的邏輯已移除。
-// ------------------------------------------
