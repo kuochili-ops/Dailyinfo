@@ -3,20 +3,30 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>仿手撕日曆</title>
+    <title>仿傳統直式日曆</title>
     <link rel="stylesheet" href="styles.css"> 
 </head>
 <body>
 
     <div class="app-container">
-        <h1>我的手撕日曆</h1>
+        
+        <div class="calendar-fixed-header">
+            <div class="header-banner">
+                萬事如意
+                <span class="small-text">廣告位</span>
+            </div>
+        </div>
         
         <div class="calendar-stack">
             </div>
 
-        <button id="tear-button">撕下一頁 →</button>
+        <div class="calendar-fixed-footer">
+            <div class="ad-area">
+                廣告範圍 | 268 X 129mm
+            </div>
+            <button id="tear-button">撕下一頁 →</button>
+        </div>
         
-        <p class="info">點擊「撕下一頁」來翻閱，您的進度將會自動儲存。</p>
     </div>
 
     <script src="script.js"></script>
