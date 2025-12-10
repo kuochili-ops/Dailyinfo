@@ -7,7 +7,7 @@ const LOCATION_NAME = '臺北市'; // 預設查詢地點
 // ------------------------------------------
 
 async function fetchWeatherForecast() {
-    if (API_KEY === 'YOUR_CWA_API_KEY') {
+    if (API_KEY === 'CWA-A6F3874E-27F3-4AA3-AF5A-96B365798F79') {
         return {
             description: "請插入 API 金鑰",
             temperature: "??° ~ ??°",
