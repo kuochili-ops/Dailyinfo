@@ -1,7 +1,7 @@
 // ====================================================================
 // 專案名稱：極簡日曆儀表板
 // 功能：顯示天氣、農民曆宜忌、每日語錄，並支持城市切換
-// 特點：農曆三行垂直顯示；農曆紅條寬度貼合內容；移除中間灰色廣告區塊；保留每日英文語錄。
+// 特點：重新加入每日英文語錄；農曆三行垂直顯示；農曆紅條寬度貼合內容；移除所有不需要的廣告區塊。
 // ====================================================================
 
 const PAGE_CONTAINER = document.getElementById('calendar-page-container');
@@ -46,7 +46,7 @@ const YIJIS = {
 };
 
 // ------------------------------------------
-// I. 每日語錄 API 擷取邏輯 (保留)
+// I. 每日語錄 API 擷取邏輯 (確保保留)
 // ------------------------------------------
 
 async function fetchQuote() {
@@ -208,8 +208,8 @@ function renderPageContent(date, weather, quote) {
         </div>
     </div>`;
     
-    // 5. 每日語錄 (保留英文一句, 緊接在宜忌之後)
-    // 這是您希望保留的英文語錄區塊
+    // 【修正：重新加入每日語錄】
+    // 5. 每日語錄 
     content += `<div style="margin-top: 15px; padding: 5px 10px; border: 1px dashed #ccc; background-color: #f9f9f9; font-size: 0.8em; color: #555; height: 60px; overflow: hidden; display: flex; align-items: center; justify-content: center; text-align: center;">
         ${quote}
     </div>`;
