@@ -19,26 +19,9 @@ const TAIWAN_CITIES = [
     { name: '臺東縣', lat: 22.7505, lon: 121.1518 }  
 ];
 
-// 手動維護的宜忌和農曆清單 (不變)
-const YIJIS = {
-    '2025-12-11': { 
-        yi: '祭祀, 納財, 開市', 
-        ji: '動土, 安床, 移徙', 
-        lunar: '農曆十一月 廿一' 
-    },
-    '2025-12-12': { 
-        yi: '嫁娶, 訂盟, 祈福', 
-        ji: '入宅, 安門, 蓋屋', 
-        lunar: '農曆十一月 廿二' 
-    },
-    '2025-12-13': { 
-        yi: '出行, 簽約, 求醫', 
-        ji: '破土, 交易, 納畜', 
-        lunar: '農曆十一月 廿三' 
-    },
-};
+// **【移除】靜態 YIJIS 清單**
 
-// 【新增】簡體字到繁體字的基礎對應表
+// 【重新新增】簡體字到繁體字的基礎對應表
 const SIMPLIFIED_TO_TRADITIONAL = {
     '个': '個', '们': '們', '与': '與', '乐': '樂', '书': '書', 
     '买': '買', '丽': '麗', '产': '產', '亲': '親', '亿': '億',
@@ -87,7 +70,7 @@ const SIMPLIFIED_TO_TRADITIONAL = {
     '体': '體', '艺': '藝', '术': '術', '语': '語', '论': '論',
     '说': '說', '远': '遠', '双': '雙', '虽': '雖', '带': '帶',
     '当': '當', '总': '總', '岁': '歲', '强': '強', '张': '張',
-    '爱': '愛', '学': '學', '帮': '幫', '应': '應', '样': '樣',
+    '爱': '愛', '学': '學', '幫': '幫', '应': '應', '样': '樣',
     '么': '麼', '只': '隻', '干': '乾', '才': '纔', '面': '麵',
     '后': '後'
 };
@@ -98,6 +81,7 @@ const SIMPLIFIED_TO_TRADITIONAL = {
  * @returns {string} 轉換後的繁體中文文本
  */
 function toTraditionalChinese(text) {
+    if (!text) return '';
     let result = '';
     for (const char of text) {
         // 如果字元在對應表中，則替換；否則保持原樣
@@ -108,33 +92,80 @@ function toTraditionalChinese(text) {
 
 
 // ------------------------------------------
-// I. 每日語錄 API 擷取邏輯 (一言 API)
+// I. 農民曆 API 擷取邏輯 (動態宜忌)
 // ------------------------------------------
 
-async function fetchQuote() {
-    const url = 'https://v1.hitokoto.cn/?encode=json&charset=utf-8&select=hitokoto&c=a&c=d&c=e&c=f';
+async function fetchAlmanac(date) {
+    const formattedDate = date.toISOString().split('T')[0]; // 格式化為 YYYY-MM-DD
+    // 使用不需要 Key 的開放 API 接口
+    const url = `https://api.tiax.cn/almanac/?date=${formattedDate}`; 
+    
     try {
         const response = await fetch(url);
-        const data = await response.json();
+        const data = await response.json(); 
         
-        const simplifiedQuote = data.hitokoto || '讀萬卷書，行萬里路。';
-        const simplifiedFrom = data.from || '未知來源';
+        // 假設 API 成功時返回 {code: 200, data: {...}}
+        if (data.code !== 200 || !data.data) {
+            console.error("Almanac API 錯誤:", data.msg || '未知錯誤');
+            throw new Error("API 查詢失敗");
+        }
         
-        // 【新增】執行簡體到繁體的轉換
-        const traditionalQuote = toTraditionalChinese(simplifiedQuote);
-        const traditionalFrom = toTraditionalChinese(simplifiedFrom);
+        const almanac = data.data;
         
-        return `${traditionalQuote} — ${traditionalFrom}`;
+        // 假設 API 返回 lunar/yi/ji (簡體中文)
+        const lunar = almanac.lunar || '農曆日期未知';
+        const yi = almanac.yi || '查無資訊';
+        const ji = almanac.ji || '查無資訊';
         
+        // 執行簡繁轉換
+        return {
+            lunar: toTraditionalChinese(lunar),
+            yi: toTraditionalChinese(yi.split(',').join(' | ')), // 轉換並將逗號換成 |
+            ji: toTraditionalChinese(ji.split(',').join(' | '))  // 轉換並將逗號換成 |
+        };
+
     } catch (error) {
-        console.error("Quote Fetch Error:", error);
-        return '今日一句：讀萬卷書，行萬里路。';
+        console.error("Fetch Almanac Error:", error);
+        return { 
+            lunar: '農曆載入失敗', 
+            yi: '宜：請自行查詢', 
+            ji: '忌：請自行查詢' 
+        };
     }
 }
 
 
 // ------------------------------------------
-// II. 天氣 API 擷取邏輯 (不變)
+// II. 每日語錄 API 擷取邏輯 (英文語錄 API)
+// ------------------------------------------
+
+async function fetchQuote() {
+    const url = 'https://type.fit/api/quotes';
+    try {
+        const response = await fetch(url);
+        const data = await response.json(); 
+
+        if (!data || data.length === 0) {
+            throw new Error("API 未返回語錄");
+        }
+        
+        const randomIndex = Math.floor(Math.random() * data.length);
+        const randomQuote = data[randomIndex];
+        
+        const quoteText = randomQuote.text;
+        const author = randomQuote.author || 'Unknown';
+        
+        return `${quoteText} — ${author}`;
+        
+    } catch (error) {
+        console.error("Quote Fetch Error:", error);
+        return 'Daily Quote: Error fetching quote from API. (Quotes are in English)';
+    }
+}
+
+
+// ------------------------------------------
+// III. 天氣 API 擷取邏輯 (不變)
 // ------------------------------------------
 
 async function fetchWeatherForecast(lat, lon, cityName) {
@@ -145,7 +176,6 @@ async function fetchWeatherForecast(lat, lon, cityName) {
         const data = await response.json();
 
         if (data.cod != 200) {
-            console.error("OpenWeatherMap 2.5 API 錯誤:", data.message);
             return { description: "API 查詢失敗", temperature: "??° ~ ??°", city: cityName };
         }
 
@@ -158,7 +188,6 @@ async function fetchWeatherForecast(lat, lon, cityName) {
 
         for (const item of data.list) {
             const itemDate = new Date(item.dt_txt).toDateString();
-            
             if (itemDate === today) {
                 maxT = Math.max(maxT, item.main.temp_max);
                 minT = Math.min(minT, item.main.temp_min);
@@ -175,26 +204,18 @@ async function fetchWeatherForecast(lat, lon, cityName) {
         };
 
     } catch (error) {
-        console.error("Fetch Error:", error);
         return { description: "網路連線錯誤", temperature: "??° ~ ??°", city: cityName };
     }
 }
 
 // ------------------------------------------
-// III. 渲染邏輯 (不變)
+// IV. 渲染邏輯 (已修改：使用動態宜忌數據)
 // ------------------------------------------
 
-function renderPageContent(date, weather, quote) { 
+function renderPageContent(date, weather, quote, yijiData) { // 接收 yijiData 參數
     const dayNumber = date.getDate();
     const weekdayName = date.toLocaleString('zh-Hant', { weekday: 'long' });
     const month = date.getMonth() + 1;
-    
-    const dateKey = `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
-    const yijiData = YIJIS[dateKey] || { 
-        yi: '無', 
-        ji: '無', 
-        lunar: '農曆資訊不足' 
-    };
     
     let content = '<div style="height: 100%;">';
 
@@ -207,7 +228,7 @@ function renderPageContent(date, weather, quote) {
     // 2. 主體內容
     content += `<div style="height: calc(100% - 100px); padding: 10px 0; overflow: auto;">`; 
 
-    // 左側：農曆紅條
+    // 左側：農曆紅條 (使用動態農曆)
     content += `<div style="float: left; width: 80px; background-color: #cc0000; color: white; padding: 5px; font-size: 0.9em; text-align: center; margin-right: 10px;">
         ${yijiData.lunar}
     </div>`;
@@ -232,7 +253,7 @@ function renderPageContent(date, weather, quote) {
         ${quote}
     </div>`;
 
-    // 3. 底部星期/宜忌
+    // 3. 底部星期/宜忌 (使用動態宜忌)
     content += `<div style="clear: both; border-top: 1px solid #eee; padding-top: 10px; text-align: center; position: absolute; bottom: 10px; width: 95%;">
         <div style="font-size: 1.5em; color: #333; margin-bottom: 5px;">${weekdayName}</div>
         <div>**宜：** ${yijiData.yi} | **忌：** ${yijiData.ji}</div>
@@ -244,19 +265,21 @@ function renderPageContent(date, weather, quote) {
 }
 
 // ------------------------------------------
-// IV. 應用程式啟動與事件處理 (不變)
+// V. 應用程式啟動與事件處理
 // ------------------------------------------
 
 async function updateCalendar(lat, lon, cityName) {
     const today = new Date();
-    PAGE_CONTAINER.innerHTML = '<div style="text-align: center; margin-top: 150px; color: #666;">獲取 ' + cityName + ' 天氣與今日語錄中...</div>';
+    PAGE_CONTAINER.innerHTML = '<div style="text-align: center; margin-top: 150px; color: #666;">獲取 ' + cityName + ' 天氣、今日語錄與農民曆資訊中...</div>';
     
-    const [weatherData, quoteData] = await Promise.all([
+    // 同時請求三個 API
+    const [weatherData, quoteData, yijiData] = await Promise.all([
         fetchWeatherForecast(lat, lon, cityName),
-        fetchQuote() // 將獲取到的繁體語錄
+        fetchQuote(),
+        fetchAlmanac(today) // 新增農民曆 API 呼叫
     ]);
     
-    renderPageContent(today, weatherData, quoteData); // 傳遞給渲染函式
+    renderPageContent(today, weatherData, quoteData, yijiData);
 }
 
 function loadCitySelector() {
