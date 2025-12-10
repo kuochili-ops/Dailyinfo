@@ -1,147 +1,119 @@
+/* --- A. 基礎樣式 --- */
 body {
-  margin: 0;
-  font-family: "標楷體", "Noto Serif TC", serif;
-  background: #fefef8;
+    font-family: 'Arial', sans-serif;
+    background-color: #f0f0f0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    min-height: 100vh;
+    margin: 0;
+    padding: 20px;
 }
 
-.calendar {
-  display: flex;
-  flex-direction: column;
-  height: 100vh;
+.app-container {
+    text-align: center;
+    max-width: 400px;
+    width: 100%;
+    /* 輕微投影，模擬底座 */
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.1); 
+    padding: 20px;
+    background-color: #fff;
+    border-radius: 8px;
 }
 
-.header {
-  background: #b71c1c;
-  color: gold;
-  text-align: center;
-  padding: 2vw 0;
-  position: relative;
+.calendar-stack {
+    position: relative;
+    width: 300px;
+    height: 400px;
+    margin: 30px auto;
 }
 
-.hole {
-  width: 3vw;
-  height: 3vw;
-  background: #900;
-  border-radius: 50%;
-  position: absolute;
-  top: 1vw;
-  left: 50%;
-  transform: translateX(-50%);
+/* --- B. 紙張立體感與堆疊 --- */
+.calendar-page {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    padding: 20px;
+    box-sizing: border-box;
+    border-radius: 4px;
+    
+    /* 紋理和顏色 (假設您有 paper-texture.jpg 檔案) */
+    background-color: #fefdfb; /* 略帶米白的顏色 */
+    /* 如果沒有圖片，請註解下一行 */
+    /* background-image: url('paper-texture.jpg'); 
+    background-repeat: repeat; */
+    
+    /* 關鍵：立體陰影 */
+    box-shadow: 
+        0 8px 15px rgba(0, 0, 0, 0.2), /* 較大的投影 */
+        0 4px 5px rgba(0, 0, 0, 0.1);  /* 較銳利的投影 */
+        
+    /* 動畫過渡 */
+    transition: transform 0.6s ease-in-out, opacity 0.6s ease-in-out;
 }
 
-.title {
-  font-size: 6vw;
-  font-weight: bold;
-  letter-spacing: 1vw;
+/* 堆疊錯開效果 */
+.calendar-page.next-page {
+    z-index: 1; /* 比當前頁低 */
+    transform: translate(3px, 3px) rotate(1deg);
+    opacity: 0.95;
 }
 
-.calendar-body {
-  flex: 2;
-  padding: 3vw;
-  overflow-y: auto;
+.calendar-page.current-page {
+    z-index: 2; /* 在最上面 */
+    transform: rotate(-1deg);
 }
 
-.month-block {
-  text-align: center;
-  margin: 2vw 0;
+/* --- C. 撕紙動畫狀態 --- */
+.calendar-page.is-torn {
+    z-index: 100;
+    opacity: 0; 
+    /* 飛走並旋轉 */
+    transform: translate(350px, 450px) rotate(45deg) scale(0.4); 
 }
 
-.year {
-  font-size: 4vw;
-  color: #444;
+/* --- D. 內容與特殊日期樣式 --- */
+.day-display {
+    text-align: center;
+    margin-top: 30px;
+}
+.day-number {
+    font-size: 8em;
+    line-height: 1em;
+    color: #333;
+    display: block;
+}
+.month-year {
+    font-size: 1.5em;
+    color: #888;
+    margin-top: -10px;
+    margin-bottom: 20px;
+}
+.holiday {
+    color: red;
+    font-weight: bold;
+    border-bottom: 3px solid red;
+    display: inline-block;
+    padding: 0 5px;
+}
+.weekend {
+    color: #cc5500;
 }
 
-.month {
-  font-size: 5vw;
-  font-weight: bold;
-  color: #2e7d32;
+button#tear-button {
+    padding: 10px 20px;
+    font-size: 1em;
+    cursor: pointer;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    margin-top: 20px;
+    transition: background-color 0.3s;
 }
-
-.date-block {
-  text-align: center;
-  font-size: 3.5vw;
-  line-height: 1.6;
-  margin-bottom: 2vw;
-}
-
-.main-number {
-  text-align: center;
-  font-size: 15vw;
-  font-weight: bold;
-  color: #2e7d32;
-  position: relative;
-  line-height: 1;
-}
-
-.zodiac {
-  font-size: 5vw;
-  color: #d32f2f;
-  position: absolute;
-  top: 1vw;
-  right: 5vw;
-}
-
-.solar-term {
-  text-align: center;
-  font-size: 4vw;
-  color: #d32f2f;
-  margin: 2vw 0;
-}
-
-.yi-ji {
-  font-size: 3.5vw;
-  text-align: center;
-  line-height: 1.6;
-  margin-bottom: 2vw;
-}
-
-.yi { color: #d32f2f; }
-.ji { color: #000; }
-
-.bottom-info {
-  font-size: 3.5vw;
-  text-align: center;
-  line-height: 1.6;
-  color: #444;
-}
-
-.clock {
-  font-size: 4vw;
-  font-weight: bold;
-  margin-top: 2vw;
-}
-
-.city-select {
-  margin-top: 2vw;
-  font-size: 3.5vw;
-}
-
-.notes {
-  flex: 1;
-  background: #f9f9f9;
-  border-top: 1vw solid #b71c1c;
-  padding-top: 2vw;
-  text-align: center;
-}
-
-.notes-title {
-  font-size: 4vw;
-  font-weight: bold;
-  color: #b71c1c;
-}
-
-.reminder {
-  margin-top: 2vw;
-}
-
-.reminder-title {
-  font-size: 4vw;
-  font-weight: bold;
-  color: #d32f2f;
-}
-
-.reminder-text {
-  font-size: 3.5vw;
-  color: #333;
-  line-height: 1.6;
+button#tear-button:hover {
+    background-color: #0056b3;
 }
