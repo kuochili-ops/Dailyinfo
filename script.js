@@ -1,5 +1,5 @@
 const PAGE_CONTAINER = document.getElementById('calendar-page-container');
-const API_KEY = 'YOUR_CWA_API_KEY'; // ⚠️【重要】請替換為您從氣象署申請的 API 授權碼
+const API_KEY = 'CWA-A6F3874E-27F3-4AA3-AF5A-96B365798F79'; // ⚠️【重要】請替換為您從氣象署申請的 API 授權碼
 const LOCATION_NAME = '臺北市'; // 預設查詢地點
 
 // ------------------------------------------
