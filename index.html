@@ -1,28 +1,24 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
-  <meta charset="UTF-8">
-  <title>紅頭撕頁農民曆</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="style.css">
-  <script src="https://cdn.jsdelivr.net/npm/solarlunar/solarlunar.min.js"></script>
-  <script src="script.js" defer></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>仿手撕日曆</title>
+    <link rel="stylesheet" href="styles.css"> 
 </head>
 <body>
-  <h2>📅 今日日期</h2>
-  <div id="gregorian">載入中...</div>
-  <div id="lunar">載入中...</div>
 
-  <h2>🌤 天氣預報</h2>
-  <label for="city">選擇縣市：</label>
-  <select id="city">
-    <option value="臺北市" selected>臺北市</option>
-    <option value="新北市">新北市</option>
-    <option value="桃園市">桃園市</option>
-    <option value="臺中市">臺中市</option>
-    <option value="高雄市">高雄市</option>
-  </select>
-  <button onclick="fetchWeather()">更新天氣</button>
-  <div id="weatherInfo">載入中...</div>
+    <div class="app-container">
+        <h1>我的手撕日曆</h1>
+        
+        <div class="calendar-stack">
+            </div>
+
+        <button id="tear-button">撕下一頁 →</button>
+        
+        <p class="info">點擊「撕下一頁」來翻閱，您的進度將會自動儲存。</p>
+    </div>
+
+    <script src="script.js"></script>
 </body>
 </html>
