@@ -3,7 +3,7 @@
 // 功能：顯示天氣、農民曆、每日語錄(或時鐘)，並支持城市切換
 // 特點：
 // 1. 已移除最頂部紅色區塊。
-// 2. ✨ 調整：小月曆已整合至月份下方，並縮小面積。
+// 2. ✨ 調整：小月曆已縮到最小，並移動至「星期」下方靠右位置。
 // ====================================================================
 
 const PAGE_CONTAINER = document.getElementById('calendar-page-container');
@@ -124,7 +124,7 @@ function startClock() {
 }
 
 // ------------------------------------------
-// V. 新增：生成小月曆函式 (已縮小)
+// V. 新增：生成小月曆函式 (最小化)
 // ------------------------------------------
 function generateMiniCalendar(date) {
     const year = date.getFullYear();
@@ -138,12 +138,12 @@ function generateMiniCalendar(date) {
     
     let html = '';
 
-    // 【修改點 1】：將 font-size 從 0.7em 縮小到 0.6em
-    html += `<table style="width: 100%; border-collapse: collapse; font-size: 0.4em; text-align: center; border: 1px solid #eee;">`;
+    // 【最小化調整 1】：font-size 調整為 0.5em
+    html += `<table style="width: 100%; border-collapse: collapse; font-size: 0.5em; text-align: center; border: 1px solid #eee;">`;
     html += `<thead style="background-color: #f7f7f7;"><tr>`;
     weekdays.forEach(day => {
         const color = day === '日' ? '#cc0000' : '#333';
-        // 【修改點 2】：將 padding 從 2px 0 縮小到 1px 0
+        // 【最小化調整 2】：padding 調整為 0px 0
         html += `<th style="padding: 0px 0; color: ${color}; font-weight: normal;">${day}</th>`;
     });
     html += `</tr></thead><tbody><tr>`;
@@ -152,8 +152,8 @@ function generateMiniCalendar(date) {
 
     // 1. 插入開頭的空白單元格 (Placeholder)
     for (let i = 0; i < firstDayOfWeek; i++) {
-        // 【修改點 3】：將 padding 從 2px 縮小到 1px
-        html += `<td style="padding: 1px;"></td>`;
+        // 【最小化調整 3】：padding 調整為 0px
+        html += `<td style="padding: 0px;"></td>`;
         cellCount++;
     }
 
@@ -168,14 +168,14 @@ function generateMiniCalendar(date) {
             ? `background-color: #004d99; color: white; border-radius: 3px; font-weight: bold;` 
             : `color: #333;`;
         
-        // 【修改點 4】：將 padding 從 2px 縮小到 1px
-        html += `<td style="padding: 1px; ${style}">${day}</td>`;
+        // 【最小化調整 4】：padding 調整為 0px
+        html += `<td style="padding: 0px; ${style}">${day}</td>`;
         cellCount++;
     }
 
     // 3. 填入結尾的空白單元格
     while (cellCount % 7 !== 0) {
-        html += `<td style="padding: 1px;"></td>`;
+        html += `<td style="padding: 0px;"></td>`;
         cellCount++;
     }
 
@@ -184,7 +184,7 @@ function generateMiniCalendar(date) {
 }
 
 // ------------------------------------------
-// VI. 渲染邏輯 (不變)
+// VI. 渲染邏輯 (已將小月曆移至星期下方靠右)
 // ------------------------------------------
 function renderPageContent(date, weather, quote) { 
     const dayNumber = date.getDate();
@@ -202,15 +202,15 @@ function renderPageContent(date, weather, quote) {
     
     let content = `<div style="height: 100%; position: relative; padding-bottom: ${AD_HEIGHT_PX + 20}px; max-width: 400px; margin: 0 auto; box-sizing: border-box;">`;
 
-    // 1. 頂部資訊 (年號，已還原為獨立區塊)
+    // 1. 頂部資訊 (年號)
     content += `<div style="overflow: auto; border-bottom: 1px solid #eee; padding-bottom: 5px; margin-top: 10px;">
         <span style="float: left; font-size: 0.8em;">${date.getFullYear() - 1911}年 歲次${typeof Solar !== 'undefined' ? Solar.fromDate(date).getLunar().getYearInGanZhi() : ''}</span>
         <span style="float: right; font-size: 0.8em;">${date.getFullYear()}</span>
     </div>`;
     
-    // 2. 主體內容：[農曆(左) --- 大日期(置中) --- 月份/小月曆(右)]
-    // 讓高度足以容納小月曆
-    content += `<div style="position: relative; height: 230px; margin-top: 15px; display: flex; align-items: flex-start; justify-content: center;">`; 
+    // 2. 主體內容：[農曆(左) --- 大日期(置中) --- 月份(右)]
+    // 高度已調整，以容納主體元素即可
+    content += `<div style="position: relative; height: 120px; margin-top: 15px; display: flex; align-items: flex-start; justify-content: center;">`; 
 
     // (A) 左側：農曆紅條 (不變)
     content += `<div style="position: absolute; left: 0; background-color: #cc0000; color: white; padding: 5px; font-size: 1.1em; text-align: center; box-shadow: 2px 2px 5px rgba(0,0,0,0.1); line-height: 1.2;">
@@ -224,29 +224,32 @@ function renderPageContent(date, weather, quote) {
         </div>
     </div>`;
 
-    // (C) 右側：月份 + 小月曆 (整合區塊)
+    // (C) 右側：月份 (小月曆已移除)
     content += `<div style="position: absolute; right: 0; text-align: right; line-height: 1.1; width: 160px;">
         <div style="font-size: 2.5em; font-weight: bold; color: #cc0000;">${monthShort}</div>
         
         <span style="display: block; transform: scale(2, 1.5); transform-origin: right top; margin-top: 5px;">
             <div style="font-size: 1.2em; font-weight: bold; color: #333;">${month}月</div>
         </span>
-        
-        <div style="margin-top: 15px;"> 
-            ${generateMiniCalendar(date)}
-        </div>
     </div>`;
 
     content += `</div>`; 
     
-    // 3. 星期 (不變)
-    content += `<div style="clear: both; margin-top: 10px; text-align: center;">
-        <div style="font-size: 1.5em; font-weight: bold; color: #333; margin-bottom: 15px;">
+    // 3. 星期 
+    content += `<div style="clear: both; margin-top: 10px; text-align: center; margin-bottom: 5px;">
+        <div style="font-size: 1.5em; font-weight: bold; color: #333; margin-bottom: 5px;">
             ${weekdayName}
         </div>
     </div>`;
     
-    // 4. 宜/忌 (不變)
+    // 3.5. 新增區塊：小月曆 (在星期下方，靠右)
+    content += `<div style="text-align: right; margin-right: 5px; margin-bottom: 10px;">
+        <div style="width: 160px; display: inline-block;">
+            ${generateMiniCalendar(date)}
+        </div>
+    </div>`;
+
+    // 4. 宜/忌 
     content += `<div style="margin: 0 5px; padding: 15px 0; text-align: center; border-top: 1px dashed #ccc; border-bottom: 1px dashed #ccc;">
         <div style="display: flex; justify-content: space-around; text-align: center; font-size: 1.1em; line-height: 1.6;">
             <div style="width: 48%; border-right: 1px solid #eee;">
