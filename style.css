@@ -1,1 +1,295 @@
+/* ====================================================================
+   style.css - 極簡日曆儀表板樣式表
+   ==================================================================== */
+
+/* 基礎佈局與卡片 */
+body {
+    font-family: 'Helvetica Neue', Helvetica, Arial, '微軟正黑體', sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f0f0f0;
+    color: #333;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    min-height: 100vh;
+}
+.calendar-card {
+    width: 100%;
+    max-width: 400px;
+    background-color: white;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    margin: 10px 0;
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+/* 頂部標題 */
+.header-top {
+    background-color: #cc0000;
+    color: white;
+    padding: 10px 0;
+    text-align: center;
+}
+.header-title { font-size: 1.5em; font-weight: bold; margin: 0; }
+.header-ad-tag { font-size: 0.7em; opacity: 0.8; }
+
+/* 城市選擇器 */
+.city-selection-container {
+    padding: 10px;
+    background-color: #f7f7f7;
+    border-bottom: 1px solid #ddd;
+}
+#city-selector {
+    width: 100%;
+    padding: 8px;
+    font-size: 1em;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+/* 內容容器 */
+#calendar-page-container { 
+    padding: 15px; 
+    /* 這裡不再使用行內樣式，改用 padding */
+}
+
+/* --- 核心日曆組件樣式 (從 script.js 搬移) --- */
+
+/* 頂部年號 */
+.top-info {
+    overflow: auto;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 5px;
+    margin-top: 10px;
+    font-size: 0.8em;
+}
+.top-info-left { float: left; }
+.top-info-right { float: right; }
+
+/* 主日期容器 */
+.main-date-container {
+    position: relative;
+    height: 120px;
+    margin-top: 15px;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+}
+
+/* 日期切換按鈕區塊 */
+.date-shift-controls {
+    position: absolute;
+    top: 55%; /* 相對於父容器居中 */
+    width: 100%;
+    transform: translateY(-50%);
+    display: flex;
+    justify-content: space-between;
+    padding: 0 10px;
+    z-index: 10;
+}
+.shift-btn {
+    background: none;
+    border: none;
+    font-size: 2.5em;
+    color: #004d99;
+    cursor: pointer;
+    padding: 0 10px;
+    outline: none;
+    opacity: 0.5;
+}
+
+/* 農曆紅條 */
+.lunar-badge {
+    position: absolute;
+    left: 0;
+    background-color: #cc0000;
+    color: white;
+    padding: 5px;
+    font-size: 1.1em;
+    text-align: center;
+    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
+    line-height: 1.2;
+}
+
+/* 中央大日期數字 */
+.date-number-wrapper {
+    width: 100%;
+    text-align: center;
+}
+.big-date-number {
+    font-size: 7.5em;
+    font-weight: 900;
+    color: #004d99;
+    line-height: 1;
+}
+
+/* 右側月份 */
+.month-info {
+    position: absolute;
+    right: 0;
+    text-align: right;
+    line-height: 1.1;
+    width: 160px;
+}
+.month-short {
+    font-size: 2.5em;
+    font-weight: bold;
+    color: #cc0000;
+}
+.month-long-wrapper {
+    display: block;
+    transform: scale(2, 1.5);
+    transform-origin: right top;
+    margin-top: 5px;
+}
+.month-long {
+    font-size: 1.2em;
+    font-weight: bold;
+    color: #333;
+}
+
+/* 星期 */
+.weekday-display {
+    clear: both;
+    margin-top: 10px;
+    text-align: center;
+    margin-bottom: 5px;
+}
+.weekday-text {
+    font-size: 1.5em;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 5px;
+}
+
+/* 小月曆 */
+.mini-calendar-container {
+    text-align: right;
+    margin-right: 5px;
+    margin-bottom: 10px;
+}
+.mini-calendar-table {
+    width: 160px;
+    display: inline-block;
+}
+.mini-calendar-table table {
+    width: 100%; 
+    border-collapse: collapse; 
+    font-size: 0.5em; 
+    text-align: center; 
+    border: 1px solid #eee;
+}
+.mini-calendar-table th { 
+    padding: 0; 
+    font-weight: normal; 
+}
+.mini-calendar-table td {
+    padding: 0; 
+    color: #333;
+}
+.mini-calendar-table .header-row th:first-child,
+.mini-calendar-table .sunday {
+    color: #cc0000;
+}
+.mini-calendar-today {
+    background-color: #004d99 !important;
+    color: white !important;
+    border-radius: 3px;
+    font-weight: bold !important;
+}
+
+/* 宜/忌 區塊 */
+.yi-ji-section {
+    margin: 0 5px;
+    padding: 15px 0;
+    text-align: center;
+    border-top: 1px dashed #ccc;
+    border-bottom: 1px dashed #ccc;
+}
+.yi-ji-wrapper {
+    display: flex;
+    justify-content: space-around;
+    text-align: center;
+    font-size: 1.1em;
+    line-height: 1.6;
+}
+.yi-col { width: 48%; border-right: 1px solid #eee; }
+.ji-col { width: 48%; }
+.yi-title { font-weight: bold; color: green; margin-bottom: 5px; }
+.ji-title { font-weight: bold; color: #cc0000; margin-bottom: 5px; }
+.yi-text, .ji-text { white-space: pre-wrap; color: #555; }
+
+/* 語錄/時鐘區塊 */
+.quote-clock-section {
+    margin-top: 20px;
+    padding: 10px;
+    border: 1px dashed #ccc;
+    background-color: #f9f9f9;
+    min-height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}
+.quote-text { font-size: 0.9em; color: #555; font-style: italic; }
+.live-clock-text { font-size: 2.0em; font-weight: bold; color: #333; }
+
+/* 天氣區塊 */
+.weather-section {
+    padding: 15px;
+    text-align: center;
+    font-size: 0.9em;
+    color: #666;
+}
+.weather-city-name { font-weight: bold; color: #333; }
+.weather-temp { font-weight: bold; color: #e60000; }
+
+/* 時辰吉凶表 */
+.hour-auspice-container {
+    margin: 15px 5px; 
+    padding: 10px 0; 
+    border-bottom: 1px dashed #ccc; 
+    text-align: center;
+}
+.hour-auspice-title {
+    font-size: 1.1em; 
+    font-weight: bold; 
+    color: #004d99; 
+    margin-bottom: 5px;
+}
+.hour-auspice-table {
+    width: 100%; 
+    border-collapse: collapse; 
+    font-size: 0.9em; 
+    text-align: center;
+}
+.hour-auspice-table th { 
+    width: 16.66%; 
+    padding: 3px 0; 
+    font-weight: normal; 
+    color: #666;
+}
+.hour-auspice-table td {
+    padding: 3px 0; 
+    font-weight: bold;
+}
+.hour-text { font-size: 1.1em; }
+.tip-text { font-size: 0.8em; }
+.auspice-gap { height: 10px; }
+.color-good { color: green; }
+.color-bad { color: #cc0000; }
+.color-neutral { color: #333; }
+
+
+/* 底部廣告空間 */
+.ad-space {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 90px;
+    background-color: #ddd;
+}
 
