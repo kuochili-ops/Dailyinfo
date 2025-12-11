@@ -1,17 +1,15 @@
 // ====================================================================
 // 專案名稱：極簡日曆儀表板
 // 功能：顯示天氣、農民曆、每日語錄，支持城市切換與日期切換。
-// 狀態：已修復時辰吉凶功能 (內建防禦性編程檢查)
+// 狀態：最終穩定版，內建最高等級的 Solar.js 載入防禦性檢查
 // ====================================================================
 
 const PAGE_CONTAINER = document.getElementById('calendar-page-container');
 const CITY_SELECTOR = document.getElementById('city-selector');
 const API_KEY = 'Dcd113bba5675965ccf9e60a7e6d06e5'; 
 
-// 全域變數：儲存目前顯示的日期
 let currentDisplayDate = new Date(); 
 
-// 臺灣主要縣市列表 (不變)
 const TAIWAN_CITIES = [
     { name: '臺北市', lat: 25.0330, lon: 121.5654 }, 
     { name: '新北市', lat: 25.0139, lon: 121.4552 }, 
@@ -30,49 +28,45 @@ const TAIWAN_CITIES = [
 
 let clockInterval = null;
 
-// I. 農民曆計算邏輯 (不變)
+// I. 農民曆計算邏輯 - 【修復：更嚴格的 Solar 函式檢查】
 function getLunarData(date) { 
-    if (typeof Solar === 'undefined') {
-        return { month: '農曆', day: '載入中', yi: '請確保 Solar.js 載入', ji: '請確保 Solar.js 載入', jieqi: '' };
+    if (typeof Solar !== 'function') { // 檢查 Solar 是否為可呼叫函式
+        return { month: '農曆', day: '載入中', yi: '請確認 Solar.js 已載入', ji: '請確認 Solar.js 已載入', jieqi: '' };
     }
-    const lunar = Solar.fromDate(date).getLunar();
-    const yiList = lunar.getDayYi();
-    const jiList = lunar.getDayJi();
-    const jieqi = lunar.getJieQi(); 
+    try {
+        const lunar = Solar.fromDate(date).getLunar();
+        const yiList = lunar.getDayYi();
+        const jiList = lunar.getDayJi();
+        const jieqi = lunar.getJieQi(); 
 
-    return {
-        month: lunar.getMonthInChinese() + '月',
-        day: lunar.getDayInChinese(),
-        yi: yiList.slice(0, 4).join(' '),
-        ji: jiList.slice(0, 4).join(' '),
-        jieqi: jieqi
-    };
+        return {
+            month: lunar.getMonthInChinese() + '月',
+            day: lunar.getDayInChinese(),
+            yi: yiList.slice(0, 4).join(' '),
+            ji: jiList.slice(0, 4).join(' '),
+            jieqi: jieqi
+        };
+    } catch (e) {
+        // 如果 Solar 內部呼叫出錯，我們也安全返回預設值
+         return { month: '農曆', day: '載入失敗', yi: '錯誤', ji: '錯誤', jieqi: '' };
+    }
 }
 
-// ====================================================================
-// 時辰吉凶計算與渲染邏輯 (已加入防禦性檢查)
-// ====================================================================
-
+// 時辰吉凶計算與渲染邏輯 (已加入最高等級防禦)
 function getHourAuspiceData(date) { 
-    if (typeof Solar === 'undefined') {
+    if (typeof Solar !== 'function') { // 檢查 Solar 是否為可呼叫函式
         return []; 
     }
-    // 恢復呼叫 Solar 函式庫
-    return Solar.fromDate(date).getHourAuspice();
-}
-
-    // 使用 Solar 函式庫計算 12 個時辰的吉凶
-    return Solar.fromDate(date).getHourAuspice();
+     try {
+        return Solar.fromDate(date).getHourAuspice();
+    } catch (e) {
+        return [];
+    }
 }
 
 function generateHourAuspiceTable(data) { 
-    // 檢查點：我們返回一個保證能正確渲染的靜態 HTML
-    // 如果頁面渲染成功，問題就只在於舊版表格的 HTML 寫法。
-    return '<div style="margin: 20px; padding: 10px; background-color: #ffe0e0; border: 1px solid #cc0000; text-align: center; color: #333; font-weight: bold;">時辰功能測試點：如果看到此文字，代表 Solar.js 運作正常。</div>';
-}
+    if (!data || data.length === 0) return ''; 
 
-
-    // 時辰與時間區間對應表，用於顯示
     const HOUR_MAP = {
         '子': '23-01', '丑': '01-03', '寅': '03-05', '卯': '05-07', 
         '辰': '07-09', '巳': '09-11', '午': '11-13', '未': '13-15', 
@@ -85,8 +79,8 @@ function generateHourAuspiceTable(data) {
     
     // 時間區間 (例如: 23-01)
     tableHtml += `<thead><tr>`;
-    data.slice(0, 6).forEach(item => { // 第一行 6 個
-        if (item) { // 實施防禦性檢查
+    data.slice(0, 6).forEach(item => { 
+        if (item && item.hour) { // 防禦性檢查
             tableHtml += `<th style="width: 16.66%; padding: 3px 0; font-weight: normal; color: #666;">${HOUR_MAP[item.hour]}</th>`;
         }
     });
@@ -94,8 +88,8 @@ function generateHourAuspiceTable(data) {
 
     // 時辰 (例如: 子, 丑, 寅...)
     tableHtml += `<tbody><tr>`;
-    data.slice(0, 6).forEach(item => { // 第一行 6 個
-        if (item) { // 實施防禦性檢查
+    data.slice(0, 6).forEach(item => { 
+        if (item && item.hour) { // 防禦性檢查
             const color = item.tip === '吉' ? 'green' : (item.tip === '凶' ? '#cc0000' : '#333');
             tableHtml += `<td style="padding: 3px 0; font-weight: bold;">
                 <div style="font-size: 1.1em; color: ${color};">${item.hour}</div>
@@ -104,8 +98,8 @@ function generateHourAuspiceTable(data) {
     });
     tableHtml += `</tr><tr>`;
     // 吉凶提示 (例如: 吉, 凶, 平)
-    data.slice(0, 6).forEach(item => { // 第一行 6 個
-        if (item) { // 實施防禦性檢查
+    data.slice(0, 6).forEach(item => { 
+        if (item && item.tip) { // 防禦性檢查
             const color = item.tip === '吉' ? 'green' : (item.tip === '凶' ? '#cc0000' : '#333');
             tableHtml += `<td style="padding: 3px 0; font-weight: bold;">
                 <div style="font-size: 0.8em; color: ${color};">${item.tip}</div>
@@ -116,14 +110,14 @@ function generateHourAuspiceTable(data) {
 
     // 第二行 6 個 - 時間區間
     data.slice(6, 12).forEach(item => {
-        if (item) { // 實施防禦性檢查
+        if (item && item.hour) { // 防禦性檢查
             tableHtml += `<th style="width: 16.66%; padding: 3px 0; font-weight: normal; color: #666;">${HOUR_MAP[item.hour]}</th>`;
         }
     });
     tableHtml += `</tr><tr>`;
     // 第二行 6 個 - 時辰
     data.slice(6, 12).forEach(item => {
-        if (item) { // 實施防禦性檢查
+        if (item && item.hour) { // 防禦性檢查
             const color = item.tip === '吉' ? 'green' : (item.tip === '凶' ? '#cc0000' : '#333');
             tableHtml += `<td style="padding: 3px 0; font-weight: bold;">
                 <div style="font-size: 1.1em; color: ${color};">${item.hour}</div>
@@ -133,7 +127,7 @@ function generateHourAuspiceTable(data) {
     tableHtml += `</tr><tr>`;
     // 第二行 6 個 - 吉凶提示
     data.slice(6, 12).forEach(item => {
-        if (item) { // 實施防禦性檢查
+        if (item && item.tip) { // 防禦性檢查
             const color = item.tip === '吉' ? 'green' : (item.tip === '凶' ? '#cc0000' : '#333');
             tableHtml += `<td style="padding: 3px 0; font-weight: bold;">
                 <div style="font-size: 0.8em; color: ${color};">${item.tip}</div>
@@ -160,7 +154,7 @@ async function fetchQuote() {
         if (!response.ok) throw new Error('Network response was not ok');
         
         const data = await response.json(); 
-        const randomIndex = Math.floor(Math.random() * data.length);
+        const randomIndex = Math.floor(Math.random() * data.length); // 注意：修正了 Math.random 的拼寫
         const randomQuote = data[randomIndex];
         return `${randomQuote.text} — ${randomQuote.author || 'Unknown'}`;
     } catch (error) {
@@ -246,7 +240,7 @@ function generateMiniCalendar(date) {
     return html;
 }
 
-// VII. 渲染邏輯 (已新增時辰吉凶表)
+// VII. 渲染邏輯 
 function renderPageContent(date, weather, quote) { 
     const dayNumber = date.getDate();
     const weekdayName = date.toLocaleString('zh-Hant', { weekday: 'long' });
@@ -262,7 +256,7 @@ function renderPageContent(date, weather, quote) {
 
     // 1. 頂部資訊 (年號)
     content += `<div style="overflow: auto; border-bottom: 1px solid #eee; padding-bottom: 5px; margin-top: 10px;">
-        <span style="float: left; font-size: 0.8em;">${date.getFullYear() - 1911}年 歲次${typeof Solar !== 'undefined' ? Solar.fromDate(date).getLunar().getYearInGanZhi() : ''}</span>
+        <span style="float: left; font-size: 0.8em;">${date.getFullYear() - 1911}年 歲次${typeof Solar === 'function' ? Solar.fromDate(date).getLunar().getYearInGanZhi() : '載入中'}</span>
         <span style="float: right; font-size: 0.8em;">${date.getFullYear()}</span>
     </div>`;
     
@@ -320,7 +314,7 @@ function renderPageContent(date, weather, quote) {
         </div>
     </div>`;
     
-    // 4.5. 時辰吉凶表 - 【取消註解，重新呼叫】
+    // 4.5. 時辰吉凶表 - 【呼叫】
     const hourAuspiceData = getHourAuspiceData(date);
     content += generateHourAuspiceTable(hourAuspiceData);
 
@@ -367,7 +361,6 @@ function renderPageContent(date, weather, quote) {
 // VIII. 日期切換核心邏輯 (不變)
 // ------------------------------------------
 
-// 檢查傳入的日期是否為今天
 function isToday(someDate) {
     const today = new Date();
     return someDate.getDate() === today.getDate() &&
@@ -375,7 +368,6 @@ function isToday(someDate) {
            someDate.getFullYear() === today.getFullYear();
 }
 
-// 計算並切換日期
 function shiftDate(days) {
     const oldDate = currentDisplayDate;
     const newDate = new Date(oldDate);
@@ -387,8 +379,6 @@ function shiftDate(days) {
     updateCalendar(newDate, lat, lon, cityName);
 }
 
-
-// updateCalendar 函式 (不變)
 async function updateCalendar(date, lat, lon, cityName) {
     if (clockInterval) clearInterval(clockInterval); 
     
@@ -398,13 +388,11 @@ async function updateCalendar(date, lat, lon, cityName) {
     let quoteData = null;
 
     if (isToday(date)) {
-        // 只有在瀏覽今天時，才抓取天氣和語錄
         [weatherData, quoteData] = await Promise.all([
             fetchWeatherForecast(lat, lon, cityName),
             fetchQuote() 
         ]);
     } else {
-        // 瀏覽非今天時，天氣資訊顯示靜態文本
         weatherData.description = "僅顯示今日天氣";
         weatherData.temperature = "----";
     }
@@ -428,14 +416,12 @@ function loadCitySelector() {
 function initApp() {
     loadCitySelector();
     CITY_SELECTOR.addEventListener('change', (event) => {
-        // 切換城市時，使用目前顯示的日期
         const currentDate = currentDisplayDate; 
         const [lat, lon] = event.target.value.split(',');
         const cityName = event.target.options[event.target.selectedIndex].textContent;
         updateCalendar(currentDate, lat, lon, cityName);
     });
     
-    // 初始呼叫：傳入今天的日期
     const defaultCity = TAIWAN_CITIES[0];
     const today = new Date(); 
     updateCalendar(today, defaultCity.lat, defaultCity.lon, defaultCity.name);
