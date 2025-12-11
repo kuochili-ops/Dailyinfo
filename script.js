@@ -1,15 +1,14 @@
 // ====================================================================
 // 專案名稱：極簡日曆儀表板
-// 功能：顯示天氣、農民曆宜忌、每日語錄，並支持城市切換
-// 特點：月份欄位靠右對齊；農曆三行垂直顯示；農曆紅條寬度貼合內容；移除中間灰色廣告區塊；保留每日英文語錄。
+// 功能：顯示天氣、農民曆(自動計算)、每日語錄
+// 特點：整合 lunar-javascript 實現自動宜忌與節氣；農曆三行垂直顯示
 // ====================================================================
 
 const PAGE_CONTAINER = document.getElementById('calendar-page-container');
 const CITY_SELECTOR = document.getElementById('city-selector');
-// 請替換成您自己的 OpenWeatherMap API Key
 const API_KEY = 'Dcd113bba5675965ccf9e60a7e6d06e5'; 
 
-// 臺灣主要縣市列表及其經緯度 (不變)
+// 臺灣主要縣市列表
 const TAIWAN_CITIES = [
     { name: '臺北市', lat: 25.0330, lon: 121.5654 }, 
     { name: '新北市', lat: 25.0139, lon: 121.4552 }, 
@@ -26,28 +25,32 @@ const TAIWAN_CITIES = [
     { name: '臺東縣', lat: 22.7505, lon: 121.1518 }  
 ];
 
-// 【靜態宜忌清單】
-const YIJIS = {
-    // 由於當前日期是 2025/12/11，我使用此日期作為演示
-    '2025-12-11': { 
-        yi: '祭祀, 納財, 開市', 
-        ji: '動土, 安床, 移徙', 
-        lunar: '農曆十一月 廿一' 
-    },
-    '2025-12-12': { 
-        yi: '嫁娶, 訂盟, 祈福', 
-        ji: '入宅, 安門, 蓋屋', 
-        lunar: '農曆十一月 廿二' 
-    },
-    '2025-12-13': { 
-        yi: '出行, 簽約, 求醫', 
-        ji: '破土, 交易, 納畜', 
-        lunar: '農曆十一月 廿三' 
-    },
-};
+// ------------------------------------------
+// I. 農民曆與節氣計算邏輯 (使用 lunar-javascript)
+// ------------------------------------------
+
+function getLunarData(date) {
+    // 使用 Solar.fromDate 將公曆轉為農曆物件
+    const lunar = Solar.fromDate(date).getLunar();
+    
+    // 獲取宜忌 (返回的是陣列，我們取前 3-4 個項目以防版面過長)
+    const yiList = lunar.getDayYi();
+    const jiList = lunar.getDayJi();
+    
+    // 獲取節氣 (如果當天不是節氣日，會返回空字串)
+    const jieqi = lunar.getJieQi(); 
+
+    return {
+        month: lunar.getMonthInChinese() + '月', // 例如：十一月
+        day: lunar.getDayInChinese(),           // 例如：廿一
+        yi: yiList.slice(0, 4).join(' '),       // 取前4個宜
+        ji: jiList.slice(0, 4).join(' '),       // 取前4個忌
+        jieqi: jieqi                            // 節氣名稱
+    };
+}
 
 // ------------------------------------------
-// I. 每日語錄 API 擷取邏輯 (保留)
+// II. 每日語錄 API 擷取邏輯
 // ------------------------------------------
 
 async function fetchQuote() {
@@ -55,43 +58,29 @@ async function fetchQuote() {
     try {
         const response = await fetch(url);
         const data = await response.json(); 
-        
         const randomIndex = Math.floor(Math.random() * data.length);
         const randomQuote = data[randomIndex];
-        
-        const quoteText = randomQuote.text;
-        const author = randomQuote.author || 'Unknown';
-        
-        return `${quoteText} — ${author}`;
-        
+        return `${randomQuote.text} — ${randomQuote.author || 'Unknown'}`;
     } catch (error) {
-        return 'Daily Quote: Error fetching quote from API. (Quotes are in English)';
+        return 'Daily Quote: Error fetching quote. (Quotes are in English)';
     }
 }
 
-
 // ------------------------------------------
-// II. 天氣 API 擷取邏輯 (不變)
+// III. 天氣 API 擷取邏輯
 // ------------------------------------------
 
 async function fetchWeatherForecast(lat, lon, cityName) {
     const forecast_url = `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=metric&lang=zh_tw`;
-    
     try {
         const response = await fetch(forecast_url);
         const data = await response.json();
+        if (data.cod != 200) return { description: "API 查詢失敗", temperature: "??°", city: cityName };
 
-        if (data.cod != 200) {
-            return { description: "API 查詢失敗", temperature: "??° ~ ??°", city: cityName };
-        }
-
-        const todayList = data.list[0];
-        const description = todayList.weather[0].description;
-        
         const today = new Date().toDateString();
         let maxT = -Infinity;
         let minT = Infinity;
-
+        // 簡單計算今日高低溫
         for (const item of data.list) {
             const itemDate = new Date(item.dt_txt).toDateString();
             if (itemDate === today) {
@@ -99,23 +88,19 @@ async function fetchWeatherForecast(lat, lon, cityName) {
                 minT = Math.min(minT, item.main.temp_min);
             }
         }
-        
-        const tempMax = maxT === -Infinity ? '??' : Math.round(maxT);
-        const tempMin = minT === Infinity ? '??' : Math.round(minT);
-        
+        const description = data.list[0].weather[0].description;
         return {
             description: description,
-            temperature: `${tempMin}°C ~ ${tempMax}°C`,
+            temperature: `${Math.round(minT)}°C ~ ${Math.round(maxT)}°C`,
             city: cityName
         };
-
     } catch (error) {
-        return { description: "網路連線錯誤", temperature: "??° ~ ??°", city: cityName };
+        return { description: "網路錯誤", temperature: "??°", city: cityName };
     }
 }
 
 // ------------------------------------------
-// III. 渲染邏輯 (應用最終排版)
+// IV. 渲染邏輯 (整合自動農曆資訊)
 // ------------------------------------------
 
 function renderPageContent(date, weather, quote) { 
@@ -124,57 +109,41 @@ function renderPageContent(date, weather, quote) {
     const month = date.getMonth() + 1;
     const monthShort = date.toLocaleDateString('en-US', { month: 'short' }).toUpperCase();
     
-    // 從靜態清單中獲取宜忌數據
-    const dateKey = `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
-    const yijiData = YIJIS[dateKey] || { 
-        yi: '無（請更新清單）', 
-        ji: '無（請更新清單）', 
-        lunar: '農曆資訊不足' 
-    };
+    // 【核心修改】主動計算農曆資料
+    const lunarData = getLunarData(date);
     
-    const yiItems = yijiData.yi.split(/[,|]/).map(s => s.trim()).filter(s => s);
-    const jiItems = yijiData.ji.split(/[,|]/).map(s => s.trim()).filter(s => s);
+    // 處理農曆紅條顯示邏輯
+    // 如果今天有節氣 (例如：大雪)，顯示節氣名稱；否則顯示「農曆」
+    const topLabel = lunarData.jieqi ? lunarData.jieqi : '農曆';
     
-    // 農曆三行垂直顯示的邏輯
-    const lunarRaw = yijiData.lunar;
-    let lunarHtml = '<div>農曆</div><div>資訊不足</div>'; 
-    if (lunarRaw.includes('月') && lunarRaw.includes(' ')) {
-        const monthPart = lunarRaw.substring(lunarRaw.indexOf('月') - 2, lunarRaw.indexOf('月') + 1).trim();
-        const dayPart = lunarRaw.substring(lunarRaw.lastIndexOf(' ') + 1).trim();
-        lunarHtml = `<div>農曆</div><div>${monthPart}</div><div>${dayPart}</div>`;
-    } else {
-        const lunarParts = lunarRaw.split(' ');
-        lunarHtml = lunarParts.map(part => `<div>${part}</div>`).join('');
-    }
+    // 農曆 HTML 結構 (三行：標題/月/日)
+    const lunarHtml = `<div>${topLabel}</div><div>${lunarData.month}</div><div>${lunarData.day}</div>`;
 
     // 廣告區域高度
     const AD_HEIGHT_PX = 90; 
     
-    // 容器設置底部填充，為廣告留出空間
     let content = `<div style="height: 100%; position: relative; padding-bottom: ${AD_HEIGHT_PX + 20}px; max-width: 400px; margin: 0 auto; box-sizing: border-box;">`;
 
-    // 1. 頂部資訊 (年與生肖)
+    // 1. 頂部資訊
     content += `<div style="overflow: auto; border-bottom: 1px solid #eee; padding-bottom: 5px;">
-        <span style="float: left; font-size: 0.8em;">${date.getFullYear() + 1911}年 兔年</span>
+        <span style="float: left; font-size: 0.8em;">${date.getFullYear() - 1911}年 歲次${Solar.fromDate(date).getLunar().getYearInGanZhi()}</span>
         <span style="float: right; font-size: 0.8em;">${date.getFullYear()}</span>
     </div>`;
     
-    // 2. 主體內容：農曆、大日期、月份
+    // 2. 主體內容
     content += `<div style="clear: both; display: flex; align-items: flex-start; margin-top: 15px;">`; 
 
-    // 左側：農曆紅條 (寬度貼合內容)
+    // 左側：農曆紅條 (若有節氣，第一行會顯示節氣名稱)
     content += `<div style="background-color: #cc0000; color: white; padding: 5px; font-size: 0.9em; text-align: center; margin-right: 15px; flex-shrink: 0; box-shadow: 2px 2px 5px rgba(0,0,0,0.1); line-height: 1.2;">
         ${lunarHtml}
     </div>`;
 
     // 中央區：大日期、月份
     content += `<div style="flex-grow: 1; display: flex; align-items: center; justify-content: center;">
-        
         <div style="display: flex; align-items: center; width: 100%;">
             <div style="font-size: 6em; font-weight: 900; color: #004d99; line-height: 1.0; margin-right: auto;">
                 ${dayNumber}
             </div>
-            
             <div style="font-size: 1.5em; font-weight: bold; color: #cc0000; line-height: 1.1; text-align: right;">
                 <div>${monthShort}</div>
                 <div style="font-size: 0.8em; color: #333;">${month}月</div>
@@ -182,68 +151,65 @@ function renderPageContent(date, weather, quote) {
         </div>
     </div>`;
 
-    // 右側：佔位符 (約 45px 寬度，平衡左側農曆紅條)
+    // 右側：佔位符
     content += `<div style="width: 45px; flex-shrink: 0; margin-left: 15px;"></div>`; 
-
-    content += `</div>`; // 主體內容結束
+    content += `</div>`; 
     
-    // 3. 星期 
+    // 3. 星期
     content += `<div style="clear: both; margin-top: 15px; text-align: center;">
         <div style="font-size: 1.3em; font-weight: bold; color: #333; margin-bottom: 10px;">
             ${weekdayName}
         </div>
     </div>`;
     
-    // 4. 宜/忌 (帶虛線框)
+    // 4. 宜/忌 (自動計算)
     content += `<div style="margin: 0 10px; padding: 10px 0; text-align: center; border-top: 1px dashed #ccc; border-bottom: 1px dashed #ccc;">
         <div style="display: flex; justify-content: space-around; text-align: center; font-size: 0.8em; line-height: 1.5;">
             <div style="width: 48%; border-right: 1px solid #eee;">
                 <div style="font-weight: bold; color: green; margin-bottom: 5px;">**宜：**</div>
-                ${yiItems.length > 0 ? yiItems.map(item => `<div>${item}</div>`).join('') : '<div>無</div>'}
+                <div style="white-space: pre-wrap; padding: 0 5px;">${lunarData.yi || '諸事不宜'}</div>
             </div>
-            
             <div style="width: 48%;">
                 <div style="font-weight: bold; color: #cc0000; margin-bottom: 5px;">**忌：**</div>
-                ${jiItems.length > 0 ? jiItems.map(item => `<div>${item}</div>`).join('') : '<div>無</div>'}
+                <div style="white-space: pre-wrap; padding: 0 5px;">${lunarData.ji || '諸事不宜'}</div>
             </div>
         </div>
     </div>`;
     
-    // 5. 每日語錄 
+    // 5. 每日語錄
     content += `<div style="margin-top: 15px; padding: 5px 10px; border: 1px dashed #ccc; background-color: #f9f9f9; font-size: 0.8em; color: #555; height: 60px; overflow: hidden; display: flex; align-items: center; justify-content: center; text-align: center;">
         ${quote}
     </div>`;
 
-    // 6. 縣市天氣 (語錄下方, 無背景色)
+    // 6. 縣市天氣
     content += `<div style="padding: 10px; text-align: center; font-size: 0.85em; color: #666; margin-top: 10px;">
         <span style="font-weight: bold; color: #333;">${weather.city} 天氣:</span> 
         ${weather.description} 
         <span style="font-weight: bold; color: #e60000;">(${weather.temperature})</span>
     </div>`;
     
-    // 7. 底部廣告空間 (90px 高度, 無標示文字)
-    content += `<div style="position: absolute; bottom: 0; left: 0; width: 100%; height: ${AD_HEIGHT_PX}px; background-color: #ddd;">
-        </div>`;
+    // 7. 底部廣告空間
+    content += `<div style="position: absolute; bottom: 0; left: 0; width: 100%; height: ${AD_HEIGHT_PX}px; background-color: #ddd;"></div>`;
 
-
-    content += `</div>`; // 容器結束
-    
+    content += `</div>`; 
     PAGE_CONTAINER.innerHTML = content;
 }
 
 // ------------------------------------------
-// IV. 應用程式啟動與事件處理 (不變)
+// V. 初始化
 // ------------------------------------------
 
 async function updateCalendar(lat, lon, cityName) {
     const today = new Date();
-    PAGE_CONTAINER.innerHTML = '<div style="text-align: center; margin-top: 150px; color: #666;">獲取 ' + cityName + ' 天氣與今日語錄中...</div>';
+    // 簡單 loading
+    if(PAGE_CONTAINER.innerHTML.includes('載入中')) {
+         // 初次載入
+    }
     
     const [weatherData, quoteData] = await Promise.all([
         fetchWeatherForecast(lat, lon, cityName),
         fetchQuote() 
     ]);
-    
     renderPageContent(today, weatherData, quoteData); 
 }
 
@@ -254,19 +220,16 @@ function loadCitySelector() {
         option.textContent = city.name;
         CITY_SELECTOR.appendChild(option);
     });
-    // 預設選擇第一個城市
     CITY_SELECTOR.value = `${TAIWAN_CITIES[0].lat},${TAIWAN_CITIES[0].lon}`;
 }
 
 function initApp() {
     loadCitySelector();
-    
     CITY_SELECTOR.addEventListener('change', (event) => {
         const [lat, lon] = event.target.value.split(',');
         const cityName = event.target.options[event.target.selectedIndex].textContent;
         updateCalendar(lat, lon, cityName);
     });
-    
     const defaultCity = TAIWAN_CITIES[0];
     updateCalendar(defaultCity.lat, defaultCity.lon, defaultCity.name);
 }
