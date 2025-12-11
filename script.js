@@ -299,9 +299,9 @@ function renderPageContent(date, weather, quote) {
         </div>
     </div>`;
     
-    // 4.5. 時辰吉凶表 - 【新增呼叫與 HTML 插入】
-    const hourAuspiceData = getHourAuspiceData(date);
-    content += generateHourAuspiceTable(hourAuspiceData);
+// 4.5. 時辰吉凶表 - 【新增呼叫與 HTML 插入】
+// const hourAuspiceData = getHourAuspiceData(date);
+// content += generateHourAuspiceTable(hourAuspiceData);
 
 
     // 5. 每日語錄 或 現在時刻 
