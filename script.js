@@ -1,14 +1,14 @@
 // ====================================================================
 // 專案名稱：極簡日曆儀表板
-// 功能：顯示天氣、農民曆宜忌、每日語錄，並支持城市切換
-// 特點：大日期完美居中；月份靠右；宜忌字體加大；自動農曆與節氣
+// 功能：顯示天氣、農民曆、每日語錄(或時鐘)，並支持城市切換
+// 特點：API 失敗自動切換為時鐘；農曆與月份字體加大；版面優化
 // ====================================================================
 
 const PAGE_CONTAINER = document.getElementById('calendar-page-container');
 const CITY_SELECTOR = document.getElementById('city-selector');
 const API_KEY = 'Dcd113bba5675965ccf9e60a7e6d06e5'; 
 
-// 臺灣主要縣市列表 (保持不變)
+// 臺灣主要縣市列表 (不變)
 const TAIWAN_CITIES = [
     { name: '臺北市', lat: 25.0330, lon: 121.5654 }, 
     { name: '新北市', lat: 25.0139, lon: 121.4552 }, 
@@ -25,8 +25,11 @@ const TAIWAN_CITIES = [
     { name: '臺東縣', lat: 22.7505, lon: 121.1518 }  
 ];
 
+// 用於存儲時鐘計時器的變數，切換頁面時需清除
+let clockInterval = null;
+
 // ------------------------------------------
-// I. 農民曆與節氣計算邏輯 (自動計算)
+// I. 農民曆與節氣計算邏輯
 // ------------------------------------------
 function getLunarData(date) {
     if (typeof Solar === 'undefined') {
@@ -47,21 +50,33 @@ function getLunarData(date) {
 }
 
 // ------------------------------------------
-// II. 每日語錄 & 天氣 API (保持不變)
+// II. 每日語錄 API (失敗時回傳 null)
 // ------------------------------------------
 async function fetchQuote() {
     const url = 'https://type.fit/api/quotes';
     try {
-        const response = await fetch(url);
+        // 設定一個超時機制，避免網頁卡住太久
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 3000); // 3秒超時
+
+        const response = await fetch(url, { signal: controller.signal });
+        clearTimeout(timeoutId);
+
+        if (!response.ok) throw new Error('Network response was not ok');
+        
         const data = await response.json(); 
         const randomIndex = Math.floor(Math.random() * data.length);
         const randomQuote = data[randomIndex];
         return `${randomQuote.text} — ${randomQuote.author || 'Unknown'}`;
     } catch (error) {
-        return 'Daily Quote: Error fetching quote. (Quotes are in English)';
+        console.warn("Quote API failed, switching to Clock mode.");
+        return null; // 回傳 null 以便切換成時鐘
     }
 }
 
+// ------------------------------------------
+// III. 天氣 API 擷取邏輯
+// ------------------------------------------
 async function fetchWeatherForecast(lat, lon, cityName) {
     const forecast_url = `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=metric&lang=zh_tw`;
     try {
@@ -90,16 +105,37 @@ async function fetchWeatherForecast(lat, lon, cityName) {
 }
 
 // ------------------------------------------
-// III. 渲染邏輯 (重點修改：日期置中、月份靠右、字體加大)
+// IV. 時鐘功能函式
 // ------------------------------------------
+function startClock() {
+    // 清除舊的計時器
+    if (clockInterval) clearInterval(clockInterval);
 
+    const updateTime = () => {
+        const clockElement = document.getElementById('live-clock');
+        if (clockElement) {
+            const now = new Date();
+            // 格式化時間為 HH:MM:SS
+            const timeString = now.toLocaleTimeString('zh-TW', { hour12: false });
+            clockElement.textContent = timeString;
+        }
+    };
+
+    // 立即執行一次，然後每秒更新
+    updateTime();
+    clockInterval = setInterval(updateTime, 1000);
+}
+
+// ------------------------------------------
+// V. 渲染邏輯
+// ------------------------------------------
 function renderPageContent(date, weather, quote) { 
     const dayNumber = date.getDate();
     const weekdayName = date.toLocaleString('zh-Hant', { weekday: 'long' });
     const month = date.getMonth() + 1;
     const monthShort = date.toLocaleDateString('en-US', { month: 'short' }).toUpperCase();
     
-    // 自動獲取農曆資訊
+    // 農曆資訊
     const lunarData = getLunarData(date);
     const topLabel = lunarData.jieqi ? lunarData.jieqi : '農曆';
     const lunarHtml = `<div>${topLabel}</div><div>${lunarData.month}</div><div>${lunarData.day}</div>`;
@@ -115,30 +151,29 @@ function renderPageContent(date, weather, quote) {
         <span style="float: right; font-size: 0.8em;">${date.getFullYear()}</span>
     </div>`;
     
-    // 2. 主體內容：[農曆(左) --- 大日期(置中) --- 月份(右)]
-    // 使用 position: relative 作為定位基準，確保日期絕對置中
+    // 2. 主體內容
     content += `<div style="position: relative; height: 120px; margin-top: 15px; display: flex; align-items: center; justify-content: center;">`; 
 
-    // (A) 左側：農曆紅條 (絕對定位靠左)
-    content += `<div style="position: absolute; left: 0; background-color: #cc0000; color: white; padding: 5px; font-size: 0.9em; text-align: center; box-shadow: 2px 2px 5px rgba(0,0,0,0.1); line-height: 1.2;">
+    // (A) 左側：農曆紅條 (字體加大至 1.1em)
+    content += `<div style="position: absolute; left: 0; background-color: #cc0000; color: white; padding: 5px; font-size: 1.1em; text-align: center; box-shadow: 2px 2px 5px rgba(0,0,0,0.1); line-height: 1.2;">
         ${lunarHtml}
     </div>`;
 
     // (B) 中央：大日期 (絕對居中)
-    // 為了不被左右元素擠壓，寬度設為 100%，文字置中，z-index 設為 0 以防遮擋點擊(雖然這裡沒點擊)
     content += `<div style="width: 100%; text-align: center;">
         <div style="font-size: 7.5em; font-weight: 900; color: #004d99; line-height: 1;">
             ${dayNumber}
         </div>
     </div>`;
 
-    // (C) 右側：月份 (絕對定位靠右)
-    content += `<div style="position: absolute; right: 0; text-align: right; line-height: 1.2;">
-        <div style="font-size: 1.5em; font-weight: bold; color: #cc0000;">${monthShort}</div>
-        <div style="font-size: 1.0em; font-weight: bold; color: #333;">${month}月</div>
+    // (C) 右側：月份 (字體加大)
+    // 英文月份加大至 2.5em, 中文月份加大至 1.2em
+    content += `<div style="position: absolute; right: 0; text-align: right; line-height: 1.1;">
+        <div style="font-size: 2.5em; font-weight: bold; color: #cc0000;">${monthShort}</div>
+        <div style="font-size: 1.2em; font-weight: bold; color: #333;">${month}月</div>
     </div>`;
 
-    content += `</div>`; // 主體內容結束
+    content += `</div>`; 
     
     // 3. 星期
     content += `<div style="clear: both; margin-top: 10px; text-align: center;">
@@ -147,8 +182,7 @@ function renderPageContent(date, weather, quote) {
         </div>
     </div>`;
     
-    // 4. 宜/忌 (字體加大)
-    // 將 font-size 從 0.8em 調整為 1.1em
+    // 4. 宜/忌 (字體維持加大)
     content += `<div style="margin: 0 5px; padding: 15px 0; text-align: center; border-top: 1px dashed #ccc; border-bottom: 1px dashed #ccc;">
         <div style="display: flex; justify-content: space-around; text-align: center; font-size: 1.1em; line-height: 1.6;">
             <div style="width: 48%; border-right: 1px solid #eee;">
@@ -162,10 +196,18 @@ function renderPageContent(date, weather, quote) {
         </div>
     </div>`;
     
-    // 5. 每日語錄
-    content += `<div style="margin-top: 20px; padding: 10px; border: 1px dashed #ccc; background-color: #f9f9f9; font-size: 0.9em; color: #555; min-height: 50px; display: flex; align-items: center; justify-content: center; text-align: center; font-style: italic;">
-        "${quote}"
-    </div>`;
+    // 5. 每日語錄 或 現在時刻
+    if (quote) {
+        // 顯示語錄
+        content += `<div style="margin-top: 20px; padding: 10px; border: 1px dashed #ccc; background-color: #f9f9f9; font-size: 0.9em; color: #555; min-height: 50px; display: flex; align-items: center; justify-content: center; text-align: center; font-style: italic;">
+            "${quote}"
+        </div>`;
+    } else {
+        // 顯示時鐘 (字體大且粗)
+        content += `<div style="margin-top: 20px; padding: 10px; border: 1px dashed #ccc; background-color: #f9f9f9; font-size: 2.0em; font-weight: bold; color: #333; min-height: 50px; display: flex; align-items: center; justify-content: center; text-align: center;">
+            <span id="live-clock">--:--:--</span>
+        </div>`;
+    }
 
     // 6. 縣市天氣
     content += `<div style="padding: 15px; text-align: center; font-size: 0.9em; color: #666;">
@@ -179,13 +221,19 @@ function renderPageContent(date, weather, quote) {
 
     content += `</div>`; 
     PAGE_CONTAINER.innerHTML = content;
+
+    // 如果沒有語錄，啟動時鐘
+    if (!quote) {
+        startClock();
+    }
 }
 
 // ------------------------------------------
-// V. 初始化與事件 (保持不變)
+// VI. 初始化與事件
 // ------------------------------------------
 async function updateCalendar(lat, lon, cityName) {
     const today = new Date();
+    // 獲取數據
     const [weatherData, quoteData] = await Promise.all([
         fetchWeatherForecast(lat, lon, cityName),
         fetchQuote() 
