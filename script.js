@@ -1,9 +1,6 @@
 // ====================================================================
 // 專案名稱：極簡日曆儀表板
-// 功能：顯示天氣、農民曆、每日語錄(或時鐘)，並支持城市切換
-// 特點：
-// 1. 小月曆已縮到最小，並移動至「星期」下方靠右位置。
-// 2. ✨ 新增：今日十二時辰吉凶表。
+// 特點：小月曆已縮到最小並移動，新增今日十二時辰吉凶表。
 // ====================================================================
 
 const PAGE_CONTAINER = document.getElementById('calendar-page-container');
@@ -29,10 +26,11 @@ const TAIWAN_CITIES = [
 
 let clockInterval = null;
 
-// ------------------------------------------
-// I. 農民曆與節氣計算邏輯
-// ------------------------------------------
-function getLunarData(date) {
+// ====================================================================
+// I - IV: 輔助功能函式 (getLunarData, fetchQuote, fetchWeatherForecast, startClock) - 內容未變動
+// ====================================================================
+
+function getLunarData(date) { /* ... (不變) */
     if (typeof Solar === 'undefined') {
         return { month: '農曆', day: '載入中', yi: '', ji: '', jieqi: '' };
     }
@@ -49,11 +47,7 @@ function getLunarData(date) {
         jieqi: jieqi
     };
 }
-
-// ------------------------------------------
-// II. 每日語錄 API 
-// ------------------------------------------
-async function fetchQuote() {
+async function fetchQuote() { /* ... (不變) */
     const url = 'https://type.fit/api/quotes';
     try {
         const controller = new AbortController();
@@ -73,11 +67,7 @@ async function fetchQuote() {
         return null; 
     }
 }
-
-// ------------------------------------------
-// III. 天氣 API 擷取邏輯
-// ------------------------------------------
-async function fetchWeatherForecast(lat, lon, cityName) {
+async function fetchWeatherForecast(lat, lon, cityName) { /* ... (不變) */
     const forecast_url = `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=metric&lang=zh_tw`;
     try {
         const response = await fetch(forecast_url);
@@ -103,13 +93,8 @@ async function fetchWeatherForecast(lat, lon, cityName) {
         return { description: "網路錯誤", temperature: "??°", city: cityName };
     }
 }
-
-// ------------------------------------------
-// IV. 時鐘功能函式
-// ------------------------------------------
-function startClock() {
+function startClock() { /* ... (不變) */
     if (clockInterval) clearInterval(clockInterval);
-
     const updateTime = () => {
         const clockElement = document.getElementById('live-clock');
         if (clockElement) {
@@ -118,69 +103,44 @@ function startClock() {
             clockElement.textContent = timeString;
         }
     };
-
     updateTime();
     clockInterval = setInterval(updateTime, 1000);
 }
 
 // ------------------------------------------
-// V. 時辰數據獲取與表格生成
+// V. 時辰數據獲取與表格生成 (新增)
 // ------------------------------------------
-
-// 獲取時辰吉凶數據的輔助函式
 function getHourAuspiceData(date) {
-    if (typeof Solar === 'undefined') {
-        return [];
-    }
+    if (typeof Solar === 'undefined') { return []; }
     const lunar = Solar.fromDate(date).getLunar();
-    
-    // 取得 12 個時辰的吉凶資訊陣列
-    const hourData = lunar.getHourAuspice(); 
-    
-    return hourData;
+    return lunar.getHourAuspice(); 
 }
 
-// 生成時辰吉凶 HTML 表格的函式
 function generateHourAuspiceTable(date) {
     const hourData = getHourAuspiceData(date);
     if (hourData.length === 0) return '';
     
-    let html = '';
-    // 標題
-    html += `<div style="text-align: center; margin-top: 15px; font-weight: bold; color: #333; font-size: 1.1em;">今日時辰吉凶</div>`;
-    
-    // 表格樣式
+    let html = `<div style="text-align: center; margin-top: 15px; font-weight: bold; color: #333; font-size: 1.1em;">今日時辰吉凶</div>`;
     html += `<table style="width: 100%; font-size: 0.8em; border-collapse: collapse; margin-top: 5px; border: 1px solid #eee;">`;
     
-    // 表頭
     html += `<thead><tr style="background-color: #f7f7f7;">`;
     html += `<th style="width: 20%; padding: 5px; text-align: center;">時辰</th>`;
     html += `<th style="width: 30%; padding: 5px; text-align: center;">時段</th>`;
     html += `<th style="width: 50%; padding: 5px; text-align: left;">吉凶 / 宜忌</th>`;
     html += `</tr></thead><tbody>`;
 
-    // 填充數據
     hourData.forEach((hour, index) => {
         const isAuspicious = hour.status === '吉';
         const statusColor = isAuspicious ? 'green' : '#cc0000'; 
         const rowColor = index % 2 === 0 ? '#ffffff' : '#fcfcfc'; 
-        
-        // 提取主要宜忌事項 (最多只顯示一項)
         const detail = hour.yi.length > 0 ? hour.yi[0] : (hour.ji.length > 0 ? hour.ji[0] : '');
 
         html += `<tr style="background-color: ${rowColor}; border-bottom: 1px solid #eee;">`;
-        
-        // 1. 時辰名稱
         html += `<td style="padding: 5px; text-align: center; font-weight: bold;">${hour.name}時</td>`;
-        
-        // 2. 時間區間
         html += `<td style="padding: 5px; text-align: center; color: #555;">${hour.startTime}-${hour.endTime}</td>`;
-        
-        // 3. 吉凶狀態 / 宜忌細節
         html += `<td style="padding: 5px; text-align: left; color: ${statusColor}; font-weight: bold;">`;
         html += `${hour.status} ${detail ? '(' + detail + ')' : ''}`;
         html += `</td>`;
-
         html += `</tr>`;
     });
 
@@ -195,61 +155,37 @@ function generateMiniCalendar(date) {
     const year = date.getFullYear();
     const month = date.getMonth(); 
     const todayDay = date.getDate(); 
-    
     const firstDayOfWeek = new Date(year, month, 1).getDay(); 
     const daysInMonth = new Date(year, month + 1, 0).getDate(); 
-    
     const weekdays = ['日', '一', '二', '三', '四', '五', '六'];
     
     let html = '';
-
-    // 最小化調整：font-size 調整為 0.5em
     html += `<table style="width: 100%; border-collapse: collapse; font-size: 0.5em; text-align: center; border: 1px solid #eee;">`;
     html += `<thead style="background-color: #f7f7f7;"><tr>`;
     weekdays.forEach(day => {
         const color = day === '日' ? '#cc0000' : '#333';
-        // 最小化調整：padding 調整為 0px 0
         html += `<th style="padding: 0px 0; color: ${color}; font-weight: normal;">${day}</th>`;
     });
     html += `</tr></thead><tbody><tr>`;
 
     let cellCount = 0; 
-
-    // 1. 插入開頭的空白單元格 (Placeholder)
-    for (let i = 0; i < firstDayOfWeek; i++) {
-        // 最小化調整：padding 調整為 0px
-        html += `<td style="padding: 0px;"></td>`;
-        cellCount++;
-    }
-
-    // 2. 填入實際日期
+    for (let i = 0; i < firstDayOfWeek; i++) { html += `<td style="padding: 0px;"></td>`; cellCount++; }
     for (let day = 1; day <= daysInMonth; day++) {
-        if (cellCount % 7 === 0 && cellCount !== 0) {
-            html += `</tr><tr>`;
-        }
-
+        if (cellCount % 7 === 0 && cellCount !== 0) { html += `</tr><tr>`; }
         const isToday = day === todayDay;
         const style = isToday 
             ? `background-color: #004d99; color: white; border-radius: 3px; font-weight: bold;` 
             : `color: #333;`;
-        
-        // 最小化調整：padding 調整為 0px
         html += `<td style="padding: 0px; ${style}">${day}</td>`;
         cellCount++;
     }
-
-    // 3. 填入結尾的空白單元格
-    while (cellCount % 7 !== 0) {
-        html += `<td style="padding: 0px;"></td>`;
-        cellCount++;
-    }
-
+    while (cellCount % 7 !== 0) { html += `<td style="padding: 0px;"></td>`; cellCount++; }
     html += `</tr></tbody></table>`;
     return html;
 }
 
 // ------------------------------------------
-// VII. 渲染邏輯 (已移動小月曆並插入時辰表)
+// VII. 渲染邏輯
 // ------------------------------------------
 function renderPageContent(date, weather, quote) { 
     const dayNumber = date.getDate();
@@ -257,12 +193,9 @@ function renderPageContent(date, weather, quote) {
     const month = date.getMonth() + 1;
     const monthShort = date.toLocaleDateString('en-US', { month: 'short' }).toUpperCase();
     
-    // 農曆資訊
     const lunarData = getLunarData(date);
     const topLabel = lunarData.jieqi ? lunarData.jieqi : '農曆';
     const lunarHtml = `<div>${topLabel}</div><div>${lunarData.month}</div><div>${lunarData.day}</div>`;
-
-    // 廣告區域高度
     const AD_HEIGHT_PX = 90; 
     
     let content = `<div style="height: 100%; position: relative; padding-bottom: ${AD_HEIGHT_PX + 20}px; max-width: 400px; margin: 0 auto; box-sizing: border-box;">`;
@@ -275,28 +208,23 @@ function renderPageContent(date, weather, quote) {
     
     // 2. 主體內容：[農曆(左) --- 大日期(置中) --- 月份(右)]
     content += `<div style="position: relative; height: 120px; margin-top: 15px; display: flex; align-items: flex-start; justify-content: center;">`; 
-
     // (A) 左側：農曆紅條
     content += `<div style="position: absolute; left: 0; background-color: #cc0000; color: white; padding: 5px; font-size: 1.1em; text-align: center; box-shadow: 2px 2px 5px rgba(0,0,0,0.1); line-height: 1.2;">
         ${lunarHtml}
     </div>`;
-
     // (B) 中央：大日期
     content += `<div style="width: 100%; text-align: center;">
         <div style="font-size: 7.5em; font-weight: 900; color: #004d99; line-height: 1;">
             ${dayNumber}
         </div>
     </div>`;
-
-    // (C) 右側：月份 (小月曆已移除)
+    // (C) 右側：月份 
     content += `<div style="position: absolute; right: 0; text-align: right; line-height: 1.1; width: 160px;">
         <div style="font-size: 2.5em; font-weight: bold; color: #cc0000;">${monthShort}</div>
-        
         <span style="display: block; transform: scale(2, 1.5); transform-origin: right top; margin-top: 5px;">
             <div style="font-size: 1.2em; font-weight: bold; color: #333;">${month}月</div>
         </span>
     </div>`;
-
     content += `</div>`; 
     
     // 3. 星期 
@@ -316,18 +244,12 @@ function renderPageContent(date, weather, quote) {
     // 4. 宜/忌 
     content += `<div style="margin: 0 5px; padding: 15px 0; text-align: center; border-top: 1px dashed #ccc; border-bottom: 1px dashed #ccc;">
         <div style="display: flex; justify-content: space-around; text-align: center; font-size: 1.1em; line-height: 1.6;">
-            <div style="width: 48%; border-right: 1px solid #eee;">
-                <div style="font-weight: bold; color: green; margin-bottom: 5px;">**宜**</div>
-                <div style="white-space: pre-wrap; color: #555;">${lunarData.yi || '諸事不宜'}</div>
-            </div>
-            <div style="width: 48%;">
-                <div style="font-weight: bold; color: #cc0000; margin-bottom: 5px;">**忌**</div>
-                <div style="white-space: pre-wrap; color: #555;">${lunarData.ji || '諸事不宜'}</div>
-            </div>
+            <div style="width: 48%; border-right: 1px solid #eee;"><div style="font-weight: bold; color: green; margin-bottom: 5px;">**宜**</div><div style="white-space: pre-wrap; color: #555;">${lunarData.yi || '諸事不宜'}</div></div>
+            <div style="width: 48%;"><div style="font-weight: bold; color: #cc0000; margin-bottom: 5px;">**忌**</div><div style="white-space: pre-wrap; color: #555;">${lunarData.ji || '諸事不宜'}</div></div>
         </div>
     </div>`;
     
-    // 4.5. 時辰吉凶表 (新增區塊，在宜/忌和語錄之間)
+    // 4.5. 時辰吉凶表 (新增)
     content += `<div style="margin: 0 5px; margin-bottom: 20px;">
         ${generateHourAuspiceTable(date)}
     </div>`;
@@ -365,8 +287,6 @@ function renderPageContent(date, weather, quote) {
 // ------------------------------------------
 // VIII. 初始化與事件 
 // ------------------------------------------
-// 備註：此處的 updateCalendar 仍使用 new Date() 獲取當前日期，
-// 尚未支持日期切換功能。
 async function updateCalendar(lat, lon, cityName) {
     if (clockInterval) clearInterval(clockInterval); 
     const today = new Date(); // 總是當前日期
@@ -378,7 +298,7 @@ async function updateCalendar(lat, lon, cityName) {
     renderPageContent(today, weatherData, quoteData); 
 }
 
-function loadCitySelector() {
+function loadCitySelector() { /* ... (不變) */
     TAIWAN_CITIES.forEach((city) => {
         const option = document.createElement('option');
         option.value = `${city.lat},${city.lon}`; 
