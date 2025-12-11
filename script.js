@@ -1,7 +1,9 @@
 // ====================================================================
 // 專案名稱：極簡日曆儀表板
 // 功能：顯示天氣、農民曆、每日語錄(或時鐘)，並支持城市切換
-// 特點：中文月份應用非等比例放大 (橫向 2x, 縱向 1.5x)
+// 特點：
+// 1. 紅頭頁「萬事如意」使用楷書並平均分散。
+// 2. 中文月份應用非等比例放大 (橫向 2x, 縱向 1.5x)。
 // ====================================================================
 
 const PAGE_CONTAINER = document.getElementById('calendar-page-container');
@@ -122,7 +124,7 @@ function startClock() {
 }
 
 // ------------------------------------------
-// V. 渲染邏輯 (重點修改：重新應用中文月份拉伸)
+// V. 渲染邏輯 (包含所有最新設計調整)
 // ------------------------------------------
 function renderPageContent(date, weather, quote) { 
     const dayNumber = date.getDate();
@@ -140,13 +142,24 @@ function renderPageContent(date, weather, quote) {
     
     let content = `<div style="height: 100%; position: relative; padding-bottom: ${AD_HEIGHT_PX + 20}px; max-width: 400px; margin: 0 auto; box-sizing: border-box;">`;
 
-    // 1. 頂部資訊
+    // 1. 頂部廣告位 (萬事如意 - 楷書字體 & 平均分散)
+    content += `<div style="background-color: #cc0000; color: white; padding: 10px; text-align: center; margin-bottom: 10px;">
+        <div style="font-size: 1.5em; font-weight: bold; font-family: 'BiauKai', 'KaiTi', 'DFKai-sb', serif; display: flex; justify-content: space-between; align-items: center; padding: 0 15px;">
+            <span style="flex-grow: 1; text-align: center;">萬</span>
+            <span style="flex-grow: 1; text-align: center;">事</span>
+            <span style="flex-grow: 1; text-align: center;">如</span>
+            <span style="flex-grow: 1; text-align: center;">意</span>
+        </div>
+        <div style="font-size: 0.7em;">廣告位</div>
+    </div>`;
+    
+    // 2. 頂部資訊
     content += `<div style="overflow: auto; border-bottom: 1px solid #eee; padding-bottom: 5px;">
         <span style="float: left; font-size: 0.8em;">${date.getFullYear() - 1911}年 歲次${typeof Solar !== 'undefined' ? Solar.fromDate(date).getLunar().getYearInGanZhi() : ''}</span>
         <span style="float: right; font-size: 0.8em;">${date.getFullYear()}</span>
     </div>`;
     
-    // 2. 主體內容：[農曆(左) --- 大日期(置中) --- 月份(右)]
+    // 3. 主體內容：[農曆(左) --- 大日期(置中) --- 月份(右)]
     content += `<div style="position: relative; height: 120px; margin-top: 15px; display: flex; align-items: center; justify-content: center;">`; 
 
     // (A) 左側：農曆紅條 
@@ -161,7 +174,7 @@ function renderPageContent(date, weather, quote) {
         </div>
     </div>`;
 
-    // (C) 右側：月份 (重新應用中文月份拉伸)
+    // (C) 右側：月份 (中文月份拉伸)
     content += `<div style="position: absolute; right: 0; text-align: right; line-height: 1.1;">
         <div style="font-size: 2.5em; font-weight: bold; color: #cc0000;">${monthShort}</div>
         
@@ -172,14 +185,14 @@ function renderPageContent(date, weather, quote) {
 
     content += `</div>`; 
     
-    // 3. 星期
+    // 4. 星期
     content += `<div style="clear: both; margin-top: 10px; text-align: center;">
         <div style="font-size: 1.5em; font-weight: bold; color: #333; margin-bottom: 15px;">
             ${weekdayName}
         </div>
     </div>`;
     
-    // 4. 宜/忌 
+    // 5. 宜/忌 
     content += `<div style="margin: 0 5px; padding: 15px 0; text-align: center; border-top: 1px dashed #ccc; border-bottom: 1px dashed #ccc;">
         <div style="display: flex; justify-content: space-around; text-align: center; font-size: 1.1em; line-height: 1.6;">
             <div style="width: 48%; border-right: 1px solid #eee;">
@@ -193,7 +206,7 @@ function renderPageContent(date, weather, quote) {
         </div>
     </div>`;
     
-    // 5. 每日語錄 或 現在時刻
+    // 6. 每日語錄 或 現在時刻
     if (quote) {
         content += `<div style="margin-top: 20px; padding: 10px; border: 1px dashed #ccc; background-color: #f9f9f9; font-size: 0.9em; color: #555; min-height: 50px; display: flex; align-items: center; justify-content: center; text-align: center; font-style: italic;">
             "${quote}"
@@ -205,14 +218,14 @@ function renderPageContent(date, weather, quote) {
         </div>`;
     }
 
-    // 6. 縣市天氣
+    // 7. 縣市天氣
     content += `<div style="padding: 15px; text-align: center; font-size: 0.9em; color: #666;">
         <span style="font-weight: bold; color: #333;">${weather.city} 天氣:</span> 
         ${weather.description} 
         <span style="font-weight: bold; color: #e60000;">(${weather.temperature})</span>
     </div>`;
     
-    // 7. 底部廣告空間
+    // 8. 底部廣告空間
     content += `<div style="position: absolute; bottom: 0; left: 0; width: 100%; height: ${AD_HEIGHT_PX}px; background-color: #ddd;"></div>`;
 
     content += `</div>`; 
