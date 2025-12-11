@@ -66,7 +66,11 @@ function getHourAuspiceData(date) {
 }
 
 function generateHourAuspiceTable(data) { 
-    if (!data || data.length === 0) return ''; // 檢查資料是否有效
+    // 檢查點：我們返回一個保證能正確渲染的靜態 HTML
+    // 如果頁面渲染成功，問題就只在於舊版表格的 HTML 寫法。
+    return '<div style="margin: 20px; padding: 10px; background-color: #ffe0e0; border: 1px solid #cc0000; text-align: center; color: #333; font-weight: bold;">時辰功能測試點：如果看到此文字，代表 Solar.js 運作正常。</div>';
+}
+
 
     // 時辰與時間區間對應表，用於顯示
     const HOUR_MAP = {
