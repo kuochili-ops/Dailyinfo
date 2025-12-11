@@ -1,7 +1,7 @@
 // ====================================================================
 // 專案名稱：極簡日曆儀表板
 // 功能：顯示天氣、農民曆、每日語錄(或時鐘)，並支持城市切換
-// 特點：英文月份恢復原尺寸；中文月份字體維持加大。
+// 特點：中文月份應用非等比例放大 (橫向 2x, 縱向 1.5x)
 // ====================================================================
 
 const PAGE_CONTAINER = document.getElementById('calendar-page-container');
@@ -122,7 +122,7 @@ function startClock() {
 }
 
 // ------------------------------------------
-// V. 渲染邏輯 (重點修改：月份恢復原尺寸，但維持較大字體)
+// V. 渲染邏輯 (重點修改：重新應用中文月份拉伸)
 // ------------------------------------------
 function renderPageContent(date, weather, quote) { 
     const dayNumber = date.getDate();
@@ -161,10 +161,13 @@ function renderPageContent(date, weather, quote) {
         </div>
     </div>`;
 
-    // (C) 右側：月份 (移除 scale 變形)
+    // (C) 右側：月份 (重新應用中文月份拉伸)
     content += `<div style="position: absolute; right: 0; text-align: right; line-height: 1.1;">
         <div style="font-size: 2.5em; font-weight: bold; color: #cc0000;">${monthShort}</div>
-        <div style="font-size: 1.2em; font-weight: bold; color: #333; margin-top: 5px;">${month}月</div>
+        
+        <span style="display: block; transform: scale(2, 1.5); transform-origin: right top; margin-top: 5px;">
+            <div style="font-size: 1.2em; font-weight: bold; color: #333;">${month}月</div>
+        </span>
     </div>`;
 
     content += `</div>`; 
