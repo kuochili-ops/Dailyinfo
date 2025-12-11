@@ -2,7 +2,7 @@
 // 專案名稱：極簡日曆儀表板
 // 功能：顯示天氣、農民曆、每日語錄(或時鐘)，並支持城市切換
 // 特點：
-// 1. 頂部紅頭頁已替換為楷書、平均分散的「萬事如意」。
+// 1. 已移除最頂部紅色區塊。
 // 2. 中文月份應用非等比例放大 (橫向 2x, 縱向 1.5x)。
 // ====================================================================
 
@@ -124,7 +124,7 @@ function startClock() {
 }
 
 // ------------------------------------------
-// V. 渲染邏輯 (包含所有最新設計調整)
+// V. 渲染邏輯 (已移除頂部紅色區塊)
 // ------------------------------------------
 function renderPageContent(date, weather, quote) { 
     const dayNumber = date.getDate();
@@ -142,24 +142,13 @@ function renderPageContent(date, weather, quote) {
     
     let content = `<div style="height: 100%; position: relative; padding-bottom: ${AD_HEIGHT_PX + 20}px; max-width: 400px; margin: 0 auto; box-sizing: border-box;">`;
 
-    // 1. 頂部廣告位 (萬事如意 - 楷書字體 & 平均分散)
-    content += `<div style="background-color: #cc0000; color: white; padding: 10px; text-align: center; margin-bottom: 10px;">
-        <div style="font-size: 1.5em; font-weight: bold; font-family: 'BiauKai', 'KaiTi', 'DFKai-sb', serif; display: flex; justify-content: space-between; align-items: center; padding: 0 15px;">
-            <span style="flex-grow: 1; text-align: center;">萬</span>
-            <span style="flex-grow: 1; text-align: center;">事</span>
-            <span style="flex-grow: 1; text-align: center;">如</span>
-            <span style="flex-grow: 1; text-align: center;">意</span>
-        </div>
-        <div style="font-size: 0.7em;">廣告位</div>
-    </div>`;
-    
-    // 2. 頂部資訊
-    content += `<div style="overflow: auto; border-bottom: 1px solid #eee; padding-bottom: 5px;">
+    // 1. 頂部資訊 (現在變成第一個元素)
+    content += `<div style="overflow: auto; border-bottom: 1px solid #eee; padding-bottom: 5px; margin-top: 10px;">
         <span style="float: left; font-size: 0.8em;">${date.getFullYear() - 1911}年 歲次${typeof Solar !== 'undefined' ? Solar.fromDate(date).getLunar().getYearInGanZhi() : ''}</span>
         <span style="float: right; font-size: 0.8em;">${date.getFullYear()}</span>
     </div>`;
     
-    // 3. 主體內容：[農曆(左) --- 大日期(置中) --- 月份(右)]
+    // 2. 主體內容：[農曆(左) --- 大日期(置中) --- 月份(右)]
     content += `<div style="position: relative; height: 120px; margin-top: 15px; display: flex; align-items: center; justify-content: center;">`; 
 
     // (A) 左側：農曆紅條 
