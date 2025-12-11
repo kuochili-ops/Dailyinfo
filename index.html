@@ -1,57 +1,11 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
-    <link rel="stylesheet" href="style.css">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>極簡日曆儀表板</title>
-    <script src="https://cdn.jsdelivr.net/npm/lunar-javascript/lunar.js"></script> 
-    <style>
-        /* ... (保持您原本的 CSS 樣式不變) ... */
-        body {
-            font-family: 'Helvetica Neue', Helvetica, Arial, '微軟正黑體', sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: #f0f0f0;
-            color: #333;
-            display: flex;
-            justify-content: center;
-            align-items: flex-start;
-            min-height: 100vh;
-        }
-        .calendar-card {
-            width: 100%;
-            max-width: 400px;
-            background-color: white;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            margin: 10px 0;
-            box-sizing: border-box;
-            overflow: hidden;
-        }
-        .header-top {
-            background-color: #cc0000;
-            color: white;
-            padding: 10px 0;
-            text-align: center;
-        }
-        .header-title { font-size: 1.5em; font-weight: bold; margin: 0; }
-        .header-ad-tag { font-size: 0.7em; opacity: 0.8; }
-        .city-selection-container {
-            padding: 10px;
-            background-color: #f7f7f7;
-            border-bottom: 1px solid #ddd;
-        }
-        #city-selector {
-            width: 100%;
-            padding: 8px;
-            font-size: 1em;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            box-sizing: border-box;
-        }
-        #calendar-page-container { padding: 15px; }
-    </style>
-</head>
+    <link rel="stylesheet" href="style.css">
+    </head>
 <body>
 
 <div class="calendar-card">
@@ -68,8 +22,6 @@
 </div>
 
 <script src="solar.js"></script> 
-
 <script src="script.js"></script> 
 </body>
 </html>
-
