@@ -139,12 +139,12 @@ function generateMiniCalendar(date) {
     let html = '';
 
     // 【修改點 1】：將 font-size 從 0.7em 縮小到 0.6em
-    html += `<table style="width: 100%; border-collapse: collapse; font-size: 0.6em; text-align: center; border: 1px solid #eee;">`;
+    html += `<table style="width: 100%; border-collapse: collapse; font-size: 0.4em; text-align: center; border: 1px solid #eee;">`;
     html += `<thead style="background-color: #f7f7f7;"><tr>`;
     weekdays.forEach(day => {
         const color = day === '日' ? '#cc0000' : '#333';
         // 【修改點 2】：將 padding 從 2px 0 縮小到 1px 0
-        html += `<th style="padding: 1px 0; color: ${color}; font-weight: normal;">${day}</th>`;
+        html += `<th style="padding: 0px 0; color: ${color}; font-weight: normal;">${day}</th>`;
     });
     html += `</tr></thead><tbody><tr>`;
 
