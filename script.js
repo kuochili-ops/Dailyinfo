@@ -176,7 +176,7 @@ function renderPageContent(date, weather, quote) {
     content += `<div style="position: relative; height: 120px; margin-top: 15px; display: flex; align-items: flex-start; justify-content: center;">`; 
     
     // 日期切換按鈕容器 - 【修改：top: 55% 讓位置略低】
-    content += `<div style="position: absolute; top: 70%; width: 100%; transform: translateY(-50%); display: flex; justify-content: space-between; padding: 0 10px; z-index: 10;">
+    content += `<div style="position: absolute; top: 90%; width: 100%; transform: translateY(-50%); display: flex; justify-content: space-between; padding: 0 10px; z-index: 10;">
         <button id="prev-day-btn" style="background: none; border: none; font-size: 2.5em; color: #004d99; cursor: pointer; padding: 0 10px; outline: none; opacity: 0.5;">
             &#x23EA;
         </button>
