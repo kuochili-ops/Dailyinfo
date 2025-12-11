@@ -1,13 +1,13 @@
 // ====================================================================
 // 專案名稱：極簡日曆儀表板
-// 功能：顯示天氣、農民曆、時辰吉凶，支持城市切換與日期切換。
+// 功能：顯示天氣、農民曆、每日語錄，支持城市切換與日期切換。
 // ====================================================================
 
 const PAGE_CONTAINER = document.getElementById('calendar-page-container');
 const CITY_SELECTOR = document.getElementById('city-selector');
 const API_KEY = 'Dcd113bba5675965ccf9e60a7e6d06e5'; 
 
-// 【新增】全域變數：儲存目前顯示的日期
+// 全域變數：儲存目前顯示的日期
 let currentDisplayDate = new Date(); 
 
 // 臺灣主要縣市列表 (不變)
@@ -29,10 +29,10 @@ const TAIWAN_CITIES = [
 
 let clockInterval = null;
 
-// I. 農民曆與時辰吉凶計算邏輯
-function getLunarData(date) { /* ... (內容不變) */
+// I. 農民曆計算邏輯
+function getLunarData(date) { 
     if (typeof Solar === 'undefined') {
-        return { month: '農曆', day: '載入中', yi: '', ji: '', jieqi: '' };
+        return { month: '農曆', day: '載入中', yi: '請確保 Solar.js 載入', ji: '請確保 Solar.js 載入', jieqi: '' };
     }
     const lunar = Solar.fromDate(date).getLunar();
     const yiList = lunar.getDayYi();
@@ -47,11 +47,11 @@ function getLunarData(date) { /* ... (內容不變) */
         jieqi: jieqi
     };
 }
-function getHourAuspiceData(date) { /* ... (內容不變) */
-    if (typeof Solar === 'undefined') { return []; }
-    const lunar = Solar.fromDate(date).getLunar();
-    return lunar.getHourAuspice(); 
-}
+
+// 時辰吉凶相關功能已被移除，以確保穩定性。
+function getHourAuspiceData(date) { return []; }
+function generateHourAuspiceTable(date) { return ''; }
+
 
 // II. 每日語錄 API (不變)
 async function fetchQuote() { /* ... (內容不變) */
@@ -83,7 +83,6 @@ async function fetchWeatherForecast(lat, lon, cityName) { /* ... (內容不變) 
         const data = await response.json();
         if (data.cod != 200) return { description: "API 查詢失敗", temperature: "??°", city: cityName };
 
-        // 雖然 API 返回多日預報，但我們只抓取今天的溫度範圍
         const today = new Date().toDateString();
         let maxT = -Infinity;
         let minT = Infinity;
@@ -117,39 +116,6 @@ function startClock() { /* ... (內容不變) */
     };
     updateTime();
     clockInterval = setInterval(updateTime, 1000);
-}
-
-// V. 生成時辰吉凶 HTML 表格的函式 (不變)
-function generateHourAuspiceTable(date) { /* ... (內容不變) */
-    const hourData = getHourAuspiceData(date);
-    if (hourData.length === 0) return '';
-    
-    let html = `<div style="text-align: center; margin-top: 15px; font-weight: bold; color: #333; font-size: 1.1em;">今日時辰吉凶</div>`;
-    html += `<table style="width: 100%; font-size: 0.8em; border-collapse: collapse; margin-top: 5px; border: 1px solid #eee;">`;
-    
-    html += `<thead><tr style="background-color: #f7f7f7;">`;
-    html += `<th style="width: 20%; padding: 5px; text-align: center;">時辰</th>`;
-    html += `<th style="width: 30%; padding: 5px; text-align: center;">時段</th>`;
-    html += `<th style="width: 50%; padding: 5px; text-align: left;">吉凶 / 宜忌</th>`;
-    html += `</tr></thead><tbody>`;
-
-    hourData.forEach((hour, index) => {
-        const isAuspicious = hour.status === '吉';
-        const statusColor = isAuspicious ? 'green' : '#cc0000'; 
-        const rowColor = index % 2 === 0 ? '#ffffff' : '#fcfcfc'; 
-        const detail = hour.yi.length > 0 ? hour.yi[0] : (hour.ji.length > 0 ? hour.ji[0] : '');
-
-        html += `<tr style="background-color: ${rowColor}; border-bottom: 1px solid #eee;">`;
-        html += `<td style="padding: 5px; text-align: center; font-weight: bold;">${hour.name}時</td>`;
-        html += `<td style="padding: 5px; text-align: center; color: #555;">${hour.startTime}-${hour.endTime}</td>`;
-        html += `<td style="padding: 5px; text-align: left; color: ${statusColor}; font-weight: bold;">`;
-        html += `${hour.status} ${detail ? '(' + detail + ')' : ''}`;
-        html += `</td>`;
-        html += `</tr>`;
-    });
-
-    html += `</tbody></table>`;
-    return html;
 }
 
 // VI. 生成小月曆函式 (不變)
@@ -186,7 +152,7 @@ function generateMiniCalendar(date) { /* ... (內容不變) */
     return html;
 }
 
-// VII. 渲染邏輯
+// VII. 渲染邏輯 (已移除時辰吉凶表)
 function renderPageContent(date, weather, quote) { 
     const dayNumber = date.getDate();
     const weekdayName = date.toLocaleString('zh-Hant', { weekday: 'long' });
@@ -209,7 +175,7 @@ function renderPageContent(date, weather, quote) {
     // 2. 主體內容：大日期區塊
     content += `<div style="position: relative; height: 120px; margin-top: 15px; display: flex; align-items: flex-start; justify-content: center;">`; 
     
-    // 【新增】日期切換按鈕容器
+    // 日期切換按鈕容器
     content += `<div style="position: absolute; top: 50%; width: 100%; transform: translateY(-50%); display: flex; justify-content: space-between; padding: 0 10px; z-index: 10;">
         <button id="prev-day-btn" style="background: none; border: none; font-size: 2.5em; color: #004d99; cursor: pointer; padding: 0 10px; outline: none;">
             &#x23EA;
@@ -260,10 +226,7 @@ function renderPageContent(date, weather, quote) {
         </div>
     </div>`;
     
-    // 4.5. 時辰吉凶表 
-    content += `<div style="margin: 0 5px; margin-bottom: 20px;">
-        ${generateHourAuspiceTable(date)}
-    </div>`;
+    // 4.5. 時辰吉凶表 - 已移除
 
     // 5. 每日語錄 或 現在時刻 
     if (quote) {
@@ -294,7 +257,7 @@ function renderPageContent(date, weather, quote) {
         startClock();
     }
     
-    // 【新增】在 renderPageContent 之後，綁定按鈕事件 (由於按鈕是動態生成的，所以必須在這裡綁定)
+    // 按鈕事件綁定 (按鈕是動態生成的，所以必須在這裡綁定)
     document.getElementById('prev-day-btn').addEventListener('click', () => {
         shiftDate(-1); // 傳入 -1 表示前一天
     });
@@ -315,29 +278,23 @@ function isToday(someDate) {
            someDate.getFullYear() === today.getFullYear();
 }
 
-// 【新增】計算並切換日期
+// 計算並切換日期
 function shiftDate(days) {
-    // 獲取目前顯示的日期
     const oldDate = currentDisplayDate;
-    
-    // 創建一個新的日期物件，並根據 days 參數增減天數
     const newDate = new Date(oldDate);
-    newDate.setDate(oldDate.getDate() + days); // +1 為下一天，-1 為前一天
+    newDate.setDate(oldDate.getDate() + days); 
 
-    // 取得當前的經緯度 (來自城市選擇器)
     const [lat, lon] = CITY_SELECTOR.value.split(',');
     const cityName = CITY_SELECTOR.options[CITY_SELECTOR.selectedIndex].textContent;
 
-    // 使用新日期刷新日曆
     updateCalendar(newDate, lat, lon, cityName);
 }
 
 
-// 【修改】updateCalendar 函式，現在接受 date 參數
+// updateCalendar 函式
 async function updateCalendar(date, lat, lon, cityName) {
     if (clockInterval) clearInterval(clockInterval); 
     
-    // 【新增】更新全域變數
     currentDisplayDate = date; 
     
     let weatherData = { description: "載入中", temperature: "??°", city: cityName };
@@ -355,7 +312,6 @@ async function updateCalendar(date, lat, lon, cityName) {
         weatherData.temperature = "----";
     }
 
-    // 將傳入的 date 參數傳遞給 renderPageContent
     renderPageContent(date, weatherData, quoteData); 
 }
 
@@ -375,11 +331,10 @@ function loadCitySelector() { /* ... (內容不變) */
 function initApp() {
     loadCitySelector();
     CITY_SELECTOR.addEventListener('change', (event) => {
-        // 切換城市時，使用目前顯示的日期，而不是強制切換回「今天」
+        // 切換城市時，使用目前顯示的日期
         const currentDate = currentDisplayDate; 
         const [lat, lon] = event.target.value.split(',');
         const cityName = event.target.options[event.target.selectedIndex].textContent;
-        // 注意：這裡將當前日期 currentDate 傳入
         updateCalendar(currentDate, lat, lon, cityName);
     });
     
@@ -387,8 +342,6 @@ function initApp() {
     const defaultCity = TAIWAN_CITIES[0];
     const today = new Date(); 
     updateCalendar(today, defaultCity.lat, defaultCity.lon, defaultCity.name);
-    
-    // 注意：按鈕事件綁定已移到 renderPageContent 函式內部，因為按鈕是動態創建的。
 }
 
 initApp();
