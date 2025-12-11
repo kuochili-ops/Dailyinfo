@@ -2,7 +2,7 @@
 // 專案名稱：極簡日曆儀表板
 // 功能：顯示天氣、農民曆、每日語錄(或時鐘)，並支持城市切換
 // 特點：
-// 1. 紅頭頁「萬事如意」使用楷書並平均分散。
+// 1. 頂部紅頭頁已替換為楷書、平均分散的「萬事如意」。
 // 2. 中文月份應用非等比例放大 (橫向 2x, 縱向 1.5x)。
 // ====================================================================
 
@@ -225,7 +225,7 @@ function renderPageContent(date, weather, quote) {
         <span style="font-weight: bold; color: #e60000;">(${weather.temperature})</span>
     </div>`;
     
-    // 8. 底部廣告空間
+    // 8. 底部廣告空間 (維持不變)
     content += `<div style="position: absolute; bottom: 0; left: 0; width: 100%; height: ${AD_HEIGHT_PX}px; background-color: #ddd;"></div>`;
 
     content += `</div>`; 
