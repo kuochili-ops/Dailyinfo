@@ -54,9 +54,17 @@ function getLunarData(date) {
 // ====================================================================
 
 function getHourAuspiceData(date) { 
-    if (typeof Solar === 'undefined') {
-        return []; 
-    }
+    // 檢查點：我們不呼叫 getHourAuspice()，而是返回一個固定的假資料。
+    // 如果頁面成功顯示這個假資料，代表 Solar.js 和 renderPageContent 都沒問題。
+    // 問題就出在 Solar.fromDate(date).getHourAuspice() 這一行。
+    return [
+        { hour: '測', tip: '試', description: '功能測試' },
+        { hour: '試', tip: '成', description: '功能測試' },
+        { hour: '成', tip: '功', description: '功能測試' },
+        // 我們只需要前三個來確認渲染成功
+    ];
+}
+
     // 使用 Solar 函式庫計算 12 個時辰的吉凶
     return Solar.fromDate(date).getHourAuspice();
 }
