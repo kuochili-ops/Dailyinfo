@@ -1,7 +1,7 @@
 // ====================================================================
 // 專案名稱：極簡日曆儀表板
 // 功能：顯示天氣、農民曆、每日語錄(或時鐘)，並支持城市切換
-// 特點：月份字體應用非等比例放大 (橫向 2x, 縱向 1.5x)
+// 特點：英文月份恢復原尺寸；中文月份字體維持加大。
 // ====================================================================
 
 const PAGE_CONTAINER = document.getElementById('calendar-page-container');
@@ -28,7 +28,7 @@ const TAIWAN_CITIES = [
 let clockInterval = null;
 
 // ------------------------------------------
-// I. 農民曆與節氣計算邏輯
+// I. 農民曆與節氣計算邏輯 (不變)
 // ------------------------------------------
 function getLunarData(date) {
     if (typeof Solar === 'undefined') {
@@ -122,7 +122,7 @@ function startClock() {
 }
 
 // ------------------------------------------
-// V. 渲染邏輯 (重點修改：應用 transform: scale(2, 1.5))
+// V. 渲染邏輯 (重點修改：月份恢復原尺寸，但維持較大字體)
 // ------------------------------------------
 function renderPageContent(date, weather, quote) { 
     const dayNumber = date.getDate();
@@ -161,13 +161,10 @@ function renderPageContent(date, weather, quote) {
         </div>
     </div>`;
 
-    // (C) 右側：月份 (應用非等比例縮放)
+    // (C) 右側：月份 (移除 scale 變形)
     content += `<div style="position: absolute; right: 0; text-align: right; line-height: 1.1;">
-        
-        <span style="display: block; transform: scale(2, 1.5); transform-origin: right center;">
-            <div style="font-size: 2.5em; font-weight: bold; color: #cc0000;">${monthShort}</div>
-            <div style="font-size: 1.2em; font-weight: bold; color: #333; margin-top: 5px;">${month}月</div>
-        </span>
+        <div style="font-size: 2.5em; font-weight: bold; color: #cc0000;">${monthShort}</div>
+        <div style="font-size: 1.2em; font-weight: bold; color: #333; margin-top: 5px;">${month}月</div>
     </div>`;
 
     content += `</div>`; 
@@ -227,7 +224,6 @@ function renderPageContent(date, weather, quote) {
 // VI. 初始化與事件 (不變)
 // ------------------------------------------
 async function updateCalendar(lat, lon, cityName) {
-    // 在切換城市或更新時，清除舊的時鐘計時器
     if (clockInterval) clearInterval(clockInterval); 
     const today = new Date();
     
