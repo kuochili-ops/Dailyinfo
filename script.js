@@ -3,7 +3,7 @@
 // 功能：顯示天氣、農民曆、每日語錄(或時鐘)，並支持城市切換
 // 特點：
 // 1. 已移除最頂部紅色區塊。
-// 2. ✨ 新增/調整：小月曆已整合並移動至月份下方。
+// 2. ✨ 調整：小月曆已整合至月份下方，並縮小面積。
 // ====================================================================
 
 const PAGE_CONTAINER = document.getElementById('calendar-page-container');
@@ -124,7 +124,7 @@ function startClock() {
 }
 
 // ------------------------------------------
-// V. 新增：生成小月曆函式 (移除 max-width 限制)
+// V. 新增：生成小月曆函式 (已縮小)
 // ------------------------------------------
 function generateMiniCalendar(date) {
     const year = date.getFullYear();
@@ -138,12 +138,13 @@ function generateMiniCalendar(date) {
     
     let html = '';
 
-    // 調整樣式：移除 max-width 和 margin-top，讓它適應父容器
-    html += `<table style="width: 100%; border-collapse: collapse; font-size: 0.7em; text-align: center; border: 1px solid #eee;">`;
+    // 【修改點 1】：將 font-size 從 0.7em 縮小到 0.6em
+    html += `<table style="width: 100%; border-collapse: collapse; font-size: 0.6em; text-align: center; border: 1px solid #eee;">`;
     html += `<thead style="background-color: #f7f7f7;"><tr>`;
     weekdays.forEach(day => {
         const color = day === '日' ? '#cc0000' : '#333';
-        html += `<th style="padding: 2px 0; color: ${color}; font-weight: normal;">${day}</th>`;
+        // 【修改點 2】：將 padding 從 2px 0 縮小到 1px 0
+        html += `<th style="padding: 1px 0; color: ${color}; font-weight: normal;">${day}</th>`;
     });
     html += `</tr></thead><tbody><tr>`;
 
@@ -151,7 +152,8 @@ function generateMiniCalendar(date) {
 
     // 1. 插入開頭的空白單元格 (Placeholder)
     for (let i = 0; i < firstDayOfWeek; i++) {
-        html += `<td style="padding: 2px;"></td>`;
+        // 【修改點 3】：將 padding 從 2px 縮小到 1px
+        html += `<td style="padding: 1px;"></td>`;
         cellCount++;
     }
 
@@ -166,13 +168,14 @@ function generateMiniCalendar(date) {
             ? `background-color: #004d99; color: white; border-radius: 3px; font-weight: bold;` 
             : `color: #333;`;
         
-        html += `<td style="padding: 2px; ${style}">${day}</td>`;
+        // 【修改點 4】：將 padding 從 2px 縮小到 1px
+        html += `<td style="padding: 1px; ${style}">${day}</td>`;
         cellCount++;
     }
 
     // 3. 填入結尾的空白單元格
     while (cellCount % 7 !== 0) {
-        html += `<td style="padding: 2px;"></td>`;
+        html += `<td style="padding: 1px;"></td>`;
         cellCount++;
     }
 
@@ -181,7 +184,7 @@ function generateMiniCalendar(date) {
 }
 
 // ------------------------------------------
-// VI. 渲染邏輯 (已將小月曆整合至月份下方)
+// VI. 渲染邏輯 (不變)
 // ------------------------------------------
 function renderPageContent(date, weather, quote) { 
     const dayNumber = date.getDate();
@@ -236,7 +239,7 @@ function renderPageContent(date, weather, quote) {
 
     content += `</div>`; 
     
-    // 3. 星期 (從 230px 高度之後開始)
+    // 3. 星期 (不變)
     content += `<div style="clear: both; margin-top: 10px; text-align: center;">
         <div style="font-size: 1.5em; font-weight: bold; color: #333; margin-bottom: 15px;">
             ${weekdayName}
