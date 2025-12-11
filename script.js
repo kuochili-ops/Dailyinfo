@@ -1,7 +1,7 @@
 // ====================================================================
 // 專案名稱：極簡日曆儀表板
 // 功能：顯示天氣、農民曆、每日語錄，支持城市切換與日期切換。
-// 狀態：最終穩定版，內建最高等級的 Solar.js 載入防禦性檢查
+// 狀態：最終優化版 (所有 CSS 已分離到 style.css)
 // ====================================================================
 
 const PAGE_CONTAINER = document.getElementById('calendar-page-container');
@@ -28,10 +28,10 @@ const TAIWAN_CITIES = [
 
 let clockInterval = null;
 
-// I. 農民曆計算邏輯 - 【修復：更嚴格的 Solar 函式檢查】
+// I. 農民曆計算邏輯 (修正為最穩定的檢查)
 function getLunarData(date) { 
-    if (typeof Solar !== 'function') { // 檢查 Solar 是否為可呼叫函式
-        return { month: '農曆', day: '載入中', yi: '請確認 Solar.js 已載入', ji: '請確認 Solar.js 已載入', jieqi: '' };
+    if (typeof Solar !== 'function') { 
+        return { month: '農曆', day: '載入中', yi: '請確保 Solar.js 載入', ji: '請確保 Solar.js 載入', jieqi: '' };
     }
     try {
         const lunar = Solar.fromDate(date).getLunar();
@@ -47,14 +47,13 @@ function getLunarData(date) {
             jieqi: jieqi
         };
     } catch (e) {
-        // 如果 Solar 內部呼叫出錯，我們也安全返回預設值
          return { month: '農曆', day: '載入失敗', yi: '錯誤', ji: '錯誤', jieqi: '' };
     }
 }
 
 // 時辰吉凶計算與渲染邏輯 (已加入最高等級防禦)
 function getHourAuspiceData(date) { 
-    if (typeof Solar !== 'function') { // 檢查 Solar 是否為可呼叫函式
+    if (typeof Solar !== 'function') { 
         return []; 
     }
      try {
@@ -73,64 +72,74 @@ function generateHourAuspiceTable(data) {
         '申': '15-17', '酉': '17-19', '戌': '19-21', '亥': '21-23'
     };
 
-    let tableHtml = `<div style="margin: 15px 5px; padding: 10px 0; border-bottom: 1px dashed #ccc; text-align: center;">`;
-    tableHtml += `<div style="font-size: 1.1em; font-weight: bold; color: #004d99; margin-bottom: 5px;">時辰吉凶</div>`;
-    tableHtml += `<table style="width: 100%; border-collapse: collapse; font-size: 0.9em; text-align: center;">`;
+    let tableHtml = `<div class="hour-auspice-container">`;
+    tableHtml += `<div class="hour-auspice-title">時辰吉凶</div>`;
+    tableHtml += `<table class="hour-auspice-table">`;
     
-    // 時間區間 (例如: 23-01)
+    // 樣式已轉移到 style.css
+    const getColorClass = (tip) => {
+        if (tip === '吉') return 'color-good';
+        if (tip === '凶') return 'color-bad';
+        return 'color-neutral';
+    };
+
+    // 時間區間
     tableHtml += `<thead><tr>`;
     data.slice(0, 6).forEach(item => { 
-        if (item && item.hour) { // 防禦性檢查
-            tableHtml += `<th style="width: 16.66%; padding: 3px 0; font-weight: normal; color: #666;">${HOUR_MAP[item.hour]}</th>`;
+        if (item && item.hour) { 
+            tableHtml += `<th>${HOUR_MAP[item.hour]}</th>`;
         }
     });
     tableHtml += `</tr></thead>`;
 
-    // 時辰 (例如: 子, 丑, 寅...)
+    // 時辰 (子, 丑, 寅...)
     tableHtml += `<tbody><tr>`;
     data.slice(0, 6).forEach(item => { 
-        if (item && item.hour) { // 防禦性檢查
-            const color = item.tip === '吉' ? 'green' : (item.tip === '凶' ? '#cc0000' : '#333');
-            tableHtml += `<td style="padding: 3px 0; font-weight: bold;">
-                <div style="font-size: 1.1em; color: ${color};">${item.hour}</div>
+        if (item && item.hour) { 
+            const colorClass = getColorClass(item.tip);
+            tableHtml += `<td>
+                <div class="hour-text ${colorClass}">${item.hour}</div>
             </td>`;
         }
     });
     tableHtml += `</tr><tr>`;
-    // 吉凶提示 (例如: 吉, 凶, 平)
+
+    // 吉凶提示 (吉, 凶, 平)
     data.slice(0, 6).forEach(item => { 
-        if (item && item.tip) { // 防禦性檢查
-            const color = item.tip === '吉' ? 'green' : (item.tip === '凶' ? '#cc0000' : '#333');
-            tableHtml += `<td style="padding: 3px 0; font-weight: bold;">
-                <div style="font-size: 0.8em; color: ${color};">${item.tip}</div>
+        if (item && item.tip) { 
+            const colorClass = getColorClass(item.tip);
+            tableHtml += `<td>
+                <div class="tip-text ${colorClass}">${item.tip}</div>
             </td>`;
         }
     });
-    tableHtml += `</tr><tr><td colspan="6" style="height: 10px;"></td></tr><tr>`; // 分隔線
+    tableHtml += `</tr><tr><td colspan="6" class="auspice-gap"></td></tr><tr>`; 
 
     // 第二行 6 個 - 時間區間
     data.slice(6, 12).forEach(item => {
-        if (item && item.hour) { // 防禦性檢查
-            tableHtml += `<th style="width: 16.66%; padding: 3px 0; font-weight: normal; color: #666;">${HOUR_MAP[item.hour]}</th>`;
+        if (item && item.hour) { 
+            tableHtml += `<th>${HOUR_MAP[item.hour]}</th>`;
         }
     });
     tableHtml += `</tr><tr>`;
+    
     // 第二行 6 個 - 時辰
     data.slice(6, 12).forEach(item => {
-        if (item && item.hour) { // 防禦性檢查
-            const color = item.tip === '吉' ? 'green' : (item.tip === '凶' ? '#cc0000' : '#333');
-            tableHtml += `<td style="padding: 3px 0; font-weight: bold;">
-                <div style="font-size: 1.1em; color: ${color};">${item.hour}</div>
+        if (item && item.hour) { 
+            const colorClass = getColorClass(item.tip);
+            tableHtml += `<td>
+                <div class="hour-text ${colorClass}">${item.hour}</div>
             </td>`;
         }
     });
     tableHtml += `</tr><tr>`;
+
     // 第二行 6 個 - 吉凶提示
     data.slice(6, 12).forEach(item => {
-        if (item && item.tip) { // 防禦性檢查
-            const color = item.tip === '吉' ? 'green' : (item.tip === '凶' ? '#cc0000' : '#333');
-            tableHtml += `<td style="padding: 3px 0; font-weight: bold;">
-                <div style="font-size: 0.8em; color: ${color};">${item.tip}</div>
+        if (item && item.tip) { 
+            const colorClass = getColorClass(item.tip);
+            tableHtml += `<td>
+                <div class="tip-text ${colorClass}">${item.tip}</div>
             </td>`;
         }
     });
@@ -141,8 +150,8 @@ function generateHourAuspiceTable(data) {
 }
 
 
-// II. 每日語錄 API (不變)
-async function fetchQuote() { 
+// II. 每日語錄 API (略，內容不變)
+async function fetchQuote() { /* ... (內容不變) */
     const url = 'https://type.fit/api/quotes';
     try {
         const controller = new AbortController();
@@ -154,7 +163,7 @@ async function fetchQuote() {
         if (!response.ok) throw new Error('Network response was not ok');
         
         const data = await response.json(); 
-        const randomIndex = Math.floor(Math.random() * data.length); // 注意：修正了 Math.random 的拼寫
+        const randomIndex = Math.floor(Math.random() * data.length);
         const randomQuote = data[randomIndex];
         return `${randomQuote.text} — ${randomQuote.author || 'Unknown'}`;
     } catch (error) {
@@ -163,8 +172,8 @@ async function fetchQuote() {
     }
 }
 
-// III. 天氣 API 擷取邏輯 (不變)
-async function fetchWeatherForecast(lat, lon, cityName) { 
+// III. 天氣 API 擷取邏輯 (略，內容不變)
+async function fetchWeatherForecast(lat, lon, cityName) { /* ... (內容不變) */
     const forecast_url = `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=metric&lang=zh_tw`;
     try {
         const response = await fetch(forecast_url);
@@ -191,8 +200,8 @@ async function fetchWeatherForecast(lat, lon, cityName) {
     }
 }
 
-// IV. 時鐘功能函式 (不變)
-function startClock() { 
+// IV. 時鐘功能函式 (略，內容不變)
+function startClock() { /* ... (內容不變) */
     if (clockInterval) clearInterval(clockInterval);
     const updateTime = () => {
         const clockElement = document.getElementById('live-clock');
@@ -206,7 +215,7 @@ function startClock() {
     clockInterval = setInterval(updateTime, 1000);
 }
 
-// VI. 生成小月曆函式 (不變)
+// VI. 生成小月曆函式 (已優化，使用 Class)
 function generateMiniCalendar(date) { 
     const year = date.getFullYear();
     const month = date.getMonth(); 
@@ -216,31 +225,35 @@ function generateMiniCalendar(date) {
     const weekdays = ['日', '一', '二', '三', '四', '五', '六'];
     
     let html = '';
-    html += `<table style="width: 100%; border-collapse: collapse; font-size: 0.5em; text-align: center; border: 1px solid #eee;">`;
-    html += `<thead style="background-color: #f7f7f7;"><tr>`;
-    weekdays.forEach(day => {
-        const color = day === '日' ? '#cc0000' : '#333';
-        html += `<th style="padding: 0px 0; color: ${color}; font-weight: normal;">${day}</th>`;
+    html += `<div class="mini-calendar-table">`; // 新增容器 Class
+    html += `<table>`;
+    html += `<thead style="background-color: #f7f7f7;"><tr class="header-row">`;
+    weekdays.forEach((day, index) => {
+        const colorClass = (index === 0) ? 'sunday' : ''; // 週日紅色
+        html += `<th class="${colorClass}">${day}</th>`;
     });
     html += `</tr></thead><tbody><tr>`;
 
     let cellCount = 0; 
-    for (let i = 0; i < firstDayOfWeek; i++) { html += `<td style="padding: 0px;"></td>`; cellCount++; }
+    for (let i = 0; i < firstDayOfWeek; i++) { html += `<td></td>`; cellCount++; }
     for (let day = 1; day <= daysInMonth; day++) {
         if (cellCount % 7 === 0 && cellCount !== 0) { html += `</tr><tr>`; }
         const isToday = day === todayDay;
-        const style = isToday 
-            ? `background-color: #004d99; color: white; border-radius: 3px; font-weight: bold;` 
-            : `color: #333;`;
-        html += `<td style="padding: 0px; ${style}">${day}</td>`;
+        
+        let dayClasses = '';
+        if (isToday) dayClasses += ' mini-calendar-today';
+        if (cellCount % 7 === 0) dayClasses += ' sunday';
+
+        html += `<td class="day-cell${dayClasses}">${day}</td>`;
         cellCount++;
     }
-    while (cellCount % 7 !== 0) { html += `<td style="padding: 0px;"></td>`; cellCount++; }
+    while (cellCount % 7 !== 0) { html += `<td></td>`; cellCount++; }
     html += `</tr></tbody></table>`;
+    html += `</div>`; // 結束容器 Class
     return html;
 }
 
-// VII. 渲染邏輯 
+// VII. 渲染邏輯 (已優化，使用 Class)
 function renderPageContent(date, weather, quote) { 
     const dayNumber = date.getDate();
     const weekdayName = date.toLocaleString('zh-Hant', { weekday: 'long' });
@@ -252,94 +265,95 @@ function renderPageContent(date, weather, quote) {
     const lunarHtml = `<div>${topLabel}</div><div>${lunarData.month}</div><div>${lunarData.day}</div>`;
     const AD_HEIGHT_PX = 90; 
     
-    let content = `<div style="height: 100%; position: relative; padding-bottom: ${AD_HEIGHT_PX + 20}px; max-width: 400px; margin: 0 auto; box-sizing: border-box;">`;
+    // 使用 padding-bottom Class
+    let content = `<div class="content-wrapper" style="padding-bottom: ${AD_HEIGHT_PX + 20}px;">`; 
 
     // 1. 頂部資訊 (年號)
-    content += `<div style="overflow: auto; border-bottom: 1px solid #eee; padding-bottom: 5px; margin-top: 10px;">
-        <span style="float: left; font-size: 0.8em;">${date.getFullYear() - 1911}年 歲次${typeof Solar === 'function' ? Solar.fromDate(date).getLunar().getYearInGanZhi() : '載入中'}</span>
-        <span style="float: right; font-size: 0.8em;">${date.getFullYear()}</span>
+    content += `<div class="top-info">
+        <span class="top-info-left">${date.getFullYear() - 1911}年 歲次${typeof Solar === 'function' ? Solar.fromDate(date).getLunar().getYearInGanZhi() : ''}</span>
+        <span class="top-info-right">${date.getFullYear()}</span>
     </div>`;
     
     // 2. 主體內容：大日期區塊
-    content += `<div style="position: relative; height: 120px; margin-top: 15px; display: flex; align-items: flex-start; justify-content: center;">`; 
+    content += `<div class="main-date-container">`; 
     
-    // 日期切換按鈕容器 - 保持優化後的 top: 55%
-    content += `<div style="position: absolute; top: 55%; width: 100%; transform: translateY(-50%); display: flex; justify-content: space-between; padding: 0 10px; z-index: 10;">
-        <button id="prev-day-btn" style="background: none; border: none; font-size: 2.5em; color: #004d99; cursor: pointer; padding: 0 10px; outline: none; opacity: 0.5;">
+    // 日期切換按鈕容器
+    content += `<div class="date-shift-controls">
+        <button id="prev-day-btn" class="shift-btn">
             &#x23EA;
         </button>
-        <button id="next-day-btn" style="background: none; border: none; font-size: 2.5em; color: #004d99; cursor: pointer; padding: 0 10px; outline: none; opacity: 0.5;">
+        <button id="next-day-btn" class="shift-btn">
             &#x23E9;
         </button>
     </div>`;
 
     // (A) 左側：農曆紅條
-    content += `<div style="position: absolute; left: 0; background-color: #cc0000; color: white; padding: 5px; font-size: 1.1em; text-align: center; box-shadow: 2px 2px 5px rgba(0,0,0,0.1); line-height: 1.2;">
+    content += `<div class="lunar-badge">
         ${lunarHtml}
     </div>`;
+
     // (B) 中央：大日期
-    content += `<div style="width: 100%; text-align: center;">
-        <div style="font-size: 7.5em; font-weight: 900; color: #004d99; line-height: 1;">
+    content += `<div class="date-number-wrapper">
+        <div class="big-date-number">
             ${dayNumber}
         </div>
     </div>`;
+
     // (C) 右側：月份 
-    content += `<div style="position: absolute; right: 0; text-align: right; line-height: 1.1; width: 160px;">
-        <div style="font-size: 2.5em; font-weight: bold; color: #cc0000;">${monthShort}</div>
-        <span style="display: block; transform: scale(2, 1.5); transform-origin: right top; margin-top: 5px;">
-            <div style="font-size: 1.2em; font-weight: bold; color: #333;">${month}月</div>
+    content += `<div class="month-info">
+        <div class="month-short">${monthShort}</div>
+        <span class="month-long-wrapper">
+            <div class="month-long">${month}月</div>
         </span>
     </div>`;
     content += `</div>`; 
     
     // 3. 星期 
-    content += `<div style="clear: both; margin-top: 10px; text-align: center; margin-bottom: 5px;">
-        <div style="font-size: 1.5em; font-weight: bold; color: #333; margin-bottom: 5px;">
+    content += `<div class="weekday-display">
+        <div class="weekday-text">
             ${weekdayName}
         </div>
     </div>`;
     
-    // 3.5. 小月曆 (在星期下方，靠右)
-    content += `<div style="text-align: right; margin-right: 5px; margin-bottom: 10px;">
-        <div style="width: 160px; display: inline-block;">
-            ${generateMiniCalendar(date)}
-        </div>
+    // 3.5. 小月曆
+    content += `<div class="mini-calendar-container">
+        ${generateMiniCalendar(date)}
     </div>`;
 
     // 4. 宜/忌 
-    content += `<div style="margin: 0 5px; padding: 15px 0; text-align: center; border-top: 1px dashed #ccc; border-bottom: 1px dashed #ccc;">
-        <div style="display: flex; justify-content: space-around; text-align: center; font-size: 1.1em; line-height: 1.6;">
-            <div style="width: 48%; border-right: 1px solid #eee;"><div style="font-weight: bold; color: green; margin-bottom: 5px;">**宜**</div><div style="white-space: pre-wrap; color: #555;">${lunarData.yi || '諸事不宜'}</div></div>
-            <div style="width: 48%;"><div style="font-weight: bold; color: #cc0000; margin-bottom: 5px;">**忌**</div><div style="white-space: pre-wrap; color: #555;">${lunarData.ji || '諸事不宜'}</div></div>
+    content += `<div class="yi-ji-section">
+        <div class="yi-ji-wrapper">
+            <div class="yi-col"><div class="yi-title">**宜**</div><div class="yi-text">${lunarData.yi || '諸事不宜'}</div></div>
+            <div class="ji-col"><div class="ji-title">**忌**</div><div class="ji-text">${lunarData.ji || '諸事不宜'}</div></div>
         </div>
     </div>`;
     
-    // 4.5. 時辰吉凶表 - 【呼叫】
+    // 4.5. 時辰吉凶表
     const hourAuspiceData = getHourAuspiceData(date);
     content += generateHourAuspiceTable(hourAuspiceData);
 
 
     // 5. 每日語錄 或 現在時刻 
     if (quote) {
-        content += `<div style="margin-top: 20px; padding: 10px; border: 1px dashed #ccc; background-color: #f9f9f9; font-size: 0.9em; color: #555; min-height: 50px; display: flex; align-items: center; justify-content: center; text-align: center; font-style: italic;">
-            "${quote}"
+        content += `<div class="quote-clock-section">
+            <span class="quote-text">"${quote}"</span>
         </div>`;
     } else {
         // 時鐘
-        content += `<div style="margin-top: 20px; padding: 10px; border: 1px dashed #ccc; background-color: #f9f9f9; font-size: 2.0em; font-weight: bold; color: #333; min-height: 50px; display: flex; align-items: center; justify-content: center; text-align: center;">
-            <span id="live-clock">--:--:--</span>
+        content += `<div class="quote-clock-section">
+            <span id="live-clock" class="live-clock-text">--:--:--</span>
         </div>`;
     }
 
     // 6. 縣市天氣 
-    content += `<div style="padding: 15px; text-align: center; font-size: 0.9em; color: #666;">
-        <span style="font-weight: bold; color: #333;">${weather.city} 天氣:</span> 
+    content += `<div class="weather-section">
+        <span class="weather-city-name">${weather.city} 天氣:</span> 
         ${weather.description} 
-        <span style="font-weight: bold; color: #e60000;">(${weather.temperature})</span>
+        <span class="weather-temp">(${weather.temperature})</span>
     </div>`;
     
     // 7. 底部廣告空間 
-    content += `<div style="position: absolute; bottom: 0; left: 0; width: 100%; height: ${AD_HEIGHT_PX}px; background-color: #ddd;"></div>`;
+    content += `<div class="ad-space"></div>`;
 
     content += `</div>`; 
     PAGE_CONTAINER.innerHTML = content;
@@ -348,7 +362,7 @@ function renderPageContent(date, weather, quote) {
         startClock();
     }
     
-    // 按鈕事件綁定 (不變)
+    // 事件綁定
     document.getElementById('prev-day-btn').addEventListener('click', () => {
         shiftDate(-1); 
     });
@@ -357,10 +371,7 @@ function renderPageContent(date, weather, quote) {
     });
 }
 
-// ------------------------------------------
-// VIII. 日期切換核心邏輯 (不變)
-// ------------------------------------------
-
+// ... (VIII. 日期切換核心邏輯 和 IX. 初始化與事件 保持不變) ...
 function isToday(someDate) {
     const today = new Date();
     return someDate.getDate() === today.getDate() &&
@@ -400,9 +411,6 @@ async function updateCalendar(date, lat, lon, cityName) {
     renderPageContent(date, weatherData, quoteData); 
 }
 
-// ------------------------------------------
-// IX. 初始化與事件 (不變)
-// ------------------------------------------
 function loadCitySelector() { 
     TAIWAN_CITIES.forEach((city) => {
         const option = document.createElement('option');
