@@ -152,7 +152,7 @@ function generateMiniCalendar(date) { /* ... (內容不變) */
     return html;
 }
 
-// VII. 渲染邏輯 (已移除時辰吉凶表)
+// VII. 渲染邏輯 (已移除時辰吉凶表，並優化按鈕樣式)
 function renderPageContent(date, weather, quote) { 
     const dayNumber = date.getDate();
     const weekdayName = date.toLocaleString('zh-Hant', { weekday: 'long' });
@@ -175,12 +175,12 @@ function renderPageContent(date, weather, quote) {
     // 2. 主體內容：大日期區塊
     content += `<div style="position: relative; height: 120px; margin-top: 15px; display: flex; align-items: flex-start; justify-content: center;">`; 
     
-    // 日期切換按鈕容器
-    content += `<div style="position: absolute; top: 50%; width: 100%; transform: translateY(-50%); display: flex; justify-content: space-between; padding: 0 10px; z-index: 10;">
-        <button id="prev-day-btn" style="background: none; border: none; font-size: 2.5em; color: #004d99; cursor: pointer; padding: 0 10px; outline: none;">
+    // 日期切換按鈕容器 - 【修改：top: 55% 讓位置略低】
+    content += `<div style="position: absolute; top: 55%; width: 100%; transform: translateY(-50%); display: flex; justify-content: space-between; padding: 0 10px; z-index: 10;">
+        <button id="prev-day-btn" style="background: none; border: none; font-size: 2.5em; color: #004d99; cursor: pointer; padding: 0 10px; outline: none; opacity: 0.5;">
             &#x23EA;
         </button>
-        <button id="next-day-btn" style="background: none; border: none; font-size: 2.5em; color: #004d99; cursor: pointer; padding: 0 10px; outline: none;">
+        <button id="next-day-btn" style="background: none; border: none; font-size: 2.5em; color: #004d99; cursor: pointer; padding: 0 10px; outline: none; opacity: 0.5;">
             &#x23E9;
         </button>
     </div>`;
@@ -226,8 +226,6 @@ function renderPageContent(date, weather, quote) {
         </div>
     </div>`;
     
-    // 4.5. 時辰吉凶表 - 已移除
-
     // 5. 每日語錄 或 現在時刻 
     if (quote) {
         content += `<div style="margin-top: 20px; padding: 10px; border: 1px dashed #ccc; background-color: #f9f9f9; font-size: 0.9em; color: #555; min-height: 50px; display: flex; align-items: center; justify-content: center; text-align: center; font-style: italic;">
