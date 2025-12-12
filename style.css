@@ -1,5 +1,5 @@
 /* ====================================================================
-   style.css - 極簡日曆儀表板樣式表 (最終版)
+   style.css - 極簡日曆儀表板樣式表 (最終版 - 依圖調整)
    ==================================================================== */
 
 /* 基礎佈局與卡片 */
@@ -62,16 +62,13 @@ body {
     border-bottom: 1px solid #eee;
 }
 
-/* 移除舊的日期按鈕定位，現在由 date-shift-wrapper 負責 */
-/* .date-shift-controls { ... } */
-
 /* ==================================================
    *** 日期切換按鈕 (新位置與透明度) ***
    ================================================== */
 .date-shift-wrapper {
     text-align: right;
     padding: 5px 15px; /* 增加上下間距 */
-    border-bottom: 1px dashed #ccc;
+    /* 移除 border-bottom，讓它緊貼宜忌區塊 */
 }
 
 .shift-btn {
@@ -135,7 +132,7 @@ body {
 .yi-ji-section {
     display: flex; 
     justify-content: space-between; 
-    margin: 10px 15px;
+    margin: 0 15px 10px 15px; /* 上方邊距移除，讓它靠近切換按鈕 */
     padding: 10px 0;
     border-bottom: 1px dashed #ccc;
 }
@@ -192,7 +189,7 @@ body {
 .bottom-row-container {
     display: flex; /* 啟用 Flex 佈局 */
     justify-content: space-between;
-    align-items: flex-start; /* 讓內容靠上對齊 */
+    align-items: flex-start; 
     margin: 20px 15px;
     padding-bottom: 15px;
     border-bottom: 1px solid #eee;
@@ -205,7 +202,7 @@ body {
     text-align: left;
     font-size: 0.9em;
     color: #666;
-    min-height: 100px; /* 確保左側有足夠的高度 */
+    min-height: 100px; 
 }
 .weather-city-name { font-weight: bold; color: #333; }
 .weather-temp { font-weight: bold; color: #e60000; }
@@ -213,21 +210,22 @@ body {
 
 /* 小月曆區塊 (右側，縮小尺寸) */
 .mini-calendar-container {
-    /* 限制寬度，達到縮小一半以上的要求 */
+    /* 設定明確寬度，例如 40%，使其小於一半 */
     width: 40%; 
     min-width: 120px;
-    flex-shrink: 0; /* 防止被壓縮 */
+    flex-shrink: 0; 
     
-    /* 調整字體，達到縮小效果 */
+    /* 縮小字體尺寸 */
     font-size: 0.6em; 
     
-    border: 1px solid #eee; /* 新增邊框讓月曆更獨立 */
+    border: 1px solid #eee; 
     border-radius: 4px;
-    overflow: hidden; /* 確保內容不溢出 */
+    overflow: hidden; 
 }
 
 .mini-calendar-title {
-    font-size: 1.2em; /* 由於整體縮小，標題字體需要相對放大 */
+    /* 相對放大，讓縮小後的標題仍清晰 */
+    font-size: 1.2em; 
     color: #333;
     text-align: center;
     margin: 5px 0;
