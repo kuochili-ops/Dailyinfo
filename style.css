@@ -1,5 +1,5 @@
 /* ====================================================================
-   style.css - 極簡日曆儀表板樣式表 (最終版 - 依圖精修)
+   style.css - 極簡日曆儀表板樣式表 (最終版 - 依圖定稿)
    ==================================================================== */
 
 /* 基礎佈局與卡片 */
@@ -42,7 +42,7 @@ body {
 .top-info {
     display: flex;
     justify-content: space-between;
-    padding: 5px 15px 0 15px; /* 減少底部間距，讓它貼近切換按鈕 */
+    padding: 5px 15px 0 15px; /* 貼近日期切換按鈕 */
     font-size: 0.8em;
     color: #999;
 }
@@ -53,11 +53,11 @@ body {
 }
 
 /* ==================================================
-   *** 日期切換按鈕 (精修位置與透明度) ***
+   *** 日期切換按鈕 (貼近主日期) ***
    ================================================== */
 .date-shift-wrapper {
     text-align: right;
-    padding: 0 15px 5px 15px; /* 上下間距微調 */
+    padding: 0 15px 5px 15px; /* 貼近上下區塊 */
 }
 
 .shift-btn {
@@ -68,7 +68,7 @@ body {
     color: #999;
     padding: 5px;
     transition: color 0.2s;
-    opacity: 0.6; /* 增加透明度 */
+    opacity: 0.6; /* 透明度 */
 }
 
 .shift-btn:hover {
@@ -202,7 +202,7 @@ body {
     text-align: left;
     font-size: 0.9em;
     color: #666;
-    min-height: 80px; /* 略微減少高度 */
+    min-height: 80px; 
 }
 .weather-city-name { font-weight: bold; color: #333; }
 .weather-temp { font-weight: bold; color: #e60000; }
@@ -229,10 +229,10 @@ body {
 
 
 /* ==================================================
-   *** 時辰吉凶表 (精簡文字版) ***
+   *** 時辰吉凶表 (最底部) ***
    ================================================== */
 .hour-auspice-container {
-    margin: 15px 15px 20px 15px; /* 增加底部間距 */
+    margin: 15px 15px 20px 15px; /* 底部間距 */
     padding: 10px 0; 
     text-align: center;
     font-size: 0.9em;
@@ -242,6 +242,9 @@ body {
     font-weight: bold; 
     color: #004d99; 
     margin-bottom: 5px;
+}
+.hour-auspice-text {
+    line-height: 1.5;
 }
 .auspice-good {
     color: #008000; /* 綠色 */
