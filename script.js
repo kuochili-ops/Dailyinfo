@@ -1,7 +1,7 @@
 // ====================================================================
 // 專案名稱：極簡日曆儀表板 (最終版 - 依圖定稿)
 // 功能：顯示天氣、農民曆 (含宜忌)、時鐘、時辰吉凶
-// 修正：版面順序和時辰吉凶動態計算
+// 修正：時辰吉凶改為使用 solar.js 庫的實際計算結果
 // ====================================================================
 
 const PAGE_CONTAINER = document.getElementById('calendar-page-container');
@@ -32,6 +32,10 @@ let clockInterval = null;
 // I. 農民曆計算邏輯 (使用 CDN 完整庫)
 // ====================================================================
 
+/**
+ * 根據日期獲取農曆資訊，包括宜忌和時辰吉凶。
+ * @param {Date} date 
+ */
 function getLunarData(date) { 
     if (typeof Solar === 'undefined') {
         return { month: '農曆', day: '載入失敗', yi: 'CDN 連線異常', ji: 'CDN 連線異常', jieqi: '', hourAuspice: [] };
@@ -42,11 +46,12 @@ function getLunarData(date) {
     const jiList = lunar.getDayJi();
     const jieqi = lunar.getJieQi(); 
 
-    // *** 時辰吉凶：從 lunar.getDayHour() 獲取時辰信息，再用 isGood() 判斷吉凶 ***
+    // *** 關鍵修正：從 lunar.getDayHour() 獲取時辰信息，再用 isGood() 判斷吉凶 ***
+    
     let hourAuspiceData = [];
-    const hours = lunar.getDayHour(); 
+    const hours = lunar.getDayHour(); // 獲取當天所有時辰 (包含名稱、起止時間、吉凶等資訊)
 
-    // 定義時辰黃黑道的判斷映射
+    // 定義時辰吉凶名稱的映射（黃道/黑道）
     const AUSPICE_MAP = {
         '青龍': '吉', '明堂': '吉', '天刑': '凶', '朱雀': '凶', '金匱': '吉', 
         '天德': '吉', '白虎': '凶', '玉堂': '吉', '天牢': '凶', '玄武': '凶', 
@@ -54,13 +59,15 @@ function getLunarData(date) {
     };
 
     hours.forEach(hour => {
+        // hour.getName() 獲取時辰名稱 (子/丑/寅...)
+        // hour.getNineStar() 獲取九星/黃黑道名稱 (青龍/明堂/天刑...)
         const nineStar = hour.getNineStar();
-        const auspice = AUSPICE_MAP[nineStar] || (hour.isGood() ? '吉' : '凶');
+        const auspice = AUSPICE_MAP[nineStar] || (hour.isGood() ? '吉' : '凶'); // 透過九星名稱判斷吉凶
         
         hourAuspiceData.push({ 
-            hour: hour.getName(), 
-            auspice: auspice,      
-            nineStar: nineStar     
+            hour: hour.getName(),  // 時辰名稱 (子, 丑...)
+            auspice: auspice,      // 吉/凶
+            nineStar: nineStar     // 黃黑道名稱 (可選)
         });
     });
 
@@ -174,7 +181,7 @@ function generateMiniCalendar(date) {
     return html;
 }
 
-// VIII. 核心渲染邏輯 (版面順序)
+// VIII. 核心渲染邏輯 (不變)
 function renderPageContent(date, weather, quote) {
     let content = '';
     const lunarYearInfo = typeof Solar !== 'undefined' ? Solar.fromDate(date).getLunar().getYearInGanZhi() : '';
