@@ -1,6 +1,6 @@
 // ====================================================================
 // 專案名稱：極簡日曆儀表板 (最終定案版 - 支援年月選擇，介面文字已轉為正體中文)
-// 狀態：已加入生肖 Emoji，小月曆日期可點擊切換。
+// 狀態：已修正生肖計算邏輯。已加入生肖 Emoji，小月曆日期可點擊切換。
 // ====================================================================
 
 const PAGE_CONTAINER = document.getElementById('calendar-page-container');
@@ -30,13 +30,15 @@ const TAIWAN_CITIES = [
 // ** 核心修正：生肖 Emoji 函式 **
 // ******************************************************
 function getChineseZodiacEmoji(year) {
+    // 陣列順序: 猴, 雞, 狗, 豬, 鼠, 牛, 虎, 兔, 龍, 蛇, 馬, 羊
     const zodiacs = ['🐒', '🐔', '🐶', '🐷', '🐭', '🐮', '🐯', '🐰', '🐲', '🐍', '🐴', '🐑'];
-    // 農曆年從立春開始，但為簡化顯示，這裡使用公曆年計算 (year - 4) % 12
-    return zodiacs[(year - 4) % 12];
+    // 修正公式：使用 2016 年 (猴, 索引 0) 作為基準年計算。
+    // 確保 2025 年 (蛇, 索引 9) 能被正確計算出來：(2025 - 2016) % 12 = 9
+    return zodiacs[(year - 2016) % 12];
 }
 
 // ******************************************************
-// ** 核心修正：簡體轉正體函式 (擴充) **
+// ** 簡體轉正體函式 **
 // ******************************************************
 function simplifiedToTraditional(text) {
     if (!text) return '';
@@ -46,7 +48,7 @@ function simplifiedToTraditional(text) {
         '进': '進', '习': '習', '医': '醫', '启': '啟', '会': '會',
         '备': '備', '园': '園', '买': '買', '卖': '賣', '发': '發', 
         '设': '設', '坛': '壇',
-        '饰': '飾', '馀': '餘', '疗': '療', '理': '理', '归': '歸',
+        '饰': '飾', '馀': '餘', '疗': '療', '理': '理', '歸': '歸',
         '灶': '竈', '会': '會'
     };
     let result = '';
@@ -68,14 +70,13 @@ function getLunarData(date) {
     const jiList = lunar.getDayJi();
     const jieqi = lunar.getJieQi(); 
 
-    // 核心修正點：對宜忌事項的內容進行簡轉正
     const rawYi = yiList.slice(0, 4).join(' ');
     const rawJi = jiList.slice(0, 4).join(' ');
 
     const finalYi = simplifiedToTraditional(rawYi);
     const finalJi = simplifiedToTraditional(rawJi);
 
-    // 時辰吉凶資料 (用戶原始邏輯)
+    // 時辰吉凶資料 
     let hourAuspiceData = [];
     const hourAuspiceMap = {
         '子': '吉', '丑': '凶', '寅': '吉', '卯': '凶', '辰': '吉', '巳': '凶',
@@ -88,8 +89,8 @@ function getLunarData(date) {
     return {
         month: lunar.getMonthInChinese() + '月',
         day: lunar.getDayInChinese(),
-        yi: finalYi, // 使用轉換後的正體中文
-        ji: finalJi, // 使用轉換後的正體中文
+        yi: finalYi, 
+        ji: finalJi, 
         jieqi: jieqi,
         hourAuspice: hourAuspiceData
     };
@@ -199,7 +200,6 @@ function generateMiniCalendar(date) {
 // 新增的點擊處理函式
 window.handleMiniCalendarClick = function(dateString) {
     const [year, month, day] = dateString.split('-').map(Number);
-    // JS month is 0-indexed, so we need month - 1
     currentDisplayDate = new Date(year, month - 1, day);
     updateCalendar(currentDisplayDate);
 }
@@ -235,7 +235,7 @@ function renderPageContent(date, weather, quote) {
     let content = '';
     const currentYear = date.getFullYear();
     const lunarYearInfo = typeof Solar !== 'undefined' ? Solar.fromDate(date).getLunar().getYearInGanZhi() : '';
-    const zodiacEmoji = getChineseZodiacEmoji(currentYear); // 取得生肖 Emoji
+    const zodiacEmoji = getChineseZodiacEmoji(currentYear); // 取得修正後的生肖 Emoji
 
     // 1. 頂部資訊 (年與歲次)
     content += `<div class="top-info"><span class="top-info-left">${currentYear - 1911}年 歲次${lunarYearInfo} ${zodiacEmoji}</span><span class="top-info-right">${currentYear}</span></div>`;
