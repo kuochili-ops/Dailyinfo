@@ -1,6 +1,7 @@
 // ====================================================================
-// 專案名稱：極簡日曆儀表板 (最終定案版 - 支援年月選擇，介面文字已轉為正體中文)
-// 狀態：已修正生肖計算邏輯。移除小月曆點擊切換，改為使用 <input type="date"> 輔助選擇。
+// 專案名稱：極簡日曆儀表板 (最終版 - 依圖定稿)
+// 功能：顯示天氣、農民曆 (含宜忌)、時鐘、時辰吉凶
+// 修正：已修正天氣載入問題、恢復簡體轉正體、恢復生肖顯示。
 // ====================================================================
 
 const PAGE_CONTAINER = document.getElementById('calendar-page-container');
@@ -8,7 +9,6 @@ const CITY_SELECTOR = document.getElementById('city-selector');
 const API_KEY = 'Dcd113bba5675965ccf9e60a7e6d06e5'; 
 
 let currentDisplayDate = new Date(); 
-let clockInterval = null;
 
 const TAIWAN_CITIES = [
     { name: '臺北市', lat: 25.0330, lon: 121.5654 }, 
@@ -17,23 +17,30 @@ const TAIWAN_CITIES = [
     { name: '臺中市', lat: 24.1478, lon: 120.6728 }, 
     { name: '臺南市', lat: 22.9909, lon: 120.2132 }, 
     { name: '高雄市', lat: 22.6273, lon: 120.3014 }, 
-    { name: '基隆市', lat: 25.1276, lon: 121.7390 }, 
-    { name: '新竹市', lat: 24.8037, lon: 120.9667 }, 
-    { name: '嘉義市', lat: 23.4791, lon: 120.4402 }, 
-    { name: '宜蘭縣', lat: 24.7554, lon: 121.7523 }, 
-    { name: '花蓮縣', lat: 23.9733, lon: 121.6062 }, 
-    { name: '屏東縣', lat: 22.6685, lon: 120.4855 }, 
-    { name: '臺東縣', lat: 22.7562, lon: 121.1524 }  
+    { name: '基隆市', lat: 25.1276, lon: 121.7392 }, 
+    { name: '新竹市', lat: 24.8037, lon: 120.9669 }, 
+    { name: '嘉義市', lat: 23.4841, lon: 120.4497 }, 
+    { name: '宜蘭縣', lat: 24.7577, lon: 121.7533 }, 
+    { name: '花蓮縣', lat: 23.9730, lon: 121.6030 }, 
+    { name: '屏東縣', lat: 22.6738, lon: 120.4851 }, 
+    { name: '臺東縣', lat: 22.7505, lon: 121.1518 }  
 ];
 
+let clockInterval = null;
+
 // ******************************************************
-// ** 輔助函式：生肖 Emoji & 簡體轉正體 **
+// ** 核心修正：生肖 Emoji 函式 **
 // ******************************************************
 function getChineseZodiacEmoji(year) {
+    // 陣列順序: 猴, 雞, 狗, 豬, 鼠, 牛, 虎, 兔, 龍, 蛇, 馬, 羊
     const zodiacs = ['🐒', '🐔', '🐶', '🐷', '🐭', '🐮', '🐯', '🐰', '🐲', '🐍', '🐴', '🐑'];
+    // 修正公式：使用 2016 年 (猴, 索引 0) 作為基準年計算。
     return zodiacs[(year - 2016) % 12];
 }
 
+// ******************************************************
+// ** 核心修正：簡體轉正體函式 **
+// ******************************************************
 function simplifiedToTraditional(text) {
     if (!text) return '';
     const map = {
@@ -41,7 +48,7 @@ function simplifiedToTraditional(text) {
         '盖': '蓋', '纳': '納', '结': '結', '办': '辦', '迁': '遷', 
         '进': '進', '习': '習', '医': '醫', '启': '啟', '会': '會',
         '備': '備', '园': '園', '买': '買', '卖': '賣', '发': '發', 
-        '设': '設', '坛': '壇',
+        '設': '設', '坛': '壇',
         '饰': '飾', '馀': '餘', '疗': '療', '理': '理', '归': '歸',
         '灶': '竈', '会': '會'
     };
@@ -53,7 +60,7 @@ function simplifiedToTraditional(text) {
     return result;
 }
 
-// I. 農民曆計算邏輯 
+// I. 農民曆計算邏輯 (使用 CDN 完整庫)
 function getLunarData(date) { 
     if (typeof Solar === 'undefined') {
         return { month: '農曆', day: '載入失敗', yi: 'CDN 連線異常', ji: 'CDN 連線異常', jieqi: '', hourAuspice: [] };
@@ -63,12 +70,14 @@ function getLunarData(date) {
     const yiList = lunar.getDayYi();
     const jiList = lunar.getDayJi();
     const jieqi = lunar.getJieQi(); 
-
+    
+    // 應用簡體轉正體
     const rawYi = yiList.slice(0, 4).join(' ');
     const rawJi = jiList.slice(0, 4).join(' ');
 
     const finalYi = simplifiedToTraditional(rawYi);
     const finalJi = simplifiedToTraditional(rawJi);
+
 
     let hourAuspiceData = [];
     const hourAuspiceMap = {
@@ -82,38 +91,90 @@ function getLunarData(date) {
     return {
         month: lunar.getMonthInChinese() + '月',
         day: lunar.getDayInChinese(),
-        yi: finalYi, 
-        ji: finalJi, 
+        yi: finalYi, // 使用轉換後的正體中文
+        ji: finalJi, // 使用轉換後的正體中文
         jieqi: jieqi,
         hourAuspice: hourAuspiceData
     };
 }
 
+// II. 時辰吉凶數據擷取 
+function getHourAuspiceData(date) { 
+    return getLunarData(date).hourAuspice; 
+}
+
+// III. 時辰吉凶表格生成
+function generateHourAuspiceContent(data) { 
+    if (!data || data.length === 0) return '';
+    
+    const goodHours = data.filter(h => h.auspice === '吉').map(h => h.hour).join(' ');
+    const badHours = data.filter(h => h.auspice === '凶').map(h => h.hour).join(' ');
+
+    return `
+    <div class="hour-auspice-container">
+        <div class="hour-auspice-title">今日時辰吉凶</div>
+        <div class="hour-auspice-text">
+            <span class="auspice-good">吉時: ${goodHours}</span> | 
+            <span class="auspice-bad">凶時: ${badHours}</span>
+        </div>
+    </div>`;
+}
+
+// IV. 天氣 API (使用 openweathermap.org/forecast)
 async function fetchWeatherForecast(lat, lon, cityName) { 
-    const url = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=metric&lang=zh_tw`;
+    const forecast_url = `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=metric&lang=zh_tw`;
     try {
-        const response = await fetch(url);
-        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        const response = await fetch(forecast_url);
+        // 如果 HTTP 狀態碼不是 200，立刻拋出錯誤
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
         const data = await response.json();
-        const weather = data.weather[0].description;
-        const temp = Math.round(data.main.temp);
+        
+        // 雖然 response.ok 檢查過狀態碼，但 API 內容可能仍有問題
+        if (data.cod != 200) return { description: "API 查詢失敗", temperature: "??°", city: cityName };
+
+        const today = new Date().toDateString();
+        let maxT = -Infinity;
+        let minT = Infinity;
+        let weatherDescription = data.list[0].weather[0].description; 
+
+        for (const item of data.list) {
+            const itemDate = new Date(item.dt_txt).toDateString();
+            if (itemDate === today) {
+                maxT = Math.max(maxT, item.main.temp_max);
+                minT = Math.min(minT, item.main.temp_min);
+                // 為了避免時區問題導致沒有當日資料，確保 minT/maxT 被計算到。
+                // 如果只找到一組數據，minT 和 maxT 會相等。
+            }
+        }
+        
+        // 如果 minT 仍然是 Infinity (表示沒有找到當日數據)，使用一個合理的預設值或當前溫度 (這裡簡化為 ??°)
+        if (minT === Infinity) {
+             return { description: "溫度數據缺失", temperature: "??°", city: cityName };
+        }
+
         return {
-            description: weather,
-            temperature: `${temp}°C`,
+            description: weatherDescription,
+            temperature: `${Math.round(minT)}°C ~ ${Math.round(maxT)}°C`,
             city: cityName
         };
     } catch (error) {
-        return { description: "網路錯誤", temperature: "??°", city: cityName };
+        // 捕獲網路錯誤或 API key 錯誤
+        console.error("Weather fetch error:", error);
+        return { description: "網路或金鑰錯誤", temperature: "??°", city: cityName };
     }
 }
 
+// V. 時鐘與小月曆 (不變)
 function startClock() { 
     if (clockInterval) clearInterval(clockInterval);
     const updateTime = () => {
         const clockElement = document.getElementById('live-clock');
         if (clockElement) {
             const now = new Date();
-            const timeString = now.toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
+            const timeString = now.toLocaleTimeString('zh-TW', { hour12: false });
             clockElement.textContent = timeString;
         }
     };
@@ -121,153 +182,128 @@ function startClock() {
     clockInterval = setInterval(updateTime, 1000);
 }
 
-// 移除小月曆的點擊事件
 function generateMiniCalendar(date) { 
     const year = date.getFullYear();
     const month = date.getMonth();
-    const today = new Date();
+    const today = new Date(); // 修正：應該用 today 判斷今天的日期
     const todayDay = today.getDate();
     const currentMonth = today.getMonth();
     const currentYear = today.getFullYear();
+
+    const displayDay = date.getDate(); // 顯示日期的高亮
+    
     const firstDayOfWeek = new Date(year, month, 1).getDay();
     const daysInMonth = new Date(year, month + 1, 0).getDate();
     const weekdays = ['日', '一', '二', '三', '四', '五', '六'];
     let html = '';
 
-    html += `<table style="width: 100%;">`; 
-    html += `<thead><tr>`;
+    html += `<table style="border-collapse: collapse; font-size: 1em; text-align: center;">`;
+    html += `<thead style="background-color: #f7f7f7;"><tr>`;
     weekdays.forEach(day => {
         const color = day === '日' ? '#cc0000' : '#333';
-        html += `<th style="color: ${color};">${day}</th>`;
+        html += `<th style="padding: 0px 0; color: ${color}; font-weight: normal;">${day}</th>`;
     });
     html += `</tr></thead><tbody><tr>`;
     
     let cellCount = 0;
-    for (let i = 0; i < firstDayOfWeek; i++) html += `<td></td>`, cellCount++;
-    
+    for (let i = 0; i < firstDayOfWeek; i++) html += `<td style="padding: 0px; width: 14.28%;"></td>`, cellCount++;
     for (let day = 1; day <= daysInMonth; day++) {
         if (cellCount % 7 === 0 && cellCount !== 0) html += `</tr><tr>`;
         const isSunday = (cellCount % 7 === 0);
+        // 高亮顯示 '當前' 顯示的日期
+        const isSelectedDay = (day === displayDay && month === date.getMonth() && year === date.getFullYear());
+        // 高亮顯示 '今天' 的日期
         const isCurrentDay = (day === todayDay && month === currentMonth && year === currentYear);
-        
-        let className = '';
-        if (isCurrentDay) className = 'current-day';
-        else if (isSunday) className = 'sunday-day';
 
-        // 移除 onclick 事件，僅顯示日期
-        html += `<td class="${className}">${day}</td>`;
+        let style = "padding: 0px; height: 16px; width: 14.28%;";
         
+        if (isSelectedDay) { 
+            style += "background-color: #004d99; color: white; border-radius: 3px; font-weight: bold;"; 
+        } else if (isCurrentDay) {
+            style += "border: 1px solid #004d99; color: #004d99; border-radius: 3px;"; // 今天的日期用邊框標記
+        } else if (isSunday) {
+            style += "color: #cc0000;";
+        } else {
+            style += "color: #333;";
+        }
+        
+        html += `<td style="${style}">${day}</td>`;
         cellCount++;
     }
-    while (cellCount % 7 !== 0) html += `<td></td>`, cellCount++;
+    while (cellCount % 7 !== 0) html += `<td style="padding: 0px; width: 14.28%;"></td>`, cellCount++;
     html += `</tr></tbody></table>`;
     return html;
 }
 
-// VI. 產生年月選擇器 (現改為顯示當前年月)
-function generateDateSelectors(date) {
-    const currentYear = date.getFullYear();
-    const currentMonth = date.getMonth() + 1; // JS month is 0-indexed
-
-    // 格式化為 YYYY-MM-DD，用於設定 Date Picker 的預設值
-    const dateValue = date.toISOString().split('T')[0];
-    
-    // 隱藏的 Date Picker，用於彈出標準選擇介面
-    let html = `
-    <input type="date" id="date-picker-trigger" style="position:absolute; opacity:0; width:100%; height:100%; top:0; left:0; cursor:pointer;" value="${dateValue}" />
-    <div class="date-selector-wrapper">
-        <span class="date-select">${currentYear}年</span>
-        <span class="date-select">${currentMonth}月</span>
-    </div>
-    `;
-    return html;
-}
-
-// 核心修正：處理 Date Picker 的 change 事件
-window.handleDatePickerChange = function() {
-    const datePicker = document.getElementById('date-picker-trigger');
-    const selectedDate = new Date(datePicker.value);
-    
-    // 由於 Date Picker 回傳的日期是 UTC 午夜 (00:00:00)，需要調整時區以避免差一天
-    selectedDate.setMinutes(selectedDate.getMinutes() + selectedDate.getTimezoneOffset());
-    
-    currentDisplayDate = selectedDate;
-    updateCalendar(currentDisplayDate);
-}
-
-
-// VIII. 核心渲染邏輯
+// VIII. 核心渲染邏輯 (調整順序與結構)
 function renderPageContent(date, weather, quote) {
     let content = '';
     const currentYear = date.getFullYear();
     const lunarYearInfo = typeof Solar !== 'undefined' ? Solar.fromDate(date).getLunar().getYearInGanZhi() : '';
-    const zodiacEmoji = getChineseZodiacEmoji(currentYear); 
+    const zodiacEmoji = getChineseZodiacEmoji(currentYear); // 取得生肖 Emoji
 
     // 1. 頂部資訊 (年與歲次)
     content += `<div class="top-info"><span class="top-info-left">${currentYear - 1911}年 歲次${lunarYearInfo} ${zodiacEmoji}</span><span class="top-info-right">${currentYear}</span></div>`;
 
     let lunarData = getLunarData(date);
     let lunarHtml = `${lunarData.month}<br>${lunarData.day}`;
-    if (lunarData.jieqi) lunarHtml += `<br>(${simplifiedToTraditional(lunarData.jieqi)})`; 
+    if (lunarData.jieqi) lunarHtml += `<br>(${simplifiedToTraditional(lunarData.jieqi)})`; // 節氣也轉正體
     
     const weekdays = ['日', '一', '二', '三', '四', '五', '六'];
     const dayOfWeek = weekdays[date.getDay()];
-    
-    // 月份中英文顯示
-    const monthShort = date.toLocaleString('en-US', { month: 'short' }); 
+    const monthShort = (date.getMonth() + 1).toString().padStart(2, '0');
 
-    // 2. 主日期區塊 (日期、星期、月份全部加大)
-    content += `<div class="main-date-container">
-        <div class="lunar-badge">${lunarHtml}</div>
-        <div class="date-number-wrapper">
-            <div class="big-date-number">${date.getDate()}</div>
-            <div class="weekday-below-date">星期${dayOfWeek}</div>
-        </div>
-        <div class="month-info">
-            <div class="month-long">${date.toLocaleString('zh-TW', { month: 'long' })}</div>
-            <div class="month-short">${monthShort}</div>
-        </div>
+    // 2. 日期切換按鈕 (比照示意圖，放在主日期區塊上方)
+    content += `<div class="date-shift-wrapper">
+        <button id="prev-day-btn" class="shift-btn date-shift-top"> &#x23EA; </button>
+        <button id="next-day-btn" class="shift-btn date-shift-top"> &#x23E9; </button>
     </div>`;
 
-    // 3. 宜/忌 區塊 
+    // 3. 主日期區塊 
+    content += `<div class="main-date-container">
+        <div class="lunar-badge">${lunarHtml}</div>
+        <div class="date-number-wrapper"><div class="big-date-number">${date.getDate()}</div></div>
+        <div class="month-info"><div class="month-short">${monthShort}</div><div class="month-long">星期${dayOfWeek}</div></div>
+    </div>`;
+
+    // 4. 宜/忌 區塊 (左右並列)
     content += `<div class="yi-ji-section">
         <div class="yi-section">宜: ${lunarData.yi}</div>
         <div class="ji-section">忌: ${lunarData.ji}</div>
     </div>`;
 
-    // 4. 底部內容容器 (天氣/時鐘 左側 vs 年月選擇/小月曆 右側)
+    // 5. 時鐘 (全寬)
+    content += `<div class="quote-clock-section">
+        <span id="live-clock" class="live-clock-text">--:--:--</span>
+    </div>`;
+
+    // 6. 底部內容容器 (天氣和縮小月曆左右並列)
     content += `<div class="bottom-row-container">
         
-        <div class="weather-clock-section-left">
-            <div class="weather-section-left">
-                <span class="weather-city-name">${weather.city} 天氣:</span> ${weather.description} 
-                <span class="weather-temp">${weather.temperature}</span>
-            </div>
-            
-            <div class="live-clock-container">
-                <span id="live-clock" class="live-clock-text">--:--:--</span>
-            </div>
+        <div class="weather-section-left">
+            <span class="weather-city-name">${weather.city} 天氣:</span> ${weather.description} 
+            <span class="weather-temp">${weather.temperature}</span>
         </div>
         
-        <div class="mini-calendar-container" id="date-selection-area">
-            ${generateDateSelectors(date)} 
+        <div class="mini-calendar-container">
+            <div class="mini-calendar-title">${date.getFullYear()}年${date.getMonth() + 1}月</div>
             <div class="mini-calendar-table">${generateMiniCalendar(date)}</div>
         </div>
         
     </div>`;
     
-    // 5. 時辰吉凶 (在最下方)
+    // 7. 時辰吉凶 (在最下方)
     content += generateHourAuspiceContent(getHourAuspiceData(date));
 
     PAGE_CONTAINER.innerHTML = content;
-    
-    // 綁定 Date Picker 的 change 事件
-    const datePicker = document.getElementById('date-picker-trigger');
-    if (datePicker) {
-        datePicker.addEventListener('change', window.handleDatePickerChange);
-    }
-    
+    document.getElementById('prev-day-btn').onclick = () => shiftDate(-1);
+    document.getElementById('next-day-btn').onclick = () => shiftDate(1);
     startClock();
+}
+
+function shiftDate(days) { 
+    currentDisplayDate.setDate(currentDisplayDate.getDate() + days);
+    updateCalendar(currentDisplayDate);
 }
 
 function isToday(date) {
@@ -275,8 +311,10 @@ function isToday(date) {
     return date.getDate() === today.getDate() && date.getMonth() === today.getMonth() && date.getFullYear() === today.getFullYear();
 }
 
+// 核心修正：加入兩階段渲染，解決載入問題
 async function updateCalendar(date, lat, lon, cityName) { 
     currentDisplayDate = date; 
+
     if (!lat || !lon || !cityName) {
         const selectedIndex = CITY_SELECTOR.selectedIndex;
         const selectedOption = CITY_SELECTOR.options[selectedIndex];
@@ -289,11 +327,20 @@ async function updateCalendar(date, lat, lon, cityName) {
             cityName = TAIWAN_CITIES[0].name;
         }
     }
+    
+    // 1. 初始渲染：立刻顯示 "載入中"
     let weatherData = { description: "載入中", temperature: "??°", city: cityName };
+    renderPageContent(date, weatherData, null); 
+
+    // 2. 異步獲取天氣數據
+    if (isToday(date)) {
+        weatherData = await fetchWeatherForecast(lat, lon, cityName); 
+    } else { 
+        weatherData.description = "僅顯示今日天氣"; 
+        weatherData.temperature = "----"; 
+    }
     
-    if (isToday(date)) [weatherData] = await Promise.all([fetchWeatherForecast(lat, lon, cityName)]);
-    
-    else { weatherData.description = "僅顯示今日天氣"; weatherData.temperature = "----"; }
+    // 3. 最終渲染：顯示載入完成的數據 (或錯誤訊息)
     renderPageContent(date, weatherData, null); 
 }
 
