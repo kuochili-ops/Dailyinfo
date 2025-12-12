@@ -93,7 +93,7 @@ body {
 .weekday-below-date { /* 新增：位於日期下方 */
     font-size: 1em;
     font-weight: bold;
-    color: #e60000; /* 紅色星期 */
+    color: #e60000; 
     margin-top: 5px;
 }
 
@@ -186,13 +186,14 @@ body {
 .bottom-row-container {
     display: flex; 
     justify-content: space-between;
-    align-items: flex-start; /* 讓內容從頂部對齊 */
-    margin: 15px 15px 5px 15px; /* 減少底部空間，讓時辰吉凶靠上 */
+    align-items: flex-start; 
+    /* 調整邊距以美化對齊 */
+    margin: 15px 15px 5px 15px; 
     padding-bottom: 15px;
     border-bottom: 1px solid #eee;
 }
 
-/* 左側容器：包含天氣和時鐘 (佔總寬度 60%) */
+/* 左側容器：包含天氣和時鐘 (佔總寬度 58%) */
 .weather-clock-section-left { 
     width: 58%; 
     flex-shrink: 0; 
@@ -201,7 +202,7 @@ body {
 
 /* 天氣區塊 */
 .weather-section-left {
-    padding-bottom: 10px; /* 增加與時鐘的間距 */
+    padding-bottom: 10px; 
     text-align: left;
     font-size: 0.9em;
     color: #666;
@@ -218,14 +219,14 @@ body {
     border-top: 1px solid #eee;
 }
 .live-clock-text {
-    font-size: 1.8em; /* 略小於之前全寬時鐘 */
+    font-size: 1.8em; 
     font-weight: 300;
     color: #004d99;
     display: block;
 }
 
 
-/* 小月曆區塊 (右側，佔總寬度 40%) */
+/* 小月曆區塊 (右側，佔總寬度 42%) */
 .mini-calendar-container {
     width: 42%; 
     min-width: 120px;
