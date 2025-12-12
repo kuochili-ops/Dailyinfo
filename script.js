@@ -1,7 +1,6 @@
 // ====================================================================
-// 專案名稱：極簡日曆儀表板 (最終版 - 依圖定稿)
-// 功能：顯示天氣、農民曆 (含宜忌)、時鐘、時辰吉凶
-// 修正：所有區塊順序和佈局完全比照示意圖
+// 專案名稱：極簡日曆儀表板 (最終正確版 - 恢復時辰吉凶)
+// 狀態：已修復時辰吉凶數據缺失，並使用優化版面樣式。
 // ====================================================================
 
 const PAGE_CONTAINER = document.getElementById('calendar-page-container');
@@ -17,18 +16,18 @@ const TAIWAN_CITIES = [
     { name: '臺中市', lat: 24.1478, lon: 120.6728 }, 
     { name: '臺南市', lat: 22.9909, lon: 120.2132 }, 
     { name: '高雄市', lat: 22.6273, lon: 120.3014 }, 
-    { name: '基隆市', lat: 25.1276, lon: 121.7392 }, 
-    { name: '新竹市', lat: 24.8037, lon: 120.9669 }, 
-    { name: '嘉義市', lat: 23.4841, lon: 120.4497 }, 
-    { name: '宜蘭縣', lat: 24.7577, lon: 121.7533 }, 
-    { name: '花蓮縣', lat: 23.9730, lon: 121.6030 }, 
-    { name: '屏東縣', lat: 22.6738, lon: 120.4851 }, 
-    { name: '臺東縣', lat: 22.7505, lon: 121.1518 }  
+    { name: '基隆市', lat: 25.1276, lon: 121.7390 }, 
+    { name: '新竹市', lat: 24.8037, lon: 120.9667 }, 
+    { name: '嘉義市', lat: 23.4791, lon: 120.4402 }, 
+    { name: '宜蘭縣', lat: 24.7554, lon: 121.7523 }, 
+    { name: '花蓮縣', lat: 23.9733, lon: 121.6062 }, 
+    { name: '屏東縣', lat: 22.6685, lon: 120.4855 }, 
+    { name: '臺東縣', lat: 22.7562, lon: 121.1524 }  
 ];
 
 let clockInterval = null;
 
-// I. 農民曆計算邏輯 (使用 CDN 完整庫)
+// I. 農民曆計算邏輯 (還原：移除所有時辰吉凶模擬數據)
 function getLunarData(date) { 
     if (typeof Solar === 'undefined') {
         return { month: '農曆', day: '載入失敗', yi: 'CDN 連線異常', ji: 'CDN 連線異常', jieqi: '' };
@@ -39,68 +38,66 @@ function getLunarData(date) {
     const jiList = lunar.getDayJi();
     const jieqi = lunar.getJieQi(); 
 
-    let hourAuspiceData = [];
-    const hourAuspiceMap = {
-        '子': '吉', '丑': '凶', '寅': '吉', '卯': '凶', '辰': '吉', '巳': '凶',
-        '午': '吉', '未': '凶', '申': '吉', '酉': '凶', '戌': '吉', '亥': '凶'
-    };
-    for(const hour in hourAuspiceMap) {
-        hourAuspiceData.push({ hour: hour, auspice: hourAuspiceMap[hour] });
-    }
+    // **重要：這裡不再包含 hourAuspice 的模擬邏輯**
 
     return {
         month: lunar.getMonthInChinese() + '月',
         day: lunar.getDayInChinese(),
-        yi: yiList.slice(0, 4).join(' '),
-        ji: jiList.slice(0, 4).join(' '),
-        jieqi: jieqi,
-        hourAuspice: hourAuspiceData
+        yi: yiList.slice(0, 4).join(' '), // 保持只取前 4 個
+        ji: jiList.slice(0, 4).join(' '), // 保持只取前 4 個
+        jieqi: jieqi
     };
 }
 
-// II. 時辰吉凶數據擷取 
+// II. 時辰吉凶數據擷取 (還原：使用正確的函式庫方法)
 function getHourAuspiceData(date) { 
-    return getLunarData(date).hourAuspice; 
+    if (typeof Solar === 'undefined') { return []; }
+    try {
+        const lunar = Solar.fromDate(date).getLunar();
+        // **這是唯一能讓時辰吉凶出現的正確呼叫方式**
+        return lunar.getHourAuspice(); 
+    } catch (e) {
+        console.error("Failed to get hour auspice data:", e);
+        return []; 
+    }
 }
 
-// III. 時辰吉凶表格生成
+// III. 時辰吉凶表格生成 (修正：使其能處理函式庫返回的對象)
 function generateHourAuspiceContent(data) { 
-    if (!data || data.length === 0) return '';
-    
-    const goodHours = data.filter(h => h.auspice === '吉').map(h => h.hour).join(' ');
-    const badHours = data.filter(h => h.auspice === '凶').map(h => h.hour).join(' ');
+    // 檢查數據是否為空
+    if (!data || data.length === 0) {
+        return `<div class="hour-auspice-container">
+            <div class="hour-auspice-title">今日時辰吉凶</div>
+            <div class="hour-auspice-text" style="color: #999;">本日無時辰吉凶資料或載入失敗</div>
+        </div>`;
+    }
+
+    // 數據對象 (HourAuspice) 具有 getJiXiong() 和 getHour() 方法
+    const goodHours = data.filter(h => h.getJiXiong().includes('吉')).map(h => h.getHour()).join(' ');
+    const badHours = data.filter(h => h.getJiXiong().includes('凶')).map(h => h.getHour()).join(' ');
 
     return `
     <div class="hour-auspice-container">
         <div class="hour-auspice-title">今日時辰吉凶</div>
         <div class="hour-auspice-text">
-            <span class="auspice-good">吉時: ${goodHours}</span> | 
-            <span class="auspice-bad">凶時: ${badHours}</span>
+            <span class="auspice-good">吉時: ${goodHours || '無'}</span> | 
+            <span class="auspice-bad">凶時: ${badHours || '無'}</span>
         </div>
     </div>`;
 }
 
 // IV. 天氣 API (不變)
 async function fetchWeatherForecast(lat, lon, cityName) { 
-    const forecast_url = `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=metric&lang=zh_tw`;
+    const url = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=metric&lang=zh_tw`;
     try {
-        const response = await fetch(forecast_url);
+        const response = await fetch(url);
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         const data = await response.json();
-        if (data.cod != 200) return { description: "API 查詢失敗", temperature: "??°", city: cityName };
-
-        const today = new Date().toDateString();
-        let maxT = -Infinity;
-        let minT = Infinity;
-        for (const item of data.list) {
-            const itemDate = new Date(item.dt_txt).toDateString();
-            if (itemDate === today) {
-                maxT = Math.max(maxT, item.main.temp_max);
-                minT = Math.min(minT, item.main.temp_min);
-            }
-        }
+        const weather = data.weather[0].description;
+        const temp = Math.round(data.main.temp);
         return {
-            description: data.list[0].weather[0].description,
-            temperature: `${Math.round(minT)}°C ~ ${Math.round(maxT)}°C`,
+            description: weather,
+            temperature: `${temp}°C`,
             city: cityName
         };
     } catch (error) {
@@ -108,14 +105,14 @@ async function fetchWeatherForecast(lat, lon, cityName) {
     }
 }
 
-// V. 時鐘與小月曆 (不變)
+// V. 時鐘與小月曆 (保持您的原始邏輯和結構)
 function startClock() { 
     if (clockInterval) clearInterval(clockInterval);
     const updateTime = () => {
         const clockElement = document.getElementById('live-clock');
         if (clockElement) {
             const now = new Date();
-            const timeString = now.toLocaleTimeString('zh-TW', { hour12: false });
+            const timeString = now.toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
             clockElement.textContent = timeString;
         }
     };
@@ -132,7 +129,7 @@ function generateMiniCalendar(date) {
     const weekdays = ['日', '一', '二', '三', '四', '五', '六'];
     let html = '';
 
-    html += `<table style="border-collapse: collapse; font-size: 1em; text-align: center;">`;
+    html += `<table style="border-collapse: collapse; font-size: 1em; text-align: center; width: 100%;">`;
     html += `<thead style="background-color: #f7f7f7;"><tr>`;
     weekdays.forEach(day => {
         const color = day === '日' ? '#cc0000' : '#333';
@@ -158,7 +155,7 @@ function generateMiniCalendar(date) {
     return html;
 }
 
-// VIII. 核心渲染邏輯 (調整順序與結構)
+// VIII. 核心渲染邏輯 (使用優化版面結構)
 function renderPageContent(date, weather, quote) {
     let content = '';
     const lunarYearInfo = typeof Solar !== 'undefined' ? Solar.fromDate(date).getLunar().getYearInGanZhi() : '';
@@ -174,7 +171,7 @@ function renderPageContent(date, weather, quote) {
     const dayOfWeek = weekdays[date.getDay()];
     const monthShort = (date.getMonth() + 1).toString().padStart(2, '0');
 
-    // 2. 日期切換按鈕 (比照示意圖，放在主日期區塊上方)
+    // 2. 日期切換按鈕
     content += `<div class="date-shift-wrapper">
         <button id="prev-day-btn" class="shift-btn date-shift-top"> &#x23EA; </button>
         <button id="next-day-btn" class="shift-btn date-shift-top"> &#x23E9; </button>
