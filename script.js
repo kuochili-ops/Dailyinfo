@@ -1,295 +1,279 @@
-/* ====================================================================
-   style.css - 極簡日曆儀表板樣式表 (最終版 - 依圖定稿)
-   ==================================================================== */
+// ====================================================================
+// 專案名稱：極簡日曆儀表板 (最終修正版 - 語法錯誤修復)
+// 狀態：功能穩定，版面結構符合最新要求。
+// ====================================================================
 
-/* 基礎佈局與卡片 */
-body {
-    font-family: 'Helvetica Neue', Helvetica, Arial, '微軟正黑體', sans-serif;
-    margin: 0;
-    padding: 0;
-    background-color: #f0f0f0;
-    color: #333;
-    display: flex;
-    justify-content: center;
-    align-items: flex-start;
-    min-height: 100vh;
-}
-.calendar-card {
-    width: 100%;
-    max-width: 400px;
-    background-color: white;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    margin: 10px 0;
-    box-sizing: border-box;
-    overflow: hidden;
-}
-#calendar-page-container {
-    position: relative; 
-    padding: 10px 0;
-}
+const PAGE_CONTAINER = document.getElementById('calendar-page-container');
+const CITY_SELECTOR = document.getElementById('city-selector');
+const API_KEY = 'Dcd113bba5675965ccf9e60a7e6d06e5'; 
 
-/* 城市選擇器 */
-.city-selection-container {
-    padding: 10px;
-    background-color: #f7f7f7;
-    text-align: center;
-}
-#city-selector {
-    padding: 8px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    width: 90%;
-    box-sizing: border-box;
-}
+let currentDisplayDate = new Date(); 
+let clockInterval = null;
 
-/* 頂部資訊 (年與歲次) */
-.top-info {
-    display: flex;
-    justify-content: space-between;
-    padding: 5px 15px;
-    font-size: 0.8em;
-    color: #999;
-}
-.top-info-right {
-    font-weight: bold;
-    color: #666;
-}
+const TAIWAN_CITIES = [
+    { name: '臺北市', lat: 25.0330, lon: 121.5654 }, 
+    { name: '新北市', lat: 25.0139, lon: 121.4552 }, 
+    { name: '桃園市', lat: 24.9961, lon: 121.3129 }, 
+    { name: '臺中市', lat: 24.1478, lon: 120.6728 }, 
+    { name: '臺南市', lat: 22.9909, lon: 120.2132 }, 
+    { name: '高雄市', lat: 22.6273, lon: 120.3014 }, 
+    { name: '基隆市', lat: 25.1276, lon: 121.7390 }, 
+    { name: '新竹市', lat: 24.8037, lon: 120.9667 }, 
+    { name: '嘉義市', lat: 23.4791, lon: 120.4402 }, 
+    { name: '宜蘭縣', lat: 24.7554, lon: 121.7523 }, 
+    { name: '花蓮縣', lat: 23.9733, lon: 121.6062 }, 
+    { name: '屏東縣', lat: 22.6685, lon: 120.4855 }, 
+    { name: '臺東縣', lat: 22.7562, lon: 121.1524 }  
+];
 
-/* ==================================================\
-   *** 日期主體區塊 ***
-   ================================================== */
-.main-date-container {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 10px 15px;
-    border-bottom: 1px solid #eee;
+// I. 農民曆計算邏輯 (保持用戶原始邏輯)
+function getLunarData(date) { 
+    if (typeof Solar === 'undefined') {
+        return { month: '農曆', day: '載入失敗', yi: 'CDN 連線異常', ji: 'CDN 連線異常', jieqi: '', hourAuspice: [] };
+    }
+    
+    const lunar = Solar.fromDate(date).getLunar();
+    const yiList = lunar.getDayYi();
+    const jiList = lunar.getDayJi();
+    const jieqi = lunar.getJieQi(); 
+
+    // 硬編碼時辰吉凶資料 (用戶原始邏輯)
+    let hourAuspiceData = [];
+    const hourAuspiceMap = {
+        '子': '吉', '丑': '凶', '寅': '吉', '卯': '凶', '辰': '吉', '巳': '凶',
+        '午': '吉', '未': '凶', '申': '吉', '酉': '凶', '戌': '吉', '亥': '凶'
+    };
+    for(const hour in hourAuspiceMap) {
+        hourAuspiceData.push({ hour: hour, auspice: hourAuspiceMap[hour] });
+    }
+
+    return {
+        month: lunar.getMonthInChinese() + '月',
+        day: lunar.getDayInChinese(),
+        yi: yiList.slice(0, 4).join(' '),
+        ji: jiList.slice(0, 4).join(' '),
+        jieqi: jieqi,
+        hourAuspice: hourAuspiceData
+    };
 }
 
-/* 農曆區塊 (左側) */
-.lunar-badge {
-    font-size: 1.1em;
-    line-height: 1.4;
-    color: #004d99;
-    font-weight: bold;
-    text-align: center;
-    width: 25%;
-    flex-shrink: 0;
-    padding-right: 10px;
-    border-right: 1px dashed #ccc;
+// II. 時辰吉凶數據擷取 (保持用戶原始邏輯)
+function getHourAuspiceData(date) { 
+    return getLunarData(date).hourAuspice; 
 }
 
-/* 日期數字與星期 (中間) */
-.date-number-wrapper {
-    flex-grow: 1;
-    text-align: center;
-}
-.big-date-number {
-    font-size: 4em; 
-    font-weight: 900;
-    color: #333;
-    line-height: 1;
-}
-.weekday-below-date { /* 新增：位於日期下方 */
-    font-size: 1em;
-    font-weight: bold;
-    color: #e60000; /* 紅色星期 */
-    margin-top: 5px;
+// III. 時辰吉凶表格生成 (保持不變)
+function generateHourAuspiceContent(data) { 
+    if (!data || data.length === 0) {
+        return `<div class="hour-auspice-container">
+            <div class="hour-auspice-title">今日時辰吉凶</div>
+            <div class="hour-auspice-text" style="color: #999;">本日無時辰吉凶資料或載入失敗</div>
+        </div>`;
+    }
+
+    const goodHours = data.filter(h => h.auspice === '吉').map(h => h.hour).join(' ');
+    const badHours = data.filter(h => h.auspice === '凶').map(h => h.hour).join(' ');
+
+    return `
+    <div class="hour-auspice-container">
+        <div class="hour-auspice-title">今日時辰吉凶</div>
+        <div class="hour-auspice-text">
+            <span class="auspice-good">吉時: ${goodHours || '無'}</span> | 
+            <span class="auspice-bad">凶時: ${badHours || '無'}</span>
+        </div>
+    </div>`;
 }
 
-/* 月份資訊 (右側) */
-.month-info {
-    width: 25%;
-    flex-shrink: 0;
-    text-align: right;
-    padding-left: 10px;
-}
-.month-long { /* 中文月份 */
-    font-size: 1.2em;
-    font-weight: bold;
-    color: #666;
-    line-height: 1.3;
-}
-.month-short { /* 數字月份 */
-    font-size: 0.9em;
-    color: #999;
-    line-height: 1.2;
-}
-
-
-/* ==================================================\
-   *** 日期切換按鈕 (不變) ***
-   ================================================== */
-.date-shift-wrapper {
-    position: absolute;
-    top: 70px; 
-    left: 0;
-    right: 0;
-    display: flex;
-    justify-content: space-between;
-    padding: 0 5px;
-    pointer-events: none; 
+// IV. 天氣 API (不變)
+async function fetchWeatherForecast(lat, lon, cityName) { 
+    const url = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=metric&lang=zh_tw`;
+    try {
+        const response = await fetch(url);
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        const data = await response.json();
+        const weather = data.weather[0].description;
+        const temp = Math.round(data.main.temp);
+        return {
+            description: weather,
+            temperature: `${temp}°C`,
+            city: cityName
+        };
+    } catch (error) {
+        return { description: "網路錯誤", temperature: "??°", city: cityName };
+    }
 }
 
-.shift-btn {
-    background: rgba(255, 255, 255, 0.8);
-    border: 1px solid #ccc;
-    border-radius: 50%;
-    width: 30px;
-    height: 30px;
-    line-height: 30px;
-    text-align: center;
-    font-size: 1.2em;
-    color: #666;
-    cursor: pointer;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-    transition: all 0.15s;
-    pointer-events: auto; 
+// V. 時鐘與小月曆 (不變)
+function startClock() { 
+    if (clockInterval) clearInterval(clockInterval);
+    const updateTime = () => {
+        const clockElement = document.getElementById('live-clock');
+        if (clockElement) {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
+            clockElement.textContent = timeString;
+        }
+    };
+    updateTime();
+    clockInterval = setInterval(updateTime, 1000);
 }
 
-.shift-btn:hover {
-    background: #004d99;
-    color: white;
-    border-color: #004d99;
+function generateMiniCalendar(date) { 
+    const year = date.getFullYear();
+    const month = date.getMonth();
+    const todayDay = date.getDate();
+    const firstDayOfWeek = new Date(year, month, 1).getDay();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const weekdays = ['日', '一', '二', '三', '四', '五', '六'];
+    let html = '';
+
+    html += `<table style="width: 100%;">`; 
+    html += `<thead><tr>`;
+    weekdays.forEach(day => {
+        const color = day === '日' ? '#cc0000' : '#333';
+        html += `<th style="color: ${color};">${day}</th>`;
+    });
+    html += `</tr></thead><tbody><tr>`;
+    
+    let cellCount = 0;
+    for (let i = 0; i < firstDayOfWeek; i++) html += `<td></td>`, cellCount++;
+    for (let day = 1; day <= daysInMonth; day++) {
+        if (cellCount % 7 === 0 && cellCount !== 0) html += `</tr><tr>`;
+        const isSunday = (cellCount % 7 === 0);
+        const isCurrentDay = (day === todayDay);
+        let className = '';
+        if (isCurrentDay) className = 'current-day';
+        else if (isSunday) className = 'sunday-day';
+        
+        html += `<td class="${className}">${day}</td>`;
+        cellCount++;
+    }
+    while (cellCount % 7 !== 0) html += `<td></td>`, cellCount++;
+    html += `</tr></tbody></table>`;
+    return html;
 }
 
+// VIII. 核心渲染邏輯 (版面結構已調整)
+function renderPageContent(date, weather, quote) {
+    let content = '';
+    const lunarYearInfo = typeof Solar !== 'undefined' ? Solar.fromDate(date).getLunar().getYearInGanZhi() : '';
 
-/* ==================================================\
-   *** 宜/忌 區塊 (不變) ***
-   ================================================== */
-.yi-ji-section {
-    display: flex;
-    border-bottom: 1px solid #eee;
-}
-.yi-section, .ji-section {
-    flex: 1;
-    padding: 10px 15px;
-    font-size: 0.9em;
-    line-height: 1.6;
-    word-break: break-all;
-}
+    // 1. 頂部資訊 (年與歲次)
+    content += `<div class="top-info"><span class="top-info-left">${date.getFullYear() - 1911}年 歲次${lunarYearInfo}</span><span class="top-info-right">${date.getFullYear()}</span></div>`;
 
-.yi-section {
-    color: #008000; 
-    border-right: 1px dashed #eee;
-    font-weight: bold;
-}
+    let lunarData = getLunarData(date);
+    let lunarHtml = `${lunarData.month}<br>${lunarData.day}`;
+    if (lunarData.jieqi) lunarHtml += `<br>(${lunarData.jieqi})`;
+    
+    const weekdays = ['日', '一', '二', '三', '四', '五', '六'];
+    const dayOfWeek = weekdays[date.getDay()];
+    const monthShort = (date.getMonth() + 1).toString().padStart(2, '0');
 
-.ji-section {
-    color: #cc0000; 
-    font-weight: bold;
-}
+    // 2. 日期切換按鈕
+    content += `<div class="date-shift-wrapper">
+        <button id="prev-day-btn" class="shift-btn date-shift-top"> &#x23EA; </button>
+        <button id="next-day-btn" class="shift-btn date-shift-top"> &#x23E9; </button>
+    </div>`;
 
-/* ==================================================\
-   *** 底部區塊：天氣/時鐘 vs 小月曆 ***
-   ================================================== */
-.bottom-row-container {
-    display: flex; 
-    justify-content: space-between;
-    align-items: flex-start; /* 讓內容從頂部對齊 */
-    margin: 15px 15px 5px 15px; /* 減少底部空間，讓時辰吉凶靠上 */
-    padding-bottom: 15px;
-    border-bottom: 1px solid #eee;
-}
+    // 3. 主日期區塊 (已調整：星期在日期下方，月份中英文上下排列)
+    content += `<div class="main-date-container">
+        <div class="lunar-badge">${lunarHtml}</div>
+        <div class="date-number-wrapper">
+            <div class="big-date-number">${date.getDate()}</div>
+            <div class="weekday-below-date">星期${dayOfWeek}</div>
+        </div>
+        <div class="month-info">
+            <div class="month-long">${date.toLocaleString('zh-TW', { month: 'long' })}</div>
+            <div class="month-short">${monthShort}</div>
+        </div>
+    </div>`;
 
-/* 左側容器：包含天氣和時鐘 (佔總寬度 60%) */
-.weather-clock-section-left { 
-    width: 58%; 
-    flex-shrink: 0; 
-    padding-right: 15px;
-}
+    // 4. 宜/忌 區塊 
+    content += `<div class="yi-ji-section">
+        <div class="yi-section">宜: ${lunarData.yi}</div>
+        <div class="ji-section">忌: ${lunarData.ji}</div>
+    </div>`;
 
-/* 天氣區塊 */
-.weather-section-left {
-    padding-bottom: 10px; /* 增加與時鐘的間距 */
-    text-align: left;
-    font-size: 0.9em;
-    color: #666;
-    line-height: 1.6;
-    min-height: 50px;
-}
-.weather-city-name { font-weight: bold; color: #333; display: block; }
-.weather-temp { font-weight: bold; color: #e60000; display: block; }
+    // 5. 底部內容容器 (天氣/時鐘 左側 vs 小月曆 右側)
+    content += `<div class="bottom-row-container">
+        
+        <div class="weather-clock-section-left">
+            <div class="weather-section-left">
+                <span class="weather-city-name">${weather.city} 天氣:</span> ${weather.description} 
+                <span class="weather-temp">${weather.temperature}</span>
+            </div>
+            
+            <div class="live-clock-container">
+                <span id="live-clock" class="live-clock-text">--:--:--</span>
+            </div>
+        </div>
+        
+        <div class="mini-calendar-container">
+            <div class="mini-calendar-title">${date.getFullYear()}年${date.getMonth() + 1}月</div>
+            <div class="mini-calendar-table">${generateMiniCalendar(date)}</div>
+        </div>
+        
+    </div>`;
+    
+    // 6. 時辰吉凶 (在最下方)
+    content += generateHourAuspiceContent(getHourAuspiceData(date));
 
-/* 時鐘區塊 */
-.live-clock-container {
-    text-align: left;
-    padding-top: 10px;
-    border-top: 1px solid #eee;
-}
-.live-clock-text {
-    font-size: 1.8em; /* 略小於之前全寬時鐘 */
-    font-weight: 300;
-    color: #004d99;
-    display: block;
-}
-
-
-/* 小月曆區塊 (右側，佔總寬度 40%) */
-.mini-calendar-container {
-    width: 42%; 
-    min-width: 120px;
-    flex-shrink: 0; 
-    font-size: 0.6em; 
-    border: 1px solid #eee; 
-    border-radius: 4px;
-    overflow: hidden; 
-    padding: 5px;
+    PAGE_CONTAINER.innerHTML = content;
+    document.getElementById('prev-day-btn').onclick = () => shiftDate(-1);
+    document.getElementById('next-day-btn').onclick = () => shiftDate(1);
+    startClock();
 }
 
-.mini-calendar-title {
-    font-size: 1.2em; 
-    color: #333;
-    text-align: center;
-    margin: 5px 0;
+function shiftDate(days) { 
+    currentDisplayDate.setDate(currentDisplayDate.getDate() + days);
+    updateCalendar(currentDisplayDate);
 }
 
-.mini-calendar-container table {
-    border-collapse: collapse;
+function isToday(date) {
+    const today = new Date();
+    return date.getDate() === today.getDate() && date.getMonth() === today.getMonth() && date.getFullYear() === today.getFullYear();
 }
 
-.mini-calendar-container th, .mini-calendar-container td {
-    padding: 0px 0;
-    height: 16px;
-    width: 14.28%;
-    text-align: center;
-}
-.mini-calendar-container th {
-    font-weight: normal;
-}
-.mini-calendar-container .sunday-day {
-    color: #cc0000;
-}
-.mini-calendar-container .current-day {
-    background-color: #004d99; 
-    color: white; 
-    border-radius: 3px; 
-    font-weight: bold;
+async function updateCalendar(date, lat, lon, cityName) { 
+    if (!lat || !lon || !cityName) {
+        const selectedIndex = CITY_SELECTOR.selectedIndex;
+        const selectedOption = CITY_SELECTOR.options[selectedIndex];
+        if (selectedOption) {
+            [lat, lon] = selectedOption.value.split(',');
+            cityName = selectedOption.textContent;
+        } else {
+            lat = TAIWAN_CITIES[0].lat;
+            lon = TAIWAN_CITIES[0].lon;
+            cityName = TAIWAN_CITIES[0].name;
+        }
+    }
+    let weatherData = { description: "載入中", temperature: "??°", city: cityName };
+    
+    // **已修復：補上缺少的括號**
+    if (isToday(date)) [weatherData] = await Promise.all([fetchWeatherForecast(lat, lon, cityName)]);
+    
+    else { weatherData.description = "僅顯示今日天氣"; weatherData.temperature = "----"; }
+    renderPageContent(date, weatherData, null); 
 }
 
+function loadCitySelector() { 
+    TAIWAN_CITIES.forEach((city) => {
+        const option = document.createElement('option');
+        option.value = `${city.lat},${city.lon}`; 
+        option.textContent = city.name;
+        CITY_SELECTOR.appendChild(option);
+    });
+    CITY_SELECTOR.value = `${TAIWAN_CITIES[0].lat},${TAIWAN_CITIES[0].lon}`;
+}
 
-/* ==================================================\
-   *** 時辰吉凶表 (最底部) (不變) ***
-   ================================================== */
-.hour-auspice-container {
-    padding: 10px 15px 15px 15px;
-    text-align: center;
+function initApp() {
+    loadCitySelector();
+    CITY_SELECTOR.addEventListener('change', (event) => {
+        const [lat, lon] = event.target.value.split(',');
+        const cityName = event.target.options[event.target.selectedIndex].textContent;
+        updateCalendar(currentDisplayDate, lat, lon, cityName);
+    });
+    updateCalendar(currentDisplayDate);
 }
-.hour-auspice-title {
-    font-size: 1.1em;
-    font-weight: bold;
-    color: #333;
-    margin-bottom: 8px;
-}
-.hour-auspice-text {
-    font-size: 0.9em;
-    line-height: 1.6;
-}
-.auspice-good {
-    color: #008000; 
-    font-weight: bold;
-}
-.auspice-bad {
-    color: #cc0000; 
-    font-weight: bold;
-}
+
+document.addEventListener('DOMContentLoaded', initApp);
