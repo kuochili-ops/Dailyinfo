@@ -1,7 +1,7 @@
 // ====================================================================
 // 專案名稱：極簡日曆儀表板 (最終版 - 依圖定稿)
 // 功能：顯示天氣、農民曆 (含宜忌)、時鐘、時辰吉凶
-// 修正：修正佈局，恢復主日曆星期顯示，並加大月份/星期字體。
+// 修正：星期移到日期正下方、小月曆上移對齊時鐘、月份改用英文縮寫且粗體。
 // ====================================================================
 
 const PAGE_CONTAINER = document.getElementById('calendar-page-container');
@@ -30,6 +30,7 @@ let clockInterval = null;
 
 // 月份與星期對應表
 const MONTH_NAMES = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+const MONTH_NAMES_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]; // 新增英文縮寫
 const MONTH_CHINESE = ['一', '二', '三', '四', '五', '六', '七', '八', '九', '十', '十一', '十二'];
 const WEEKDAYS_CHINESE = ['日', '一', '二', '三', '四', '五', '六'];
 const WEEKDAYS_ENGLISH = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
@@ -47,7 +48,7 @@ function simplifiedToTraditional(text) {
     if (!text) return '';
     const map = {
         '开': '開', '动': '動', '修': '修', '造': '造', '谢': '謝', 
-        '盖': '蓋', '纳': '納', '结': '結', '办': '辦', '迁': '遷', 
+        '盖': '蓋', '纳': '納', '結': '結', '办': '辦', '迁': '遷', 
         '进': '進', '习': '習', '医': '醫', '启': '啟', '会': '會',
         '備': '備', '园': '園', '买': '買', '卖': '賣', '发': '發', 
         '設': '設', '坛': '壇',
@@ -298,36 +299,38 @@ function renderPageContent(date, weather, quote) {
     if (lunarData.jieqi) lunarHtml += `<br>(${simplifiedToTraditional(lunarData.jieqi)})`; 
     
     const monthChineseName = MONTH_CHINESE[date.getMonth()];
-    const monthEnglishName = MONTH_NAMES[date.getMonth()];
-    const dayOfWeekChineseMain = `星期${WEEKDAYS_CHINESE[dayIndex]}`; // 主日曆的星期
+    const monthEnglishNameShort = MONTH_NAMES_SHORT[date.getMonth()]; // 使用縮寫
+    const dayOfWeekChineseMain = `星期${WEEKDAYS_CHINESE[dayIndex]}`; 
+    
     // 星期資訊 (用於小月曆下方)
     const dayOfWeekChinese = `星期${WEEKDAYS_CHINESE[dayIndex]}`;
     const dayOfWeekEnglish = WEEKDAYS_ENGLISH[dayIndex];
 
-    // 2. 移除頂部換日按鈕 (原 date-shift-wrapper)
-
-    // 3. 主日期區塊 
+    // 2. 主日期區塊 
     content += `<div class="main-date-container">
         <div class="lunar-badge">${lunarHtml}</div>
-        <div class="date-number-wrapper"><div class="big-date-number">${date.getDate()}</div></div>
+        <div class="center-date-info">
+            <div class="big-date-number">${date.getDate()}</div>
+            <div class="main-day-of-week">${dayOfWeekChineseMain}</div>
+        </div>
         <div class="month-info">
-            <div class="month-short">${monthChineseName}月 / ${monthEnglishName}</div>
-            <div class="month-long">${dayOfWeekChineseMain}</div>
+            <div class="month-short">${monthChineseName}月 / ${monthEnglishNameShort}</div>
         </div>
     </div>`;
 
-    // 4. 宜/忌 區塊 (左右並列)
+    // 3. 宜/忌 區塊 (左右並列)
     content += `<div class="yi-ji-section">
         <div class="yi-section">宜: ${lunarData.yi}</div>
         <div class="ji-section">忌: ${lunarData.ji}</div>
     </div>`;
 
-    // 5. 時鐘 (全寬)
+    // 4. 時鐘 (全寬)
     content += `<div class="quote-clock-section">
         <span id="live-clock" class="live-clock-text">--:--:--</span>
     </div>`;
 
-    // 6. 底部內容容器 (天氣和縮小月曆左右並列)
+    // 5. 底部內容容器 (天氣和縮小月曆左右並列)
+    // 註: 透過 CSS 調整 margin/padding 實現小月曆上移
     content += `<div class="bottom-row-container">
         
         <div class="weather-section-left">
@@ -350,12 +353,12 @@ function renderPageContent(date, weather, quote) {
         
     </div>`;
     
-    // 7. 時辰吉凶 (在最下方)
+    // 6. 時辰吉凶 (在最下方)
     content += generateHourAuspiceContent(getHourAuspiceData(date));
 
     PAGE_CONTAINER.innerHTML = content;
     
-    // 綁定按鈕 (只剩下小月曆下方的換日按鈕)
+    // 綁定按鈕
     document.getElementById('prev-day-mini-btn').onclick = () => shiftDate(-1);
     document.getElementById('next-day-mini-btn').onclick = () => shiftDate(1);
     
