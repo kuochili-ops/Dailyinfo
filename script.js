@@ -1,7 +1,7 @@
 // ====================================================================
 // 專案名稱：極簡日曆儀表板 (最終版 - 依圖定稿)
 // 功能：顯示天氣、農民曆 (含宜忌)、時鐘、時辰吉凶
-// 修正：所有區塊順序和佈局完全比照示意圖
+// 修正：時辰吉凶改為使用 solar.js 庫的實際計算結果
 // ====================================================================
 
 const PAGE_CONTAINER = document.getElementById('calendar-page-container');
@@ -28,10 +28,17 @@ const TAIWAN_CITIES = [
 
 let clockInterval = null;
 
+// ====================================================================
 // I. 農民曆計算邏輯 (使用 CDN 完整庫)
+// ====================================================================
+
+/**
+ * 根據日期獲取農曆資訊，包括宜忌和時辰吉凶。
+ * @param {Date} date 
+ */
 function getLunarData(date) { 
     if (typeof Solar === 'undefined') {
-        return { month: '農曆', day: '載入失敗', yi: 'CDN 連線異常', ji: 'CDN 連線異常', jieqi: '' };
+        return { month: '農曆', day: '載入失敗', yi: 'CDN 連線異常', ji: 'CDN 連線異常', jieqi: '', hourAuspice: [] };
     }
     
     const lunar = Solar.fromDate(date).getLunar();
@@ -39,14 +46,30 @@ function getLunarData(date) {
     const jiList = lunar.getDayJi();
     const jieqi = lunar.getJieQi(); 
 
+    // *** 關鍵修正：從 lunar.getDayHour() 獲取時辰信息，再用 isGood() 判斷吉凶 ***
+    
     let hourAuspiceData = [];
-    const hourAuspiceMap = {
-        '子': '吉', '丑': '凶', '寅': '吉', '卯': '凶', '辰': '吉', '巳': '凶',
-        '午': '吉', '未': '凶', '申': '吉', '酉': '凶', '戌': '吉', '亥': '凶'
+    const hours = lunar.getDayHour(); // 獲取當天所有時辰 (包含名稱、起止時間、吉凶等資訊)
+
+    // 定義時辰吉凶名稱的映射（黃道/黑道）
+    const AUSPICE_MAP = {
+        '青龍': '吉', '明堂': '吉', '天刑': '凶', '朱雀': '凶', '金匱': '吉', 
+        '天德': '吉', '白虎': '凶', '玉堂': '吉', '天牢': '凶', '玄武': '凶', 
+        '司命': '吉', '勾陳': '凶'
     };
-    for(const hour in hourAuspiceMap) {
-        hourAuspiceData.push({ hour: hour, auspice: hourAuspiceMap[hour] });
-    }
+
+    hours.forEach(hour => {
+        // hour.getName() 獲取時辰名稱 (子/丑/寅...)
+        // hour.getNineStar() 獲取九星/黃黑道名稱 (青龍/明堂/天刑...)
+        const nineStar = hour.getNineStar();
+        const auspice = AUSPICE_MAP[nineStar] || (hour.isGood() ? '吉' : '凶'); // 透過九星名稱判斷吉凶
+        
+        hourAuspiceData.push({ 
+            hour: hour.getName(),  // 時辰名稱 (子, 丑...)
+            auspice: auspice,      // 吉/凶
+            nineStar: nineStar     // 黃黑道名稱 (可選)
+        });
+    });
 
     return {
         month: lunar.getMonthInChinese() + '月',
@@ -63,7 +86,7 @@ function getHourAuspiceData(date) {
     return getLunarData(date).hourAuspice; 
 }
 
-// III. 時辰吉凶表格生成
+// III. 時辰吉凶表格生成 (精簡文字版)
 function generateHourAuspiceContent(data) { 
     if (!data || data.length === 0) return '';
     
@@ -74,8 +97,8 @@ function generateHourAuspiceContent(data) {
     <div class="hour-auspice-container">
         <div class="hour-auspice-title">今日時辰吉凶</div>
         <div class="hour-auspice-text">
-            <span class="auspice-good">吉時: ${goodHours}</span> | 
-            <span class="auspice-bad">凶時: ${badHours}</span>
+            <span class="auspice-good">吉時: ${goodHours || '無'}</span> | 
+            <span class="auspice-bad">凶時: ${badHours || '無'}</span>
         </div>
     </div>`;
 }
@@ -158,7 +181,7 @@ function generateMiniCalendar(date) {
     return html;
 }
 
-// VIII. 核心渲染邏輯 (調整順序與結構)
+// VIII. 核心渲染邏輯 (不變)
 function renderPageContent(date, weather, quote) {
     let content = '';
     const lunarYearInfo = typeof Solar !== 'undefined' ? Solar.fromDate(date).getLunar().getYearInGanZhi() : '';
@@ -174,7 +197,7 @@ function renderPageContent(date, weather, quote) {
     const dayOfWeek = weekdays[date.getDay()];
     const monthShort = (date.getMonth() + 1).toString().padStart(2, '0');
 
-    // 2. 日期切換按鈕 (比照示意圖，放在主日期區塊上方)
+    // 2. 日期切換按鈕 
     content += `<div class="date-shift-wrapper">
         <button id="prev-day-btn" class="shift-btn date-shift-top"> &#x23EA; </button>
         <button id="next-day-btn" class="shift-btn date-shift-top"> &#x23E9; </button>
