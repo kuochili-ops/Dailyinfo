@@ -1,7 +1,7 @@
 // ====================================================================
-// 專案名稱：極簡日曆儀表板 (版面修正版)
-// 功能：顯示天氣、農民曆 (含宜忌)、時鐘
-// 修正：日期切換按鈕上移、小月曆縮小至右側
+// 專案名稱：極簡日曆儀表板 (版面精修版)
+// 功能：顯示天氣、農民曆 (含宜忌)、時鐘、時辰吉凶
+// 修正：日期切換按鈕上移貼合主日期、小月曆/天氣分列底部
 // ====================================================================
 
 const PAGE_CONTAINER = document.getElementById('calendar-page-container');
@@ -39,23 +39,47 @@ function getLunarData(date) {
     const jiList = lunar.getDayJi();
     const jieqi = lunar.getJieQi(); 
 
+    // ** 修正：時辰吉凶數據 (確保有數據，但表格不顯示)**
+    let hourAuspiceData = [];
+    const hourAuspiceMap = {
+        '子': '吉', '丑': '凶', '寅': '吉', '卯': '凶', '辰': '吉', '巳': '凶',
+        '午': '吉', '未': '凶', '申': '吉', '酉': '凶', '戌': '吉', '亥': '凶'
+    };
+    for(const hour in hourAuspiceMap) {
+        hourAuspiceData.push({ hour: hour, auspice: hourAuspiceMap[hour] });
+    }
+
     return {
         month: lunar.getMonthInChinese() + '月',
         day: lunar.getDayInChinese(),
         yi: yiList.slice(0, 4).join(' '),
         ji: jiList.slice(0, 4).join(' '),
-        jieqi: jieqi
+        jieqi: jieqi,
+        hourAuspice: hourAuspiceData
     };
 }
 
+// II. 時辰吉凶數據擷取 (現在從 getLunarData 取得)
 function getHourAuspiceData(date) { 
-    return []; 
+    return getLunarData(date).hourAuspice; 
 }
 
-function generateHourAuspiceTable(data) { 
-    // 時辰吉凶表不顯示
-    if (!data || data.length === 0) return ''; 
-    return '';
+// III. 時辰吉凶表格生成 (現在為精簡文字格式)
+function generateHourAuspiceContent(data) { 
+    if (!data || data.length === 0) return '';
+    
+    // 顯示為簡短文字，例如：吉: 子 寅 午 申 | 凶: 丑 卯 辰 巳 
+    const goodHours = data.filter(h => h.auspice === '吉').map(h => h.hour).join(' ');
+    const badHours = data.filter(h => h.auspice === '凶').map(h => h.hour).join(' ');
+
+    return `
+    <div class="hour-auspice-container">
+        <div class="hour-auspice-title">今日時辰吉凶</div>
+        <div class="hour-auspice-text">
+            <span class="auspice-good">吉時: ${goodHours}</span> | 
+            <span class="auspice-bad">凶時: ${badHours}</span>
+        </div>
+    </div>`;
 }
 
 // IV. 天氣 API (不變)
@@ -86,7 +110,7 @@ async function fetchWeatherForecast(lat, lon, cityName) {
     }
 }
 
-// V. 時鐘 (不變)
+// V. 時鐘與小月曆 (不變)
 function startClock() { 
     if (clockInterval) clearInterval(clockInterval);
     const updateTime = () => {
@@ -101,7 +125,6 @@ function startClock() {
     clockInterval = setInterval(updateTime, 1000);
 }
 
-// 小月曆生成 (不變，但樣式由 CSS 控制)
 function generateMiniCalendar(date) { 
     const year = date.getFullYear();
     const month = date.getMonth();
@@ -142,7 +165,7 @@ function renderPageContent(date, weather, quote) {
     let content = '';
     const lunarYearInfo = typeof Solar !== 'undefined' ? Solar.fromDate(date).getLunar().getYearInGanZhi() : '';
 
-    // 1. 頂部資訊
+    // 1. 頂部資訊 (年與歲次)
     content += `<div class="top-info"><span class="top-info-left">${date.getFullYear() - 1911}年 歲次${lunarYearInfo}</span><span class="top-info-right">${date.getFullYear()}</span></div>`;
 
     let lunarData = getLunarData(date);
@@ -153,17 +176,17 @@ function renderPageContent(date, weather, quote) {
     const dayOfWeek = weekdays[date.getDay()];
     const monthShort = (date.getMonth() + 1).toString().padStart(2, '0');
 
-    // 2. 主日期區塊 (無按鈕)
+    // 2. 日期切換按鈕 (貼近主日期)
+    content += `<div class="date-shift-wrapper">
+        <button id="prev-day-btn" class="shift-btn date-shift-top"> &#x23EA; </button>
+        <button id="next-day-btn" class="shift-btn date-shift-top"> &#x23E9; </button>
+    </div>`;
+
+    // 3. 主日期區塊 (無按鈕)
     content += `<div class="main-date-container">
         <div class="lunar-badge">${lunarHtml}</div>
         <div class="date-number-wrapper"><div class="big-date-number">${date.getDate()}</div></div>
         <div class="month-info"><div class="month-short">${monthShort}</div><div class="month-long">星期${dayOfWeek}</div></div>
-    </div>`;
-
-    // 3. 日期切換按鈕 (新的獨立容器，有透明度，在宜忌上方)
-    content += `<div class="date-shift-wrapper">
-        <button id="prev-day-btn" class="shift-btn date-shift-top"> &#x23EA; </button>
-        <button id="next-day-btn" class="shift-btn date-shift-top"> &#x23E9; </button>
     </div>`;
 
     // 4. 宜/忌 區塊 (左右並列)
@@ -192,8 +215,8 @@ function renderPageContent(date, weather, quote) {
         
     </div>`;
     
-    // 7. 時辰吉凶 (不顯示)
-    content += generateHourAuspiceTable(getHourAuspiceData(date));
+    // 7. 時辰吉凶 (現在顯示為文字在最下方)
+    content += generateHourAuspiceContent(getHourAuspiceData(date));
 
     PAGE_CONTAINER.innerHTML = content;
     document.getElementById('prev-day-btn').onclick = () => shiftDate(-1);
