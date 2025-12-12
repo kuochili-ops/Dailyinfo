@@ -1,5 +1,5 @@
 /* ====================================================================
-   style.css - 極簡日曆儀表板樣式表 (最終版 - 依圖調整)
+   style.css - 極簡日曆儀表板樣式表 (最終版 - 依圖精修)
    ==================================================================== */
 
 /* 基礎佈局與卡片 */
@@ -42,7 +42,7 @@ body {
 .top-info {
     display: flex;
     justify-content: space-between;
-    padding: 5px 15px;
+    padding: 5px 15px 0 15px; /* 減少底部間距，讓它貼近切換按鈕 */
     font-size: 0.8em;
     color: #999;
 }
@@ -52,23 +52,12 @@ body {
     color: #333;
 }
 
-/* 主日期區塊 */
-.main-date-container {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0 15px 15px 15px;
-    position: relative;
-    border-bottom: 1px solid #eee;
-}
-
 /* ==================================================
-   *** 日期切換按鈕 (新位置與透明度) ***
+   *** 日期切換按鈕 (精修位置與透明度) ***
    ================================================== */
 .date-shift-wrapper {
     text-align: right;
-    padding: 5px 15px; /* 增加上下間距 */
-    /* 移除 border-bottom，讓它緊貼宜忌區塊 */
+    padding: 0 15px 5px 15px; /* 上下間距微調 */
 }
 
 .shift-btn {
@@ -87,6 +76,17 @@ body {
     opacity: 1;
 }
 /* ================================================== */
+
+
+/* 主日期區塊 */
+.main-date-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 15px 15px 15px;
+    position: relative;
+    border-bottom: 1px solid #eee;
+}
 
 .lunar-badge {
     background-color: #cc0000;
@@ -132,7 +132,7 @@ body {
 .yi-ji-section {
     display: flex; 
     justify-content: space-between; 
-    margin: 0 15px 10px 15px; /* 上方邊距移除，讓它靠近切換按鈕 */
+    margin: 10px 15px;
     padding: 10px 0;
     border-bottom: 1px dashed #ccc;
 }
@@ -187,7 +187,7 @@ body {
    *** 底部左右並列容器 (天氣/月曆) ***
    ================================================== */
 .bottom-row-container {
-    display: flex; /* 啟用 Flex 佈局 */
+    display: flex; 
     justify-content: space-between;
     align-items: flex-start; 
     margin: 20px 15px;
@@ -197,12 +197,12 @@ body {
 
 /* 天氣區塊 (左側) */
 .weather-section-left {
-    flex: 1; /* 佔據剩餘空間 */
+    flex: 1; 
     padding-right: 15px;
     text-align: left;
     font-size: 0.9em;
     color: #666;
-    min-height: 100px; 
+    min-height: 80px; /* 略微減少高度 */
 }
 .weather-city-name { font-weight: bold; color: #333; }
 .weather-temp { font-weight: bold; color: #e60000; }
@@ -210,21 +210,16 @@ body {
 
 /* 小月曆區塊 (右側，縮小尺寸) */
 .mini-calendar-container {
-    /* 設定明確寬度，例如 40%，使其小於一半 */
     width: 40%; 
     min-width: 120px;
     flex-shrink: 0; 
-    
-    /* 縮小字體尺寸 */
     font-size: 0.6em; 
-    
     border: 1px solid #eee; 
     border-radius: 4px;
     overflow: hidden; 
 }
 
 .mini-calendar-title {
-    /* 相對放大，讓縮小後的標題仍清晰 */
     font-size: 1.2em; 
     color: #333;
     text-align: center;
@@ -233,12 +228,14 @@ body {
 /* ================================================== */
 
 
-/* 時辰吉凶表 (不變) */
+/* ==================================================
+   *** 時辰吉凶表 (精簡文字版) ***
+   ================================================== */
 .hour-auspice-container {
-    margin: 15px 5px; 
+    margin: 15px 15px 20px 15px; /* 增加底部間距 */
     padding: 10px 0; 
-    border-bottom: 1px dashed #ccc; 
     text-align: center;
+    font-size: 0.9em;
 }
 .hour-auspice-title {
     font-size: 1.1em; 
@@ -246,3 +243,12 @@ body {
     color: #004d99; 
     margin-bottom: 5px;
 }
+.auspice-good {
+    color: #008000; /* 綠色 */
+    font-weight: bold;
+}
+.auspice-bad {
+    color: #cc0000; /* 紅色 */
+    font-weight: bold;
+}
+/* ================================================== */
