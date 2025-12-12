@@ -1,7 +1,7 @@
 // ====================================================================
-// 專案名稱：極簡日曆儀表板 (版面精修版)
+// 專案名稱：極簡日曆儀表板 (最終版 - 依圖定稿)
 // 功能：顯示天氣、農民曆 (含宜忌)、時鐘、時辰吉凶
-// 修正：日期切換按鈕上移貼合主日期、小月曆/天氣分列底部
+// 修正：所有區塊順序和佈局完全比照示意圖
 // ====================================================================
 
 const PAGE_CONTAINER = document.getElementById('calendar-page-container');
@@ -39,7 +39,6 @@ function getLunarData(date) {
     const jiList = lunar.getDayJi();
     const jieqi = lunar.getJieQi(); 
 
-    // ** 修正：時辰吉凶數據 (確保有數據，但表格不顯示)**
     let hourAuspiceData = [];
     const hourAuspiceMap = {
         '子': '吉', '丑': '凶', '寅': '吉', '卯': '凶', '辰': '吉', '巳': '凶',
@@ -59,16 +58,15 @@ function getLunarData(date) {
     };
 }
 
-// II. 時辰吉凶數據擷取 (現在從 getLunarData 取得)
+// II. 時辰吉凶數據擷取 
 function getHourAuspiceData(date) { 
     return getLunarData(date).hourAuspice; 
 }
 
-// III. 時辰吉凶表格生成 (現在為精簡文字格式)
+// III. 時辰吉凶表格生成
 function generateHourAuspiceContent(data) { 
     if (!data || data.length === 0) return '';
     
-    // 顯示為簡短文字，例如：吉: 子 寅 午 申 | 凶: 丑 卯 辰 巳 
     const goodHours = data.filter(h => h.auspice === '吉').map(h => h.hour).join(' ');
     const badHours = data.filter(h => h.auspice === '凶').map(h => h.hour).join(' ');
 
@@ -176,13 +174,13 @@ function renderPageContent(date, weather, quote) {
     const dayOfWeek = weekdays[date.getDay()];
     const monthShort = (date.getMonth() + 1).toString().padStart(2, '0');
 
-    // 2. 日期切換按鈕 (貼近主日期)
+    // 2. 日期切換按鈕 (比照示意圖，放在主日期區塊上方)
     content += `<div class="date-shift-wrapper">
         <button id="prev-day-btn" class="shift-btn date-shift-top"> &#x23EA; </button>
         <button id="next-day-btn" class="shift-btn date-shift-top"> &#x23E9; </button>
     </div>`;
 
-    // 3. 主日期區塊 (無按鈕)
+    // 3. 主日期區塊 
     content += `<div class="main-date-container">
         <div class="lunar-badge">${lunarHtml}</div>
         <div class="date-number-wrapper"><div class="big-date-number">${date.getDate()}</div></div>
@@ -215,7 +213,7 @@ function renderPageContent(date, weather, quote) {
         
     </div>`;
     
-    // 7. 時辰吉凶 (現在顯示為文字在最下方)
+    // 7. 時辰吉凶 (在最下方)
     content += generateHourAuspiceContent(getHourAuspiceData(date));
 
     PAGE_CONTAINER.innerHTML = content;
