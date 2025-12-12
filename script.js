@@ -1,7 +1,7 @@
 // ====================================================================
 // 專案名稱：極簡日曆儀表板 (最終版 - 依圖定稿)
 // 功能：顯示天氣、農民曆 (含宜忌)、時鐘、時辰吉凶
-// 修正：修正佈局，移除頂部換日鍵、調整月份格式、移動星期到小月曆下方。
+// 修正：修正佈局，恢復主日曆星期顯示，並加大月份/星期字體。
 // ====================================================================
 
 const PAGE_CONTAINER = document.getElementById('calendar-page-container');
@@ -299,6 +299,7 @@ function renderPageContent(date, weather, quote) {
     
     const monthChineseName = MONTH_CHINESE[date.getMonth()];
     const monthEnglishName = MONTH_NAMES[date.getMonth()];
+    const dayOfWeekChineseMain = `星期${WEEKDAYS_CHINESE[dayIndex]}`; // 主日曆的星期
     // 星期資訊 (用於小月曆下方)
     const dayOfWeekChinese = `星期${WEEKDAYS_CHINESE[dayIndex]}`;
     const dayOfWeekEnglish = WEEKDAYS_ENGLISH[dayIndex];
@@ -311,7 +312,8 @@ function renderPageContent(date, weather, quote) {
         <div class="date-number-wrapper"><div class="big-date-number">${date.getDate()}</div></div>
         <div class="month-info">
             <div class="month-short">${monthChineseName}月 / ${monthEnglishName}</div>
-            </div>
+            <div class="month-long">${dayOfWeekChineseMain}</div>
+        </div>
     </div>`;
 
     // 4. 宜/忌 區塊 (左右並列)
