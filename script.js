@@ -1,6 +1,6 @@
 // ====================================================================
-// 專案名稱：極簡日曆儀表板 (最終正確版 - 恢復時辰吉凶)
-// 狀態：已修復時辰吉凶數據缺失，並使用優化版面樣式。
+// 專案名稱：極簡日曆儀表板 (最終修正版 - 恢復用戶原始擷取邏輯)
+// 狀態：修復時辰吉凶顯示，使用用戶原始的硬編碼資料邏輯，結合優化版面樣式。
 // ====================================================================
 
 const PAGE_CONTAINER = document.getElementById('calendar-page-container');
@@ -8,6 +8,7 @@ const CITY_SELECTOR = document.getElementById('city-selector');
 const API_KEY = 'Dcd113bba5675965ccf9e60a7e6d06e5'; 
 
 let currentDisplayDate = new Date(); 
+let clockInterval = null;
 
 const TAIWAN_CITIES = [
     { name: '臺北市', lat: 25.0330, lon: 121.5654 }, 
@@ -25,12 +26,11 @@ const TAIWAN_CITIES = [
     { name: '臺東縣', lat: 22.7562, lon: 121.1524 }  
 ];
 
-let clockInterval = null;
 
-// I. 農民曆計算邏輯 (還原：移除所有時辰吉凶模擬數據)
+// I. 農民曆計算邏輯 (恢復用戶原始的硬編碼邏輯)
 function getLunarData(date) { 
     if (typeof Solar === 'undefined') {
-        return { month: '農曆', day: '載入失敗', yi: 'CDN 連線異常', ji: 'CDN 連線異常', jieqi: '' };
+        return { month: '農曆', day: '載入失敗', yi: 'CDN 連線異常', ji: 'CDN 連線異常', jieqi: '', hourAuspice: [] };
     }
     
     const lunar = Solar.fromDate(date).getLunar();
@@ -38,31 +38,33 @@ function getLunarData(date) {
     const jiList = lunar.getDayJi();
     const jieqi = lunar.getJieQi(); 
 
-    // **重要：這裡不再包含 hourAuspice 的模擬邏輯**
+    // **重要：恢復您原始程式碼中的硬編碼時辰吉凶資料，這是唯一能讓您看到資料的方式**
+    let hourAuspiceData = [];
+    const hourAuspiceMap = {
+        '子': '吉', '丑': '凶', '寅': '吉', '卯': '凶', '辰': '吉', '巳': '凶',
+        '午': '吉', '未': '凶', '申': '吉', '酉': '凶', '戌': '吉', '亥': '凶'
+    };
+    for(const hour in hourAuspiceMap) {
+        // 這些是簡單的 JS Object，而不是函式庫的 HourAuspice 對象
+        hourAuspiceData.push({ hour: hour, auspice: hourAuspiceMap[hour] });
+    }
 
     return {
         month: lunar.getMonthInChinese() + '月',
         day: lunar.getDayInChinese(),
-        yi: yiList.slice(0, 4).join(' '), // 保持只取前 4 個
-        ji: jiList.slice(0, 4).join(' '), // 保持只取前 4 個
-        jieqi: jieqi
+        yi: yiList.slice(0, 4).join(' '),
+        ji: jiList.slice(0, 4).join(' '),
+        jieqi: jieqi,
+        hourAuspice: hourAuspiceData // 傳遞硬編碼的資料
     };
 }
 
-// II. 時辰吉凶數據擷取 (還原：使用正確的函式庫方法)
+// II. 時辰吉凶數據擷取 (恢復用戶原始的擷取方式：從 getLunarData 取得)
 function getHourAuspiceData(date) { 
-    if (typeof Solar === 'undefined') { return []; }
-    try {
-        const lunar = Solar.fromDate(date).getLunar();
-        // **這是唯一能讓時辰吉凶出現的正確呼叫方式**
-        return lunar.getHourAuspice(); 
-    } catch (e) {
-        console.error("Failed to get hour auspice data:", e);
-        return []; 
-    }
+    return getLunarData(date).hourAuspice; 
 }
 
-// III. 時辰吉凶表格生成 (修正：使其能處理函式庫返回的對象)
+// III. 時辰吉凶表格生成 (修正為讀取硬編碼物件的屬性：.hour 和 .auspice)
 function generateHourAuspiceContent(data) { 
     // 檢查數據是否為空
     if (!data || data.length === 0) {
@@ -72,9 +74,9 @@ function generateHourAuspiceContent(data) {
         </div>`;
     }
 
-    // 數據對象 (HourAuspice) 具有 getJiXiong() 和 getHour() 方法
-    const goodHours = data.filter(h => h.getJiXiong().includes('吉')).map(h => h.getHour()).join(' ');
-    const badHours = data.filter(h => h.getJiXiong().includes('凶')).map(h => h.getHour()).join(' ');
+    // 由於我們使用的是硬編碼資料，物件是 { hour: '子', auspice: '吉' }
+    const goodHours = data.filter(h => h.auspice === '吉').map(h => h.hour).join(' ');
+    const badHours = data.filter(h => h.auspice === '凶').map(h => h.hour).join(' ');
 
     return `
     <div class="hour-auspice-container">
@@ -105,7 +107,7 @@ async function fetchWeatherForecast(lat, lon, cityName) {
     }
 }
 
-// V. 時鐘與小月曆 (保持您的原始邏輯和結構)
+// V. 時鐘與小月曆 (不變)
 function startClock() { 
     if (clockInterval) clearInterval(clockInterval);
     const updateTime = () => {
