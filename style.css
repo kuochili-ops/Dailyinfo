@@ -1,5 +1,5 @@
 /* ====================================================================
-   style.css - 極簡日曆儀表板樣式表 (最終版 - 介面文字已轉為正體中文)
+   style.css - 極簡日曆儀表板樣式表 (最終版 - 加入 Date Picker 輔助)
    ==================================================================== */
 
 /* 基礎佈局與卡片 */
@@ -77,7 +77,7 @@ body {
     flex-shrink: 0;
     padding-right: 10px;
     border-right: 1px dashed #ccc;
-    min-height: 75px; /* 確保有足夠空間顯示節氣 */
+    min-height: 75px; 
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -90,7 +90,6 @@ body {
     text-align: center;
 }
 .big-date-number {
-    /* 日期數字：維持長高效果 */
     font-size: 6.5em; 
     font-weight: 900; 
     color: #333;
@@ -101,7 +100,6 @@ body {
     display: inline-block; 
 }
 .weekday-below-date { 
-    /* 星期字體加大並下移 */
     font-size: 1.5em; 
     font-weight: bold;
     color: #e60000; 
@@ -117,14 +115,12 @@ body {
     padding-left: 10px;
 }
 .month-long { 
-    /* 中文月份加大 */
     font-size: 1.8em; 
     font-weight: bold;
     color: #666;
     line-height: 1.3;
 }
 .month-short { 
-    /* 英文月份加大 */
     font-size: 1.3em; 
     color: #999;
     line-height: 1.2;
@@ -200,8 +196,9 @@ body {
 }
 
 
-/* 小月曆/選擇器區塊 (右側) */
+/* 小月曆/選擇器區塊 (右側) - 設置相對定位，以便隱藏的 input 絕對定位 */
 .mini-calendar-container {
+    position: relative; /* 核心修正 */
     width: 42%; 
     min-width: 120px;
     flex-shrink: 0; 
@@ -209,22 +206,22 @@ body {
     border: 1px solid #eee; 
     border-radius: 4px;
     overflow: hidden; 
+    cursor: pointer; /* 提示可點擊 */
 }
 
-/* 年月選擇器樣式 */
+/* 年月顯示樣式 (取代了原本的 select) */
 .date-selector-wrapper {
     display: flex;
     justify-content: space-around;
     padding: 5px 5px 10px 5px;
     border-bottom: 1px solid #f0f0f0;
+    pointer-events: none; /* 讓點擊事件穿透到下方的 input */
 }
 .date-select {
     font-size: 1.1em;
     padding: 2px;
-    border: 1px solid #ccc;
-    border-radius: 3px;
-    background-color: #fff;
-    cursor: pointer;
+    font-weight: bold;
+    color: #333;
 }
 
 .mini-calendar-table {
@@ -233,6 +230,7 @@ body {
 .mini-calendar-container table {
     border-collapse: collapse;
     width: 100%;
+    pointer-events: none; /* 讓月曆本身不響應點擊，只有整體區域觸發 date picker */
 }
 
 .mini-calendar-container th, .mini-calendar-container td {
