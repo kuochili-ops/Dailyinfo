@@ -46,208 +46,189 @@ body {
 .top-info {
     display: flex;
     justify-content: space-between;
-    padding: 5px 15px 0 15px; 
+    padding: 5px 15px;
     font-size: 0.8em;
     color: #999;
 }
 .top-info-right {
-    font-size: 1.1em;
     font-weight: bold;
-    color: #333;
-}
-
-/* ==================================================
-   *** 日期切換按鈕 (貼近主日期) ***
-   ================================================== */
-.date-shift-wrapper {
-    text-align: right;
-    padding: 0 15px 5px 15px; 
-}
-
-.shift-btn {
-    /* *** 修正點：尺寸增大，背景使用純白提高透明度 *** */
-    background: #fff; /* 透明度高一點 */
-    border: 1px solid #ccc;
-    border-radius: 50%;
-    width: 40px; /* 大一點 */
-    height: 40px; /* 大一點 */
-    line-height: 40px;
-    text-align: center;
-    font-size: 1.6em; /* 增大圖示 */
     color: #666;
-    cursor: pointer;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-    transition: all 0.15s;
-    opacity: 1; /* 確保完全不透明 */
-    margin-left: 5px;
 }
 
-.shift-btn:hover {
-    background: #004d99;
-    color: white;
-    border-color: #004d99;
-    opacity: 1;
-}
-/* ================================================== */
-
-
-/* 主日期區塊 */
+/* ==================================================\
+   *** 日期主體區塊 ***
+   ================================================== */
 .main-date-container {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0 15px 15px 15px;
-    position: relative;
+    padding: 10px 15px;
     border-bottom: 1px solid #eee;
 }
 
+/* 農曆區塊 (左側) */
 .lunar-badge {
-    background-color: #cc0000;
-    color: white;
-    padding: 8px 10px;
-    border-radius: 4px;
-    font-size: 0.7em;
+    font-size: 1.1em;
+    line-height: 1.4;
+    color: #004d99;
+    font-weight: bold;
     text-align: center;
-    line-height: 1.3;
-    width: 60px; 
-    box-sizing: border-box;
+    width: 25%;
+    flex-shrink: 0;
+    padding-right: 10px;
+    border-right: 1px dashed #ccc;
 }
 
+/* 日期數字與星期 (中間) */
 .date-number-wrapper {
     flex-grow: 1;
     text-align: center;
 }
-
 .big-date-number {
-    /* *** 修正點：變長不變寬 *** */
-    font-size: 6.5em; /* 增大字體 */
-    font-weight: 900; /* 極粗 */
-    line-height: 0.8; /* 減少行高 */
+    /* 日期數字：維持長高效果 */
+    font-size: 6.5em; 
+    font-weight: 900; 
     color: #333;
-    transform: scaleY(1.5); /* 垂直拉伸 50% */
+    line-height: 0.8; 
+    letter-spacing: -3px; 
+    transform: scaleY(1.5); 
     transform-origin: center center; 
     display: inline-block; 
 }
-
-.month-info {
-    text-align: right;
-    font-size: 0.9em;
-    width: 80px;
-}
-.month-short {
-    font-size: 1.5em;
+.weekday-below-date { 
+    /* 修正點：星期字體加大 */
+    font-size: 1.2em;
     font-weight: bold;
-    color: #004d99;
-}
-.month-long {
-    color: #666;
+    color: #e60000; 
+    margin-top: 5px; /* 確保與日期保持間隔，不重疊 */
 }
 
-/* ==================================================
-   宜/忌 區塊 (左右並列)
+/* 月份資訊 (右側) */
+.month-info {
+    width: 25%;
+    flex-shrink: 0;
+    text-align: right;
+    padding-left: 10px;
+}
+.month-long { 
+    /* 修正點：中文月份加大 */
+    font-size: 1.5em; 
+    font-weight: bold;
+    color: #666;
+    line-height: 1.3;
+}
+.month-short { 
+    /* 修正點：英文月份加大 */
+    font-size: 1.1em; 
+    color: #999;
+    line-height: 1.2;
+}
+
+
+/* ==================================================\
+   *** 宜/忌 區塊 (不變) ***
    ================================================== */
 .yi-ji-section {
     display: flex;
-    justify-content: space-between; 
-    margin: 10px 15px;
-    padding: 10px 0;
-    border-bottom: 1px dashed #ccc;
+    border-bottom: 1px solid #eee;
 }
-
 .yi-section, .ji-section {
     flex: 1;
-    padding: 8px;
-    border-radius: 4px;
-    font-size: 0.85em;
-    line-height: 1.4;
-    text-align: left;
-    min-height: 50px; 
+    padding: 10px 15px;
+    font-size: 0.9em;
+    line-height: 1.6;
+    word-break: break-all;
 }
 
 .yi-section {
-    background-color: #e6ffe6;
     color: #008000; 
-    border: 1px solid #ccffcc;
-    margin-right: 5px; 
+    border-right: 1px dashed #eee;
+    font-weight: bold;
 }
 
 .ji-section {
-    background-color: #ffe6e6; 
-    color: #cc0000;
-    border: 1px solid #ffcccc;
-    margin-left: 5px; 
-}
-/* ================================================== */
-
-
-/* 時鐘區塊 */
-.quote-clock-section {
-    margin: 10px 15px; 
-    padding: 10px;
-    border: 1px solid #eee; 
-    background-color: #fcfcfc;
-    min-height: 50px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    border-radius: 4px;
-}
-.live-clock-text { 
-    font-size: 2.5em; 
-    font-weight: 300; 
-    color: #333;
+    color: #cc0000; 
+    font-weight: bold;
 }
 
-
-/* ==================================================
-   *** 底部左右並列容器 (天氣/月曆) ***
+/* ==================================================\
+   *** 底部區塊：天氣/時鐘 vs 年月選擇/小月曆 ***
    ================================================== */
 .bottom-row-container {
     display: flex; 
     justify-content: space-between;
     align-items: flex-start; 
-    margin: 20px 15px;
+    margin: 15px 15px 5px 15px; 
     padding-bottom: 15px;
     border-bottom: 1px solid #eee;
 }
 
-/* 天氣區塊 (左側) */
-.weather-section-left {
-    flex: 1; 
+/* 左側容器：包含天氣和時鐘 (佔總寬度 58%) */
+.weather-clock-section-left { 
+    width: 58%; 
+    flex-shrink: 0; 
     padding-right: 15px;
+}
+
+.weather-section-left {
+    padding-bottom: 10px; 
     text-align: left;
     font-size: 0.9em;
     color: #666;
-    min-height: 80px;
+    line-height: 1.6;
+    min-height: 50px;
 }
-.weather-city-name { font-weight: bold; color: #333; }
-.weather-temp { font-weight: bold; color: #e60000;
+.weather-city-name { font-weight: bold; color: #333; display: block; }
+.weather-temp { font-weight: bold; color: #e60000; display: block; }
+
+.live-clock-container {
+    text-align: left;
+    padding-top: 10px;
+    border-top: 1px solid #eee;
+}
+.live-clock-text {
+    font-size: 1.8em; 
+    font-weight: 300;
+    color: #004d99;
+    display: block;
 }
 
 
-/* 小月曆區塊 (右側，縮小尺寸) */
+/* 小月曆/選擇器區塊 (右側) */
 .mini-calendar-container {
-    width: 40%; 
+    width: 42%; 
     min-width: 120px;
     flex-shrink: 0; 
     font-size: 0.6em; 
-    border: 1px solid #eee;
+    border: 1px solid #eee; 
     border-radius: 4px;
     overflow: hidden; 
 }
 
-.mini-calendar-title {
-    font-size: 1.2em; 
-    color: #333;
-    text-align: center;
-    margin: 5px 0;
+/* 年月選擇器樣式 (新加入) */
+.date-selector-wrapper {
+    display: flex;
+    justify-content: space-around;
+    padding: 5px 5px 10px 5px;
+    border-bottom: 1px solid #f0f0f0;
+}
+.date-select {
+    font-size: 1.1em;
+    padding: 2px;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+    background-color: #fff;
+    cursor: pointer;
 }
 
-/* 小月曆的表格樣式 (未變動) */
+.mini-calendar-table {
+    padding: 5px;
+}
 .mini-calendar-container table {
     border-collapse: collapse;
+    width: 100%;
 }
+/* ... (小月曆表格樣式保持不變) ... */
 
 .mini-calendar-container th, .mini-calendar-container td {
     padding: 0px 0;
@@ -267,33 +248,30 @@ body {
     border-radius: 3px; 
     font-weight: bold;
 }
-/* ================================================== */
 
 
-/* ==================================================
-   *** 時辰吉凶表 (最底部) ***
+/* ==================================================\
+   *** 時辰吉凶表 (最底部) (不變) ***
    ================================================== */
 .hour-auspice-container {
-    margin: 15px 15px 20px 15px;
-    padding: 10px 0; 
+    padding: 10px 15px 15px 15px;
     text-align: center;
-    font-size: 0.9em;
 }
 .hour-auspice-title {
     font-size: 1.1em;
-    font-weight: bold; 
-    color: #004d99; 
-    margin-bottom: 5px;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 8px;
 }
 .hour-auspice-text {
-    line-height: 1.5;
+    font-size: 0.9em;
+    line-height: 1.6;
 }
 .auspice-good {
-    color: #008000;
+    color: #008000; 
     font-weight: bold;
 }
 .auspice-bad {
-    color: #cc0000;
+    color: #cc0000; 
     font-weight: bold;
 }
-/* ================================================== */
