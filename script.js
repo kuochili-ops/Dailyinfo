@@ -1,6 +1,7 @@
 // ====================================================================
 // 專案名稱：極簡日曆儀表板 (最終定案版 - 支援年月選擇，介面文字已轉為正體中文)
 // 狀態：已移除日期切換按鈕，改為年月選擇器。
+// 修正：加入了簡體轉正體函式，確保宜忌事項內容為正體中文。
 // ====================================================================
 
 const PAGE_CONTAINER = document.getElementById('calendar-page-container');
@@ -26,6 +27,28 @@ const TAIWAN_CITIES = [
     { name: '臺東縣', lat: 22.7562, lon: 121.1524 }  
 ];
 
+// ******************************************************
+// ** 核心修正：簡體轉正體函式 **
+// ******************************************************
+function simplifiedToTraditional(text) {
+    if (!text) return '';
+    // 這裡只轉換常見於宜忌事項中的簡體字。
+    // 如果需要更完整的轉換，應使用專門的轉換庫或字典。
+    const map = {
+        '开': '開', '动': '動', '修': '修', '造': '造', '谢': '謝', 
+        '盖': '蓋', '纳': '納', '结': '結', '办': '辦', '迁': '遷', 
+        '进': '進', '习': '習', '医': '醫', '启': '啟', '会': '會',
+        '备': '備', '园': '園', '备': '備', '买': '買', '卖': '賣',
+        '发': '發', '设': '設', '坛': '壇'
+    };
+    let result = '';
+    for (let i = 0; i < text.length; i++) {
+        const char = text[i];
+        result += map[char] || char;
+    }
+    return result;
+}
+
 // I. 農民曆計算邏輯 
 function getLunarData(date) { 
     if (typeof Solar === 'undefined') {
@@ -36,6 +59,13 @@ function getLunarData(date) {
     const yiList = lunar.getDayYi();
     const jiList = lunar.getDayJi();
     const jieqi = lunar.getJieQi(); 
+
+    // 核心修正點：對宜忌事項的內容進行簡轉正
+    const rawYi = yiList.slice(0, 4).join(' ');
+    const rawJi = jiList.slice(0, 4).join(' ');
+
+    const finalYi = simplifiedToTraditional(rawYi);
+    const finalJi = simplifiedToTraditional(rawJi);
 
     // 時辰吉凶資料 (用戶原始邏輯)
     let hourAuspiceData = [];
@@ -50,8 +80,8 @@ function getLunarData(date) {
     return {
         month: lunar.getMonthInChinese() + '月',
         day: lunar.getDayInChinese(),
-        yi: yiList.slice(0, 4).join(' '),
-        ji: jiList.slice(0, 4).join(' '),
+        yi: finalYi, // 使用轉換後的正體中文
+        ji: finalJi, // 使用轉換後的正體中文
         jieqi: jieqi,
         hourAuspice: hourAuspiceData
     };
@@ -188,7 +218,7 @@ function renderPageContent(date, weather, quote) {
 
     let lunarData = getLunarData(date);
     let lunarHtml = `${lunarData.month}<br>${lunarData.day}`;
-    if (lunarData.jieqi) lunarHtml += `<br>(${lunarData.jieqi})`;
+    if (lunarData.jieqi) lunarHtml += `<br>(${simplifiedToTraditional(lunarData.jieqi)})`; // 節氣也轉正體
     
     const weekdays = ['日', '一', '二', '三', '四', '五', '六'];
     const dayOfWeek = weekdays[date.getDay()];
