@@ -167,7 +167,9 @@ function renderPageContent(date, weather, quote) {
     
     const weekdays = ['日', '一', '二', '三', '四', '五', '六'];
     const dayOfWeek = weekdays[date.getDay()];
-    const monthShort = (date.getMonth() + 1).toString().padStart(2, '0');
+    
+    // *** 修正點：月份中英文顯示 (英文月份縮寫) ***
+    const monthShort = date.toLocaleString('en-US', { month: 'short' }); 
 
     // 2. 日期切換按鈕
     content += `<div class="date-shift-wrapper">
@@ -175,7 +177,7 @@ function renderPageContent(date, weather, quote) {
         <button id="next-day-btn" class="shift-btn date-shift-top"> &#x23E9; </button>
     </div>`;
 
-    // 3. 主日期區塊 (已調整：星期在日期下方，月份中英文上下排列)
+    // 3. 主日期區塊 
     content += `<div class="main-date-container">
         <div class="lunar-badge">${lunarHtml}</div>
         <div class="date-number-wrapper">
