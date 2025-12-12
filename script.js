@@ -28,9 +28,7 @@ const TAIWAN_CITIES = [
 
 let clockInterval = null;
 
-// ====================================================================
 // I. 農民曆計算邏輯 (使用 CDN 完整庫)
-// ====================================================================
 function getLunarData(date) { 
     if (typeof Solar === 'undefined') {
         return { month: '農曆', day: '載入失敗', yi: 'CDN 連線異常', ji: 'CDN 連線異常', jieqi: '' };
@@ -55,6 +53,7 @@ function getHourAuspiceData(date) {
 }
 
 function generateHourAuspiceTable(data) { 
+    // 時辰吉凶表不顯示
     if (!data || data.length === 0) return ''; 
     return '';
 }
@@ -87,7 +86,7 @@ async function fetchWeatherForecast(lat, lon, cityName) {
     }
 }
 
-// V. 時鐘與其他渲染邏輯 (不變)
+// V. 時鐘 (不變)
 function startClock() { 
     if (clockInterval) clearInterval(clockInterval);
     const updateTime = () => {
@@ -102,6 +101,7 @@ function startClock() {
     clockInterval = setInterval(updateTime, 1000);
 }
 
+// 小月曆生成 (不變，但樣式由 CSS 控制)
 function generateMiniCalendar(date) { 
     const year = date.getFullYear();
     const month = date.getMonth();
@@ -111,12 +111,10 @@ function generateMiniCalendar(date) {
     const weekdays = ['日', '一', '二', '三', '四', '五', '六'];
     let html = '';
 
-    // 這裡我們將移除 table style 中的 width 100%，讓 CSS 決定寬度
-    html += `<table style="border-collapse: collapse; font-size: 1em; text-align: center; border: 1px solid #eee;">`;
+    html += `<table style="border-collapse: collapse; font-size: 1em; text-align: center;">`;
     html += `<thead style="background-color: #f7f7f7;"><tr>`;
     weekdays.forEach(day => {
         const color = day === '日' ? '#cc0000' : '#333';
-        // 移除 th 上的寬度設定
         html += `<th style="padding: 0px 0; color: ${color}; font-weight: normal;">${day}</th>`;
     });
     html += `</tr></thead><tbody><tr>`;
@@ -168,7 +166,7 @@ function renderPageContent(date, weather, quote) {
         <button id="next-day-btn" class="shift-btn date-shift-top"> &#x23E9; </button>
     </div>`;
 
-    // 4. 宜/忌 區塊
+    // 4. 宜/忌 區塊 (左右並列)
     content += `<div class="yi-ji-section">
         <div class="yi-section">宜: ${lunarData.yi}</div>
         <div class="ji-section">忌: ${lunarData.ji}</div>
@@ -198,7 +196,6 @@ function renderPageContent(date, weather, quote) {
     content += generateHourAuspiceTable(getHourAuspiceData(date));
 
     PAGE_CONTAINER.innerHTML = content;
-    // 綁定事件到新的按鈕位置
     document.getElementById('prev-day-btn').onclick = () => shiftDate(-1);
     document.getElementById('next-day-btn').onclick = () => shiftDate(1);
     startClock();
