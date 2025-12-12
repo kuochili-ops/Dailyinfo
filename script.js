@@ -1,7 +1,7 @@
 // ====================================================================
-// 專案名稱：極簡日曆儀表板 (方案 B - CDN 修復版)
+// 專案名稱：極簡日曆儀表板 (版面修正版)
 // 功能：顯示天氣、農民曆 (含宜忌)、時鐘
-// 修正：移除不支援的 getHourAuspice，調整宜忌至時鐘上方
+// 修正：日期切換按鈕上移、小月曆縮小至右側
 // ====================================================================
 
 const PAGE_CONTAINER = document.getElementById('calendar-page-container');
@@ -32,12 +32,10 @@ let clockInterval = null;
 // I. 農民曆計算邏輯 (使用 CDN 完整庫)
 // ====================================================================
 function getLunarData(date) { 
-    // 檢查 CDN 是否載入成功
     if (typeof Solar === 'undefined') {
         return { month: '農曆', day: '載入失敗', yi: 'CDN 連線異常', ji: 'CDN 連線異常', jieqi: '' };
     }
     
-    // 使用 Solar.fromDate 轉換
     const lunar = Solar.fromDate(date).getLunar();
     const yiList = lunar.getDayYi();
     const jiList = lunar.getDayJi();
@@ -46,25 +44,18 @@ function getLunarData(date) {
     return {
         month: lunar.getMonthInChinese() + '月',
         day: lunar.getDayInChinese(),
-        // 恢復宜忌顯示
         yi: yiList.slice(0, 4).join(' '),
         ji: jiList.slice(0, 4).join(' '),
         jieqi: jieqi
     };
 }
 
-// ** II. 時辰吉凶數據擷取 (修正：避免呼叫不存在的函式) **
 function getHourAuspiceData(date) { 
-    // 標準版 lunar-javascript 不包含 getHourAuspice()
-    // 為了防止報錯崩潰，這裡直接回傳空陣列。
-    // 如果需要時辰吉凶，需要自行撰寫複雜的干支對照邏輯。
     return []; 
 }
 
-// ** III. 時辰吉凶表格生成 (保持不變，但因數據為空將自動隱藏) **
 function generateHourAuspiceTable(data) { 
     if (!data || data.length === 0) return ''; 
-    // ... (表格生成邏輯略，因為不會被執行) ...
     return '';
 }
 
@@ -120,16 +111,18 @@ function generateMiniCalendar(date) {
     const weekdays = ['日', '一', '二', '三', '四', '五', '六'];
     let html = '';
 
-    html += `<table style="width: 100%; border-collapse: collapse; font-size: 0.5em; text-align: center; border: 1px solid #eee;">`;
+    // 這裡我們將移除 table style 中的 width 100%，讓 CSS 決定寬度
+    html += `<table style="border-collapse: collapse; font-size: 1em; text-align: center; border: 1px solid #eee;">`;
     html += `<thead style="background-color: #f7f7f7;"><tr>`;
     weekdays.forEach(day => {
         const color = day === '日' ? '#cc0000' : '#333';
+        // 移除 th 上的寬度設定
         html += `<th style="padding: 0px 0; color: ${color}; font-weight: normal;">${day}</th>`;
     });
     html += `</tr></thead><tbody><tr>`;
     
     let cellCount = 0;
-    for (let i = 0; i < firstDayOfWeek; i++) html += `<td style="padding: 0px;"></td>`, cellCount++;
+    for (let i = 0; i < firstDayOfWeek; i++) html += `<td style="padding: 0px; width: 14.28%;"></td>`, cellCount++;
     for (let day = 1; day <= daysInMonth; day++) {
         if (cellCount % 7 === 0 && cellCount !== 0) html += `</tr><tr>`;
         const isSunday = (cellCount % 7 === 0);
@@ -141,14 +134,12 @@ function generateMiniCalendar(date) {
         html += `<td style="${style}">${day}</td>`;
         cellCount++;
     }
-    while (cellCount % 7 !== 0) html += `<td style="padding: 0px;"></td>`, cellCount++;
+    while (cellCount % 7 !== 0) html += `<td style="padding: 0px; width: 14.28%;"></td>`, cellCount++;
     html += `</tr></tbody></table>`;
     return html;
 }
 
-// ====================================================================
-// VIII. 核心渲染邏輯 (調整順序：宜忌 -> 時鐘)
-// ====================================================================
+// VIII. 核心渲染邏輯 (調整順序與結構)
 function renderPageContent(date, weather, quote) {
     let content = '';
     const lunarYearInfo = typeof Solar !== 'undefined' ? Solar.fromDate(date).getLunar().getYearInGanZhi() : '';
@@ -164,38 +155,50 @@ function renderPageContent(date, weather, quote) {
     const dayOfWeek = weekdays[date.getDay()];
     const monthShort = (date.getMonth() + 1).toString().padStart(2, '0');
 
-    // 2. 主日期區塊
+    // 2. 主日期區塊 (無按鈕)
     content += `<div class="main-date-container">
-        <div class="date-shift-controls">
-            <button id="prev-day-btn" class="shift-btn"> &#x23EA; </button>
-            <button id="next-day-btn" class="shift-btn"> &#x23E9; </button>
-        </div>
         <div class="lunar-badge">${lunarHtml}</div>
         <div class="date-number-wrapper"><div class="big-date-number">${date.getDate()}</div></div>
         <div class="month-info"><div class="month-short">${monthShort}</div><div class="month-long">星期${dayOfWeek}</div></div>
     </div>`;
 
-    // 3. 宜/忌 區塊 (移到這裡，位於時間上方)
-    // 這裡使用 flex 佈局，已經是左右區塊 (style.css 中定義)
+    // 3. 日期切換按鈕 (新的獨立容器，有透明度，在宜忌上方)
+    content += `<div class="date-shift-wrapper">
+        <button id="prev-day-btn" class="shift-btn date-shift-top"> &#x23EA; </button>
+        <button id="next-day-btn" class="shift-btn date-shift-top"> &#x23E9; </button>
+    </div>`;
+
+    // 4. 宜/忌 區塊
     content += `<div class="yi-ji-section">
         <div class="yi-section">宜: ${lunarData.yi}</div>
         <div class="ji-section">忌: ${lunarData.ji}</div>
     </div>`;
 
-    // 4. 時鐘 (時間位置)
+    // 5. 時鐘 (全寬)
     content += `<div class="quote-clock-section">
         <span id="live-clock" class="live-clock-text">--:--:--</span>
     </div>`;
 
-    // 5. 小月曆與天氣 (移到時鐘下方)
-    content += `<div class="mini-calendar-container"><div class="mini-calendar-title">${date.getFullYear()}年${date.getMonth() + 1}月</div><div class="mini-calendar-table">${generateMiniCalendar(date)}</div></div>`;
+    // 6. 底部內容容器 (天氣和縮小月曆左右並列)
+    content += `<div class="bottom-row-container">
+        
+        <div class="weather-section-left">
+            <span class="weather-city-name">${weather.city} 天氣:</span> ${weather.description} 
+            <span class="weather-temp">${weather.temperature}</span>
+        </div>
+        
+        <div class="mini-calendar-container">
+            <div class="mini-calendar-title">${date.getFullYear()}年${date.getMonth() + 1}月</div>
+            <div class="mini-calendar-table">${generateMiniCalendar(date)}</div>
+        </div>
+        
+    </div>`;
     
-    content += `<div class="weather-section"><span class="weather-city-name">${weather.city} 天氣:</span> ${weather.description} <span class="weather-temp">${weather.temperature}</span></div>`;
-    
-    // 6. 時辰吉凶 (回傳空陣列，暫不顯示)
+    // 7. 時辰吉凶 (不顯示)
     content += generateHourAuspiceTable(getHourAuspiceData(date));
 
     PAGE_CONTAINER.innerHTML = content;
+    // 綁定事件到新的按鈕位置
     document.getElementById('prev-day-btn').onclick = () => shiftDate(-1);
     document.getElementById('next-day-btn').onclick = () => shiftDate(1);
     startClock();
