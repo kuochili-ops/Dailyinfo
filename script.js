@@ -2,6 +2,7 @@
 // 專案名稱：極簡日曆儀表板 (最終版 - 依圖定稿)
 // 功能：顯示天氣、農民曆 (含宜忌)、時鐘、時辰吉凶
 // 修正：已修正天氣載入問題、恢復簡體轉正體、恢復生肖顯示。
+// 新增：小月曆區域加入月份切換和日期微調按鈕。
 // ====================================================================
 
 const PAGE_CONTAINER = document.getElementById('calendar-page-container');
@@ -32,9 +33,7 @@ let clockInterval = null;
 // ** 核心修正：生肖 Emoji 函式 **
 // ******************************************************
 function getChineseZodiacEmoji(year) {
-    // 陣列順序: 猴, 雞, 狗, 豬, 鼠, 牛, 虎, 兔, 龍, 蛇, 馬, 羊
     const zodiacs = ['🐒', '🐔', '🐶', '🐷', '🐭', '🐮', '🐯', '🐰', '🐲', '🐍', '🐴', '🐑'];
-    // 修正公式：使用 2016 年 (猴, 索引 0) 作為基準年計算。
     return zodiacs[(year - 2016) % 12];
 }
 
@@ -45,12 +44,12 @@ function simplifiedToTraditional(text) {
     if (!text) return '';
     const map = {
         '开': '開', '动': '動', '修': '修', '造': '造', '谢': '謝', 
-        '盖': '蓋', '纳': '納', '结': '結', '办': '辦', '迁': '遷', 
+        '盖': '蓋', '納': '納', '结': '結', '办': '辦', '迁': '遷', 
         '进': '進', '习': '習', '医': '醫', '启': '啟', '会': '會',
         '備': '備', '园': '園', '买': '買', '卖': '賣', '发': '發', 
         '設': '設', '坛': '壇',
         '饰': '飾', '馀': '餘', '疗': '療', '理': '理', '归': '歸',
-        '灶': '竈', '会': '會'
+        '灶': '竈'
     };
     let result = '';
     for (let i = 0; i < text.length; i++) {
@@ -114,8 +113,8 @@ function generateHourAuspiceContent(data) {
     <div class="hour-auspice-container">
         <div class="hour-auspice-title">今日時辰吉凶</div>
         <div class="hour-auspice-text">
-            <span class="auspice-good">吉時: ${goodHours}</span> | 
-            <span class="auspice-bad">凶時: ${badHours}</span>
+            <span class="auspice-good">吉時: ${goodHours || '無'}</span> | 
+            <span class="auspice-bad">凶時: ${badHours || '無'}</span>
         </div>
     </div>`;
 }
@@ -125,14 +124,11 @@ async function fetchWeatherForecast(lat, lon, cityName) {
     const forecast_url = `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=metric&lang=zh_tw`;
     try {
         const response = await fetch(forecast_url);
-        // 如果 HTTP 狀態碼不是 200，立刻拋出錯誤
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
         
         const data = await response.json();
-        
-        // 雖然 response.ok 檢查過狀態碼，但 API 內容可能仍有問題
         if (data.cod != 200) return { description: "API 查詢失敗", temperature: "??°", city: cityName };
 
         const today = new Date().toDateString();
@@ -145,12 +141,10 @@ async function fetchWeatherForecast(lat, lon, cityName) {
             if (itemDate === today) {
                 maxT = Math.max(maxT, item.main.temp_max);
                 minT = Math.min(minT, item.main.temp_min);
-                // 為了避免時區問題導致沒有當日資料，確保 minT/maxT 被計算到。
-                // 如果只找到一組數據，minT 和 maxT 會相等。
+                weatherDescription = item.weather[0].description; // 使用當日最新的天氣描述
             }
         }
         
-        // 如果 minT 仍然是 Infinity (表示沒有找到當日數據)，使用一個合理的預設值或當前溫度 (這裡簡化為 ??°)
         if (minT === Infinity) {
              return { description: "溫度數據缺失", temperature: "??°", city: cityName };
         }
@@ -161,7 +155,6 @@ async function fetchWeatherForecast(lat, lon, cityName) {
             city: cityName
         };
     } catch (error) {
-        // 捕獲網路錯誤或 API key 錯誤
         console.error("Weather fetch error:", error);
         return { description: "網路或金鑰錯誤", temperature: "??°", city: cityName };
     }
@@ -185,7 +178,7 @@ function startClock() {
 function generateMiniCalendar(date) { 
     const year = date.getFullYear();
     const month = date.getMonth();
-    const today = new Date(); // 修正：應該用 today 判斷今天的日期
+    const today = new Date(); 
     const todayDay = today.getDate();
     const currentMonth = today.getMonth();
     const currentYear = today.getFullYear();
@@ -234,6 +227,21 @@ function generateMiniCalendar(date) {
     html += `</tr></tbody></table>`;
     return html;
 }
+
+// VI. 日期控制函式
+function shiftDate(days) { 
+    currentDisplayDate.setDate(currentDisplayDate.getDate() + days);
+    updateCalendar(currentDisplayDate);
+}
+
+function shiftMonth(months) {
+    // 1. Shift month
+    currentDisplayDate.setMonth(currentDisplayDate.getMonth() + months);
+    // 2. Set day to the 1st of the new month (符合用戶需求)
+    currentDisplayDate.setDate(1); 
+    updateCalendar(currentDisplayDate);
+}
+
 
 // VIII. 核心渲染邏輯 (調整順序與結構)
 function renderPageContent(date, weather, quote) {
@@ -286,8 +294,16 @@ function renderPageContent(date, weather, quote) {
         </div>
         
         <div class="mini-calendar-container">
-            <div class="mini-calendar-title">${date.getFullYear()}年${date.getMonth() + 1}月</div>
+            <div class="mini-calendar-header">
+                <button id="prev-month-btn" class="shift-month-btn"> &lt; </button>
+                <div class="mini-calendar-title">${date.getFullYear()}年${date.getMonth() + 1}月</div>
+                <button id="next-month-btn" class="shift-month-btn"> &gt; </button>
+            </div>
             <div class="mini-calendar-table">${generateMiniCalendar(date)}</div>
+            <div class="mini-calendar-footer">
+                <button id="prev-day-mini-btn" class="shift-btn day-shift-mini"> &#x23EA; </button>
+                <button id="next-day-mini-btn" class="shift-btn day-shift-mini"> &#x23E9; </button>
+            </div>
         </div>
         
     </div>`;
@@ -296,14 +312,18 @@ function renderPageContent(date, weather, quote) {
     content += generateHourAuspiceContent(getHourAuspiceData(date));
 
     PAGE_CONTAINER.innerHTML = content;
+    
+    // 綁定主日曆切換按鈕
     document.getElementById('prev-day-btn').onclick = () => shiftDate(-1);
     document.getElementById('next-day-btn').onclick = () => shiftDate(1);
+    
+    // 綁定小月曆切換按鈕 (新功能)
+    document.getElementById('prev-month-btn').onclick = () => shiftMonth(-1);
+    document.getElementById('next-month-btn').onclick = () => shiftMonth(1);
+    document.getElementById('prev-day-mini-btn').onclick = () => shiftDate(-1);
+    document.getElementById('next-day-mini-btn').onclick = () => shiftDate(1);
+    
     startClock();
-}
-
-function shiftDate(days) { 
-    currentDisplayDate.setDate(currentDisplayDate.getDate() + days);
-    updateCalendar(currentDisplayDate);
 }
 
 function isToday(date) {
@@ -311,7 +331,7 @@ function isToday(date) {
     return date.getDate() === today.getDate() && date.getMonth() === today.getMonth() && date.getFullYear() === today.getFullYear();
 }
 
-// 核心修正：加入兩階段渲染，解決載入問題
+// 核心修正：兩階段渲染，解決載入問題
 async function updateCalendar(date, lat, lon, cityName) { 
     currentDisplayDate = date; 
 
