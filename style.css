@@ -44,11 +44,31 @@ body {
 }
 
 /* 左側欄位：天氣 + 時鐘 */
-.left-info-column { width: 55%; display: flex; flex-direction: column; justify-content: space-between; }
-.weather-section { font-size: 0.9em; color: #666; line-height: 1.5; }
+.left-info-column { 
+    width: 55%; 
+    display: flex; 
+    flex-direction: column; 
+    /* 讓 column 的高度可以與右側小月曆對齊 */
+    justify-content: flex-start; 
+}
+.weather-section { 
+    font-size: 0.9em; color: #666; line-height: 1.5; 
+    padding-bottom: 5px; /* 天氣與時鐘間的間隔 */
+}
 .weather-temp { display: block; color: #e60000; font-weight: bold; font-size: 1.1em; }
-.clock-section { margin-top: 15px; border-top: 1px solid #f0f0f0; padding-top: 10px; }
-#live-clock { font-size: 1.6em; color: #004d99; font-family: monospace; font-weight: bold; }
+
+/* 時鐘區塊 */
+.clock-section { 
+    margin-top: 10px; /* 時鐘距離天氣下方的距離 */
+    border-top: 1px solid #f0f0f0; 
+    padding-top: 10px; 
+}
+#live-clock { 
+    font-size: 1.6em; 
+    color: #004d99; 
+    font-family: monospace; 
+    font-weight: bold; 
+}
 
 /* 右側欄位：小月曆 */
 .mini-calendar-container { 
@@ -57,10 +77,10 @@ body {
 }
 .mini-calendar-select-wrapper { display: flex; background: #f7f7f7; padding: 3px; }
 .mini-calendar-select-wrapper select { flex: 1; font-size: 1em; border: none; background: transparent; }
+.mini-calendar-table { padding: 5px; }
 .mini-calendar-table table { width: 100%; text-align: center; border-collapse: collapse; }
 .mini-calendar-table td { padding: 2px 0; }
 
-/* 修正後的切換按鈕樣式 */
 .mini-calendar-footer { 
     display: flex; justify-content: space-around; 
     border-top: 1px solid #eee; padding: 5px 0;
