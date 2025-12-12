@@ -28,23 +28,18 @@ const TAIWAN_CITIES = [
 
 let clockInterval = null;
 
-// I. 農民曆計算邏輯
-function getLunarData(date) { 
-    if (typeof Solar === 'undefined') {
-        return { month: '農曆', day: '載入中', yi: '請確保 Solar.js 載入', ji: '請確保 Solar.js 載入', jieqi: '' };
+// ** II. 恢復時辰吉凶數據擷取 **
+function getHourAuspiceData(date) { 
+    if (typeof Solar === 'undefined') { return []; }
+    try {
+        // 修正：從 Solar 物件中取得 Lunar 物件，再從 Lunar 物件取得時辰吉凶
+        const lunar = Solar.fromDate(date).getLunar();
+        return lunar.getHourAuspice(); // <--- 修正後的正確呼叫
+    } catch (e) {
+        // 確保在出錯時不會崩潰
+        console.error("Failed to get hour auspice data:", e);
+        return []; 
     }
-    const lunar = Solar.fromDate(date).getLunar();
-    const yiList = lunar.getDayYi();
-    const jiList = lunar.getDayJi();
-    const jieqi = lunar.getJieQi(); 
-
-    return {
-        month: lunar.getMonthInChinese() + '月',
-        day: lunar.getDayInChinese(),
-        yi: yiList.slice(0, 4).join(' '),
-        ji: jiList.slice(0, 4).join(' '),
-        jieqi: jieqi
-    };
 }
 
 // ** II. 恢復時辰吉凶數據擷取 **
