@@ -1,5 +1,5 @@
 // ====================================================================
-// 專案名稱：極簡日曆儀表板 (最終定案版 - 支援年月選擇)
+// 專案名稱：極簡日曆儀表板 (最終定案版 - 支援年月選擇，介面文字已轉為正體中文)
 // 狀態：已移除日期切換按鈕，改為年月選擇器。
 // ====================================================================
 
@@ -26,7 +26,7 @@ const TAIWAN_CITIES = [
     { name: '臺東縣', lat: 22.7562, lon: 121.1524 }  
 ];
 
-// I. 農民曆計算邏輯 (保持不變)
+// I. 農民曆計算邏輯 
 function getLunarData(date) { 
     if (typeof Solar === 'undefined') {
         return { month: '農曆', day: '載入失敗', yi: 'CDN 連線異常', ji: 'CDN 連線異常', jieqi: '', hourAuspice: [] };
@@ -37,7 +37,7 @@ function getLunarData(date) {
     const jiList = lunar.getDayJi();
     const jieqi = lunar.getJieQi(); 
 
-    // 硬編碼時辰吉凶資料 (用戶原始邏輯)
+    // 時辰吉凶資料 (用戶原始邏輯)
     let hourAuspiceData = [];
     const hourAuspiceMap = {
         '子': '吉', '丑': '凶', '寅': '吉', '卯': '凶', '辰': '吉', '巳': '凶',
@@ -56,8 +56,6 @@ function getLunarData(date) {
         hourAuspice: hourAuspiceData
     };
 }
-
-// 時辰、天氣等函數保持不變...
 
 function getHourAuspiceData(date) { 
     return getLunarData(date).hourAuspice; 
@@ -155,7 +153,7 @@ function generateMiniCalendar(date) {
     return html;
 }
 
-// VI. 產生年月選擇器 (新功能)
+// VI. 產生年月選擇器
 function generateDateSelectors(date) {
     const currentYear = date.getFullYear();
     const currentMonth = date.getMonth() + 1; // JS month is 0-indexed
