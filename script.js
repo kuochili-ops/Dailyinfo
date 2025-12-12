@@ -1,6 +1,6 @@
 // ====================================================================
-// 專案名稱：極簡日曆儀表板 (最終修正版 - 語法錯誤修復)
-// 狀態：功能穩定，版面結構符合最新要求。
+// 專案名稱：極簡日曆儀表板 (最終定案版 - 版面結構與功能穩定)
+// 狀態：已修復 JS 錯誤，並完成所有版面要求。
 // ====================================================================
 
 const PAGE_CONTAINER = document.getElementById('calendar-page-container');
@@ -26,7 +26,7 @@ const TAIWAN_CITIES = [
     { name: '臺東縣', lat: 22.7562, lon: 121.1524 }  
 ];
 
-// I. 農民曆計算邏輯 (保持用戶原始邏輯)
+// I. 農民曆計算邏輯 (保持不變)
 function getLunarData(date) { 
     if (typeof Solar === 'undefined') {
         return { month: '農曆', day: '載入失敗', yi: 'CDN 連線異常', ji: 'CDN 連線異常', jieqi: '', hourAuspice: [] };
@@ -153,7 +153,7 @@ function generateMiniCalendar(date) {
     return html;
 }
 
-// VIII. 核心渲染邏輯 (版面結構已調整)
+// VIII. 核心渲染邏輯 (已調整結構以符合視覺要求)
 function renderPageContent(date, weather, quote) {
     let content = '';
     const lunarYearInfo = typeof Solar !== 'undefined' ? Solar.fromDate(date).getLunar().getYearInGanZhi() : '';
@@ -249,7 +249,7 @@ async function updateCalendar(date, lat, lon, cityName) {
     }
     let weatherData = { description: "載入中", temperature: "??°", city: cityName };
     
-    // **已修復：補上缺少的括號**
+    // 語法錯誤已修復
     if (isToday(date)) [weatherData] = await Promise.all([fetchWeatherForecast(lat, lon, cityName)]);
     
     else { weatherData.description = "僅顯示今日天氣"; weatherData.temperature = "----"; }
