@@ -1,6 +1,6 @@
 // ====================================================================
-// 專案名稱：極簡日曆儀表板 (按鈕修正版)
-// 修正：確保小月曆下方的日期切換按鈕正常顯示並具備點擊感
+// 專案名稱：極簡日曆儀表板 (時鐘位置修正版)
+// 修正：將時鐘放在天氣預報下方
 // ====================================================================
 
 const PAGE_CONTAINER = document.getElementById('calendar-page-container');
@@ -98,13 +98,14 @@ function generateMiniCalendar(date) {
     const firstDay = new Date(year, month, 1).getDay();
     const daysInMonth = new Date(year, month + 1, 0).getDate();
     let html = '<table><thead><tr>';
-    WEEKDAYS_CHINESE.forEach(d => html += `<th>${d}</th>`);
+    WEEKDAYS_CHINESE.forEach(d => html += `<th style="color:${d==='日'?'#cc0000':'#333'};">${d}</th>`);
     html += '</tr></thead><tbody><tr>';
     let cells = 0;
     for (let i = 0; i < firstDay; i++) { html += '<td></td>'; cells++; }
     for (let d = 1; d <= daysInMonth; d++) {
         if (cells % 7 === 0 && cells !== 0) html += '</tr><tr>';
-        let style = (d === date.getDate() && month === date.getMonth()) ? 'background:#004d99;color:white;border-radius:3px;' : '';
+        let style = (d === date.getDate() && month === date.getMonth()) ? 'background:#004d99;color:white;border-radius:3px;font-weight:bold;' : '';
+        if (cells % 7 === 0 && !style.includes('color')) style += 'color:#cc0000;';
         html += `<td style="${style}">${d}</td>`;
         cells++;
     }
@@ -153,7 +154,7 @@ function renderPageContent(date, weather) {
         
         <div class="mini-calendar-container">
             <div class="mini-calendar-select-wrapper">
-                <select id="mini-calendar-year" onchange="handleMiniCalendarSelection()">${Array.from({length:21},(_,i)=>`<option value="${date.getFullYear()-10+i}" ${10===i?'selected':''}>${date.getFullYear()-10+i}年</option>`).join('')}</select>
+                <select id="mini-calendar-year" onchange="handleMiniCalendarSelection()">${Array.from({length:21},(_,i)=>`<option value="${date.getFullYear()-10+i}" ${date.getFullYear()-10+i===date.getFullYear()?'selected':''}>${date.getFullYear()-10+i}年</option>`).join('')}</select>
                 <select id="mini-calendar-month" onchange="handleMiniCalendarSelection()">${Array.from({length:12},(_,i)=>`<option value="${i}" ${i===date.getMonth()?'selected':''}>${i+1}月</option>`).join('')}</select>
             </div>
             <div class="mini-calendar-table">${generateMiniCalendar(date)}</div>
@@ -201,6 +202,11 @@ window.handleMiniCalendarSelection = function() {
 async function updateCalendar(date) {
     const [lat, lon] = CITY_SELECTOR.value.split(',');
     const cityName = CITY_SELECTOR.options[CITY_SELECTOR.selectedIndex].textContent;
+    // 初始載入時顯示載入中
+    const initialWeather = { description: "載入中", temperature: "...", city: cityName };
+    renderPageContent(date, initialWeather);
+    
+    // 異步獲取並重新渲染
     const weather = await fetchWeatherForecast(lat, lon, cityName);
     renderPageContent(date, weather);
 }
