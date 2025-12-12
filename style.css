@@ -1,5 +1,5 @@
-/* ====================================================================
-   style.css - 極簡日曆儀表板樣式表 (最終版 - 加入 Date Picker 輔助)
+/* ====================================================================\
+   style.css - 極簡日曆儀表板樣式表 (最終版 - 依圖定稿，修正佈局)
    ==================================================================== */
 
 /* 基礎佈局與卡片 */
@@ -22,10 +22,6 @@ body {
     margin: 10px 0;
     box-sizing: border-box;
     overflow: hidden;
-}
-#calendar-page-container {
-    position: relative; 
-    padding: 10px 0;
 }
 
 /* 城市選擇器 */
@@ -54,6 +50,7 @@ body {
     font-weight: bold;
     color: #666;
 }
+
 
 /* ==================================================\
    *** 日期主體區塊 ***
@@ -84,11 +81,19 @@ body {
     align-items: center;
 }
 
-/* 日期數字與星期 (中間) */
-.date-number-wrapper {
+/* 日期數字 + 星期 (中間) - 新增 wrapper 實現垂直居中 */
+.center-date-info {
     flex-grow: 1;
     text-align: center;
+    /* 確保高度與 lunar-badge 相似，使月份區對齊 */
+    min-height: 75px; 
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
 }
+
+/* 日期數字 */
 .big-date-number {
     font-size: 6.5em; 
     font-weight: 900; 
@@ -99,12 +104,14 @@ body {
     transform-origin: center center; 
     display: inline-block; 
 }
-.weekday-below-date { 
+
+/* 星期 (日期下方) */
+.main-day-of-week { 
     font-size: 1.5em; 
     font-weight: bold;
     color: #e60000; 
-    margin-top: 20px; 
-    display: block;
+    line-height: 1.3;
+    margin-top: 5px;
 }
 
 /* 月份資訊 (右側) */
@@ -113,17 +120,18 @@ body {
     flex-shrink: 0;
     text-align: right;
     padding-left: 10px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: 75px; 
 }
-.month-long { 
-    font-size: 1.8em; 
-    font-weight: bold;
+/* 月份中英文/縮寫 */
+.month-short { 
+    font-size: 1.2em; 
+    font-weight: bold; /* 確保粗體 */
     color: #666;
     line-height: 1.3;
-}
-.month-short { 
-    font-size: 1.3em; 
-    color: #999;
-    line-height: 1.2;
+    display: block;
 }
 
 
@@ -153,40 +161,14 @@ body {
     font-weight: bold;
 }
 
+
 /* ==================================================\
-   *** 底部區塊：天氣/時鐘 vs 年月選擇/小月曆 ***
+   *** 時鐘區塊 ***
    ================================================== */
-.bottom-row-container {
-    display: flex; 
-    justify-content: space-between;
-    align-items: flex-start; 
-    margin: 15px 15px 5px 15px; 
-    padding-bottom: 15px;
+.quote-clock-section {
+    text-align: center;
+    padding: 10px 15px 0 15px; /* 底部邊距設為 0，讓小月曆上移 */
     border-bottom: 1px solid #eee;
-}
-
-/* 左側容器：包含天氣和時鐘 (佔總寬度 58%) */
-.weather-clock-section-left { 
-    width: 58%; 
-    flex-shrink: 0; 
-    padding-right: 15px;
-}
-
-.weather-section-left {
-    padding-bottom: 10px; 
-    text-align: left;
-    font-size: 0.9em;
-    color: #666;
-    line-height: 1.6;
-    min-height: 50px;
-}
-.weather-city-name { font-weight: bold; color: #333; display: block; }
-.weather-temp { font-weight: bold; color: #e60000; display: block; }
-
-.live-clock-container {
-    text-align: left;
-    padding-top: 10px;
-    border-top: 1px solid #eee;
 }
 .live-clock-text {
     font-size: 1.8em; 
@@ -196,32 +178,65 @@ body {
 }
 
 
-/* 小月曆/選擇器區塊 (右側) - 設置相對定位，以便隱藏的 input 絕對定位 */
+/* ==================================================\
+   *** 底部區塊：天氣 vs 小月曆 ***
+   ================================================== */
+.bottom-row-container {
+    display: flex; 
+    justify-content: space-between;
+    align-items: flex-start; 
+    margin: 0 15px 15px 15px; /* 頂部邊距設為 0，讓小月曆上移對齊時鐘 */
+    padding-bottom: 15px;
+    border-bottom: 1px solid #eee;
+}
+
+/* 天氣區塊 (左側) */
+.weather-section-left {
+    flex: 1; 
+    padding-right: 15px;
+    text-align: left;
+    font-size: 0.9em;
+    color: #666;
+    min-height: 80px; 
+}
+.weather-city-name { font-weight: bold; color: #333; display: block; }
+.weather-temp { font-weight: bold; color: #e60000; display: block; }
+
+
+/* 小月曆區塊 (右側，縮小尺寸) */
 .mini-calendar-container {
-    position: relative; /* 核心修正 */
-    width: 42%; 
+    width: 40%; 
     min-width: 120px;
     flex-shrink: 0; 
     font-size: 0.6em; 
     border: 1px solid #eee; 
     border-radius: 4px;
     overflow: hidden; 
-    cursor: pointer; /* 提示可點擊 */
 }
 
-/* 年月顯示樣式 (取代了原本的 select) */
-.date-selector-wrapper {
+/* 小月曆頭部：年/月下拉選單樣式 */
+.mini-calendar-select-wrapper {
     display: flex;
     justify-content: space-around;
-    padding: 5px 5px 10px 5px;
-    border-bottom: 1px solid #f0f0f0;
-    pointer-events: none; /* 讓點擊事件穿透到下方的 input */
+    align-items: center;
+    padding: 5px 2px;
+    background-color: #f7f7f7;
+    border-bottom: 1px solid #eee; 
 }
-.date-select {
-    font-size: 1.1em;
-    padding: 2px;
-    font-weight: bold;
-    color: #333;
+
+#mini-calendar-year, #mini-calendar-month {
+    flex-grow: 1;
+    margin: 0 3px;
+    padding: 3px;
+    font-size: 1.0em;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+    text-align: center;
+    -webkit-appearance: none; 
+    -moz-appearance: none;    
+    appearance: none;
+    background-color: white;
+    cursor: pointer;
 }
 
 .mini-calendar-table {
@@ -230,7 +245,6 @@ body {
 .mini-calendar-container table {
     border-collapse: collapse;
     width: 100%;
-    pointer-events: none; /* 讓月曆本身不響應點擊，只有整體區域觸發 date picker */
 }
 
 .mini-calendar-container th, .mini-calendar-container td {
@@ -242,14 +256,35 @@ body {
 .mini-calendar-container th {
     font-weight: normal;
 }
-.mini-calendar-container .sunday-day {
-    color: #cc0000;
+
+/* 小月曆底部：日期微調按鈕 */
+.mini-calendar-footer {
+    display: flex;
+    justify-content: space-around;
+    padding: 5px 0;
+    border-top: 1px solid #eee;
 }
-.mini-calendar-container .current-day {
-    background-color: #004d99; 
-    color: white; 
-    border-radius: 3px; 
+.day-shift-mini {
+    padding: 2px 10px;
+    font-size: 0.6em;
+}
+
+/* 小月曆下方星期顯示區塊 (維持上次的邊界對齊要求) */
+.mini-calendar-weekday {
+    display: flex;
+    justify-content: space-between;
+    padding: 5px 5px 10px 5px;
+    font-size: 0.9em;
     font-weight: bold;
+    border-top: 1px solid #eee; 
+    color: #004d99; 
+}
+.weekday-cn {
+    text-align: left;
+}
+.weekday-en {
+    text-align: right;
+    color: #cc0000; 
 }
 
 
