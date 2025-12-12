@@ -85,12 +85,13 @@ body {
     text-align: center;
 }
 .big-date-number {
-    font-size: 4em; 
-    font-weight: 900;
+    /* 修正點：字體變大、長度比例更高 */
+    font-size: 4.5em; 
+    font-weight: 900; /* 已是最大粗體 */
     color: #333;
     line-height: 1;
 }
-.weekday-below-date { /* 新增：位於日期下方 */
+.weekday-below-date { 
     font-size: 1em;
     font-weight: bold;
     color: #e60000; 
@@ -110,7 +111,7 @@ body {
     color: #666;
     line-height: 1.3;
 }
-.month-short { /* 數字月份 */
+.month-short { /* 英文月份縮寫 */
     font-size: 0.9em;
     color: #999;
     line-height: 1.2;
@@ -118,7 +119,7 @@ body {
 
 
 /* ==================================================\
-   *** 日期切換按鈕 (不變) ***
+   *** 日期切換按鈕 (調整大小與透明度) ***
    ================================================== */
 .date-shift-wrapper {
     position: absolute;
@@ -132,14 +133,15 @@ body {
 }
 
 .shift-btn {
-    background: rgba(255, 255, 255, 0.8);
+    /* 修正點：尺寸變大，透明度提高 */
+    background: #fff; /* 更改為不透明白色 (透明度高一點) */
     border: 1px solid #ccc;
     border-radius: 50%;
-    width: 30px;
-    height: 30px;
-    line-height: 30px;
+    width: 35px; 
+    height: 35px; 
+    line-height: 35px;
     text-align: center;
-    font-size: 1.2em;
+    font-size: 1.4em; /* 稍微放大圖示 */
     color: #666;
     cursor: pointer;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
@@ -181,13 +183,12 @@ body {
 }
 
 /* ==================================================\
-   *** 底部區塊：天氣/時鐘 vs 小月曆 ***
+   *** 底部區塊：天氣/時鐘 vs 小月曆 (不變) ***
    ================================================== */
 .bottom-row-container {
     display: flex; 
     justify-content: space-between;
     align-items: flex-start; 
-    /* 調整邊距以美化對齊 */
     margin: 15px 15px 5px 15px; 
     padding-bottom: 15px;
     border-bottom: 1px solid #eee;
