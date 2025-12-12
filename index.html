@@ -1,23 +1,19 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>極簡日曆儀表板</title>
     <link rel="stylesheet" href="style.css">
     </head>
 <body>
 
 <div class="calendar-card">
+    <div id="calendar-page-container">
+        <div style="text-align: center; margin-top: 150px; color: #666;">載入中...</div>
     </div>
-
+</div>
 <script src="solar.js"></script> 
-<script>
-    console.log('--- 載入檢查 ---');
-    if (typeof Solar !== 'undefined') {
-        console.log('✅ Solar.js 載入成功！物件已定義。');
-    } else {
-        console.error('❌ Solar.js 載入失敗！Solar 物件仍是 undefined。');
-    }
-    console.log('----------------');
-</script>
 <script src="script.js"></script>
 </body>
 </html>
