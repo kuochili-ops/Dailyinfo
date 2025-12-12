@@ -85,11 +85,12 @@ body {
     text-align: center;
 }
 .big-date-number {
-    /* 修正點：字體變大、長度比例更高 */
-    font-size: 4.5em; 
-    font-weight: 900; /* 已是最大粗體 */
+    /* *** 修正點：再次加大字體，減少行高，模擬高長比例 *** */
+    font-size: 5.5em; /* 增大字體 */
+    font-weight: 900; 
     color: #333;
-    line-height: 1;
+    line-height: 0.9; /* 減少行高，使數字更緊湊、長高 */
+    letter-spacing: -2px; /* 稍微減少字距，使數字更集中 */
 }
 .weekday-below-date { 
     font-size: 1em;
@@ -119,7 +120,7 @@ body {
 
 
 /* ==================================================\
-   *** 日期切換按鈕 (調整大小與透明度) ***
+   *** 日期切換按鈕 (保持上次調整，大尺寸/全白背景) ***
    ================================================== */
 .date-shift-wrapper {
     position: absolute;
@@ -133,15 +134,14 @@ body {
 }
 
 .shift-btn {
-    /* 修正點：尺寸變大，透明度提高 */
-    background: #fff; /* 更改為不透明白色 (透明度高一點) */
+    background: #fff; 
     border: 1px solid #ccc;
     border-radius: 50%;
     width: 35px; 
     height: 35px; 
     line-height: 35px;
     text-align: center;
-    font-size: 1.4em; /* 稍微放大圖示 */
+    font-size: 1.4em; 
     color: #666;
     cursor: pointer;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
