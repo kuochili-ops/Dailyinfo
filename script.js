@@ -1,6 +1,6 @@
 // ====================================================================
-// 專案名稱：極簡日曆儀表板 (最終定案版 - 版面結構與功能穩定)
-// 狀態：已修復 JS 錯誤，並完成所有版面要求。
+// 專案名稱：極簡日曆儀表板 (最終定案版 - 支援年月選擇)
+// 狀態：已移除日期切換按鈕，改為年月選擇器。
 // ====================================================================
 
 const PAGE_CONTAINER = document.getElementById('calendar-page-container');
@@ -57,12 +57,12 @@ function getLunarData(date) {
     };
 }
 
-// II. 時辰吉凶數據擷取 (保持用戶原始邏輯)
+// 時辰、天氣等函數保持不變...
+
 function getHourAuspiceData(date) { 
     return getLunarData(date).hourAuspice; 
 }
 
-// III. 時辰吉凶表格生成 (保持不變)
 function generateHourAuspiceContent(data) { 
     if (!data || data.length === 0) {
         return `<div class="hour-auspice-container">
@@ -84,7 +84,6 @@ function generateHourAuspiceContent(data) {
     </div>`;
 }
 
-// IV. 天氣 API (不變)
 async function fetchWeatherForecast(lat, lon, cityName) { 
     const url = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=metric&lang=zh_tw`;
     try {
@@ -103,7 +102,6 @@ async function fetchWeatherForecast(lat, lon, cityName) {
     }
 }
 
-// V. 時鐘與小月曆 (不變)
 function startClock() { 
     if (clockInterval) clearInterval(clockInterval);
     const updateTime = () => {
@@ -121,7 +119,10 @@ function startClock() {
 function generateMiniCalendar(date) { 
     const year = date.getFullYear();
     const month = date.getMonth();
-    const todayDay = date.getDate();
+    const today = new Date();
+    const todayDay = today.getDate();
+    const currentMonth = today.getMonth();
+    const currentYear = today.getFullYear();
     const firstDayOfWeek = new Date(year, month, 1).getDay();
     const daysInMonth = new Date(year, month + 1, 0).getDate();
     const weekdays = ['日', '一', '二', '三', '四', '五', '六'];
@@ -140,7 +141,8 @@ function generateMiniCalendar(date) {
     for (let day = 1; day <= daysInMonth; day++) {
         if (cellCount % 7 === 0 && cellCount !== 0) html += `</tr><tr>`;
         const isSunday = (cellCount % 7 === 0);
-        const isCurrentDay = (day === todayDay);
+        // 只有當日期是今天、且年份和月份都吻合時，才標記 current-day
+        const isCurrentDay = (day === todayDay && month === currentMonth && year === currentYear);
         let className = '';
         if (isCurrentDay) className = 'current-day';
         else if (isSunday) className = 'sunday-day';
@@ -153,7 +155,32 @@ function generateMiniCalendar(date) {
     return html;
 }
 
-// VIII. 核心渲染邏輯 (已調整結構以符合視覺要求)
+// VI. 產生年月選擇器 (新功能)
+function generateDateSelectors(date) {
+    const currentYear = date.getFullYear();
+    const currentMonth = date.getMonth() + 1; // JS month is 0-indexed
+
+    let yearOptions = '';
+    // 顯示當年及前後三年
+    for (let y = currentYear - 3; y <= currentYear + 3; y++) {
+        const selected = (y === currentYear) ? 'selected' : '';
+        yearOptions += `<option value="${y}" ${selected}>${y}年</option>`;
+    }
+
+    let monthOptions = '';
+    for (let m = 1; m <= 12; m++) {
+        const selected = (m === currentMonth) ? 'selected' : '';
+        monthOptions += `<option value="${m}" ${selected}>${m}月</option>`;
+    }
+
+    return `
+    <div class="date-selector-wrapper">
+        <select id="year-selector" class="date-select">${yearOptions}</select>
+        <select id="month-selector" class="date-select">${monthOptions}</select>
+    </div>`;
+}
+
+// VIII. 核心渲染邏輯
 function renderPageContent(date, weather, quote) {
     let content = '';
     const lunarYearInfo = typeof Solar !== 'undefined' ? Solar.fromDate(date).getLunar().getYearInGanZhi() : '';
@@ -168,16 +195,10 @@ function renderPageContent(date, weather, quote) {
     const weekdays = ['日', '一', '二', '三', '四', '五', '六'];
     const dayOfWeek = weekdays[date.getDay()];
     
-    // *** 修正點：月份中英文顯示 (英文月份縮寫) ***
+    // 月份中英文顯示
     const monthShort = date.toLocaleString('en-US', { month: 'short' }); 
 
-    // 2. 日期切換按鈕
-    content += `<div class="date-shift-wrapper">
-        <button id="prev-day-btn" class="shift-btn date-shift-top"> &#x23EA; </button>
-        <button id="next-day-btn" class="shift-btn date-shift-top"> &#x23E9; </button>
-    </div>`;
-
-    // 3. 主日期區塊 
+    // 2. 主日期區塊 (日期、星期、月份全部加大)
     content += `<div class="main-date-container">
         <div class="lunar-badge">${lunarHtml}</div>
         <div class="date-number-wrapper">
@@ -190,13 +211,13 @@ function renderPageContent(date, weather, quote) {
         </div>
     </div>`;
 
-    // 4. 宜/忌 區塊 
+    // 3. 宜/忌 區塊 
     content += `<div class="yi-ji-section">
         <div class="yi-section">宜: ${lunarData.yi}</div>
         <div class="ji-section">忌: ${lunarData.ji}</div>
     </div>`;
 
-    // 5. 底部內容容器 (天氣/時鐘 左側 vs 小月曆 右側)
+    // 4. 底部內容容器 (天氣/時鐘 左側 vs 年月選擇/小月曆 右側)
     content += `<div class="bottom-row-container">
         
         <div class="weather-clock-section-left">
@@ -211,23 +232,38 @@ function renderPageContent(date, weather, quote) {
         </div>
         
         <div class="mini-calendar-container">
-            <div class="mini-calendar-title">${date.getFullYear()}年${date.getMonth() + 1}月</div>
+            ${generateDateSelectors(date)} 
             <div class="mini-calendar-table">${generateMiniCalendar(date)}</div>
         </div>
         
     </div>`;
     
-    // 6. 時辰吉凶 (在最下方)
+    // 5. 時辰吉凶 (在最下方)
     content += generateHourAuspiceContent(getHourAuspiceData(date));
 
     PAGE_CONTAINER.innerHTML = content;
-    document.getElementById('prev-day-btn').onclick = () => shiftDate(-1);
-    document.getElementById('next-day-btn').onclick = () => shiftDate(1);
+    
+    // 綁定年月選擇器的事件
+    const yearSelector = document.getElementById('year-selector');
+    const monthSelector = document.getElementById('month-selector');
+    
+    if (yearSelector && monthSelector) {
+        yearSelector.addEventListener('change', handleDateSelection);
+        monthSelector.addEventListener('change', handleDateSelection);
+    }
+    
     startClock();
 }
 
-function shiftDate(days) { 
-    currentDisplayDate.setDate(currentDisplayDate.getDate() + days);
+// 處理年月選擇器變動的函數
+function handleDateSelection() {
+    const year = parseInt(document.getElementById('year-selector').value);
+    const month = parseInt(document.getElementById('month-selector').value) - 1; // 0-indexed
+
+    // 保持日期為當前日期的 Day，但如果新月份沒有這一天（如 31 號），則自動調整為該月最後一天
+    const day = Math.min(currentDisplayDate.getDate(), new Date(year, month + 1, 0).getDate());
+    
+    currentDisplayDate = new Date(year, month, day);
     updateCalendar(currentDisplayDate);
 }
 
@@ -251,7 +287,6 @@ async function updateCalendar(date, lat, lon, cityName) {
     }
     let weatherData = { description: "載入中", temperature: "??°", city: cityName };
     
-    // 語法錯誤已修復
     if (isToday(date)) [weatherData] = await Promise.all([fetchWeatherForecast(lat, lon, cityName)]);
     
     else { weatherData.description = "僅顯示今日天氣"; weatherData.temperature = "----"; }
