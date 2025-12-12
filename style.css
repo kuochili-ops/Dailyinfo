@@ -1,5 +1,5 @@
 /* ====================================================================
-   style.css - 極簡日曆儀表板樣式表 (最終版 - 依圖定稿)
+   style.css - 極簡日曆儀表板樣式表 (最終版 - 介面文字已轉為正體中文)
    ==================================================================== */
 
 /* 基礎佈局與卡片 */
@@ -101,11 +101,11 @@ body {
     display: inline-block; 
 }
 .weekday-below-date { 
-    /* 修正點：星期字體加大並下移 */
-    font-size: 1.5em; /* 字體加大 */
+    /* 星期字體加大並下移 */
+    font-size: 1.5em; 
     font-weight: bold;
     color: #e60000; 
-    margin-top: 20px; /* 位置下移，確保與日期不重疊 */
+    margin-top: 20px; 
     display: block;
 }
 
@@ -117,14 +117,14 @@ body {
     padding-left: 10px;
 }
 .month-long { 
-    /* 修正點：中文月份加大 */
+    /* 中文月份加大 */
     font-size: 1.8em; 
     font-weight: bold;
     color: #666;
     line-height: 1.3;
 }
 .month-short { 
-    /* 修正點：英文月份加大 */
+    /* 英文月份加大 */
     font-size: 1.3em; 
     color: #999;
     line-height: 1.2;
@@ -132,7 +132,7 @@ body {
 
 
 /* ==================================================\
-   *** 宜/忌 區塊 (不變) ***
+   *** 宜/忌 區塊 ***
    ================================================== */
 .yi-ji-section {
     display: flex;
@@ -234,7 +234,6 @@ body {
     border-collapse: collapse;
     width: 100%;
 }
-/* ... (小月曆表格樣式保持不變) ... */
 
 .mini-calendar-container th, .mini-calendar-container td {
     padding: 0px 0;
@@ -257,7 +256,7 @@ body {
 
 
 /* ==================================================\
-   *** 時辰吉凶表 (最底部) (不變) ***
+   *** 時辰吉凶表 (最底部) ***
    ================================================== */
 .hour-auspice-container {
     padding: 10px 15px 15px 15px;
