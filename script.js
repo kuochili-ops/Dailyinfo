@@ -1,7 +1,7 @@
 // ====================================================================
 // 專案名稱：極簡日曆儀表板
 // 功能：顯示天氣、農民曆、每日語錄，支持城市切換與日期切換。
-// 狀態：已修正 solar.js 載入錯誤 (solarlunar.fromDate is not a function)
+// 狀態：已修正 solar.js 模組載入錯誤 (solarlunar.fromDate is not a function)
 // ====================================================================
 
 const PAGE_CONTAINER = document.getElementById('calendar-page-container');
@@ -29,14 +29,23 @@ const TAIWAN_CITIES = [
 let clockInterval = null;
 
 // ====================================================================
-// *** FIX: 處理 solarlunar 模組包裝問題 ***
-// 由於 solarlunar 可能被包裹在 .default 屬性中，我們創建 LunarApi 變數
-// 來確保它指向具有 fromDate 函式的正確物件。
+// *** FIX: 處理 solarlunar 模組包裝問題 (更強健的檢查) ***
+// 確保 LunarApi 指向一個具有 fromDate 函式的物件。
+// 優先檢查 window.solarlunar，然後檢查其 .default 屬性。
 // ====================================================================
-let LunarApi = typeof solarlunar !== 'undefined' 
-    ? (solarlunar.default || solarlunar) 
-    : undefined;
 
+let LunarApi = undefined;
+if (typeof solarlunar !== 'undefined') {
+    // 檢查 solarlunar 本身
+    if (typeof solarlunar.fromDate === 'function') {
+        LunarApi = solarlunar;
+    } 
+    // 檢查 solarlunar.default
+    else if (solarlunar.default && typeof solarlunar.default.fromDate === 'function') {
+        LunarApi = solarlunar.default;
+    }
+}
+// 如果 LunarApi 仍然是 undefined，則在函式內部會報載入失敗。
 
 // ====================================================================
 // I. 農民曆計算邏輯 
@@ -44,27 +53,33 @@ let LunarApi = typeof solarlunar !== 'undefined'
 function getLunarData(date) { 
     // 檢查 LunarApi 是否已正確載入並具有 fromDate 函式
     if (typeof LunarApi === 'undefined' || typeof LunarApi.fromDate !== 'function') {
-        return { month: '農曆', day: '載入中', yi: 'solar.js 尚未載入', ji: 'solar.js 尚未載入', jieqi: '' };
+        // 如果載入失敗，返回預設佔位符
+        return { month: '農曆', day: '載入失敗', yi: 'solar.js 錯誤', ji: '請檢查 console', jieqi: '' };
     }
     
-    // 使用修正後的 LunarApi
-    const lunar = LunarApi.fromDate(date).getLunar();
-    const yiList = lunar.getDayYi();
-    const jiList = lunar.getDayJi();
-    const jieqi = lunar.getJieQi(); 
-
-    return {
-        month: lunar.getMonthInChinese() + '月',
-        day: lunar.getDayInChinese(),
-        yi: yiList.slice(0, 4).join(' '),
-        ji: jiList.slice(0, 4).join(' '),
-        jieqi: jieqi
-    };
+    try {
+        // 使用修正後的 LunarApi
+        const lunar = LunarApi.fromDate(date).getLunar();
+        const yiList = lunar.getDayYi();
+        const jiList = lunar.getDayJi();
+        const jieqi = lunar.getJieQi(); 
+    
+        return {
+            month: lunar.getMonthInChinese() + '月',
+            day: lunar.getDayInChinese(),
+            yi: yiList.slice(0, 4).join(' '),
+            ji: jiList.slice(0, 4).join(' '),
+            jieqi: jieqi
+        };
+    } catch (e) {
+        console.error("Lunar data generation failed:", e);
+        return { month: '農曆', day: '錯誤', yi: '運算失敗', ji: e.message, jieqi: '' };
+    }
 }
 
 // ** II. 時辰吉凶數據擷取 **
 function getHourAuspiceData(date) { 
-    // 檢查 LunarApi 是否已正確載入並具有 fromDate 函式
+    // 檢查 LunarApi
     if (typeof LunarApi === 'undefined' || typeof LunarApi.fromDate !== 'function') { return []; }
     try {
         // 使用修正後的 LunarApi
@@ -270,7 +285,8 @@ function renderPageContent(date, weather, quote) {
     let content = '';
 
     // 1. 頂部資訊：年號與西元
-    const lunarYearInfo = (typeof LunarApi !== 'undefined' && typeof LunarApi.fromDate === 'function') 
+    const hasLunarApi = (typeof LunarApi !== 'undefined' && typeof LunarApi.fromDate === 'function');
+    const lunarYearInfo = hasLunarApi 
         ? LunarApi.fromDate(date).getLunar().getYearInGanZhi() 
         : ''; // 使用修正後的 LunarApi
 
