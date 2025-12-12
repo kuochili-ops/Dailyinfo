@@ -1,7 +1,7 @@
 // ====================================================================
 // 專案名稱：極簡日曆儀表板
 // 功能：顯示天氣、農民曆、每日語錄，支持城市切換與日期切換。
-// 狀態：最終完整版 (所有錯誤已修正)
+// 狀態：已修正 solar.js 載入錯誤 (solarlunar.fromDate is not a function)
 // ====================================================================
 
 const PAGE_CONTAINER = document.getElementById('calendar-page-container');
@@ -29,14 +29,26 @@ const TAIWAN_CITIES = [
 let clockInterval = null;
 
 // ====================================================================
-// I. 農民曆計算邏輯 (修正：使用 solarlunar 替代 Solar)
+// *** FIX: 處理 solarlunar 模組包裝問題 ***
+// 由於 solarlunar 可能被包裹在 .default 屬性中，我們創建 LunarApi 變數
+// 來確保它指向具有 fromDate 函式的正確物件。
+// ====================================================================
+let LunarApi = typeof solarlunar !== 'undefined' 
+    ? (solarlunar.default || solarlunar) 
+    : undefined;
+
+
+// ====================================================================
+// I. 農民曆計算邏輯 
 // ====================================================================
 function getLunarData(date) { 
-    if (typeof solarlunar === 'undefined') {
-        // 現在這個訊息只會在 solar.js 載入失敗時顯示
+    // 檢查 LunarApi 是否已正確載入並具有 fromDate 函式
+    if (typeof LunarApi === 'undefined' || typeof LunarApi.fromDate !== 'function') {
         return { month: '農曆', day: '載入中', yi: 'solar.js 尚未載入', ji: 'solar.js 尚未載入', jieqi: '' };
     }
-    const lunar = solarlunar.fromDate(date).getLunar();
+    
+    // 使用修正後的 LunarApi
+    const lunar = LunarApi.fromDate(date).getLunar();
     const yiList = lunar.getDayYi();
     const jiList = lunar.getDayJi();
     const jieqi = lunar.getJieQi(); 
@@ -50,12 +62,13 @@ function getLunarData(date) {
     };
 }
 
-// ** II. 時辰吉凶數據擷取 (修正：使用 solarlunar 替代 Solar) **
+// ** II. 時辰吉凶數據擷取 **
 function getHourAuspiceData(date) { 
-    if (typeof solarlunar === 'undefined') { return []; }
+    // 檢查 LunarApi 是否已正確載入並具有 fromDate 函式
+    if (typeof LunarApi === 'undefined' || typeof LunarApi.fromDate !== 'function') { return []; }
     try {
-        // 從 solarlunar 轉換到 Lunar，再呼叫 getHourAuspice()
-        const lunar = solarlunar.fromDate(date).getLunar();
+        // 使用修正後的 LunarApi
+        const lunar = LunarApi.fromDate(date).getLunar();
         return lunar.getHourAuspice();
     } catch (e) {
         console.error("Failed to get hour auspice data:", e);
@@ -257,7 +270,9 @@ function renderPageContent(date, weather, quote) {
     let content = '';
 
     // 1. 頂部資訊：年號與西元
-    const lunarYearInfo = typeof solarlunar !== 'undefined' ? solarlunar.fromDate(date).getLunar().getYearInGanZhi() : '';
+    const lunarYearInfo = (typeof LunarApi !== 'undefined' && typeof LunarApi.fromDate === 'function') 
+        ? LunarApi.fromDate(date).getLunar().getYearInGanZhi() 
+        : ''; // 使用修正後的 LunarApi
 
     content += `<div class="top-info">
         <span class="top-info-left">${date.getFullYear() - 1911}年 歲次${lunarYearInfo}</span>
