@@ -29,14 +29,14 @@ const TAIWAN_CITIES = [
 let clockInterval = null;
 
 // ====================================================================
-// I. 農民曆計算邏輯 (修正後：確保函式在被呼叫前定義)
+// I. 農民曆計算邏輯 (修正：使用 solarlunar 替代 Solar)
 // ====================================================================
 function getLunarData(date) { 
-    if (typeof Solar === 'undefined') {
+    if (typeof solarlunar === 'undefined') {
         // 現在這個訊息只會在 solar.js 載入失敗時顯示
-        return { month: '農曆', day: '載入中', yi: 'Solar.js 尚未載入', ji: 'Solar.js 尚未載入', jieqi: '' };
+        return { month: '農曆', day: '載入中', yi: 'solar.js 尚未載入', ji: 'solar.js 尚未載入', jieqi: '' };
     }
-    const lunar = Solar.fromDate(date).getLunar();
+    const lunar = solarlunar.fromDate(date).getLunar();
     const yiList = lunar.getDayYi();
     const jiList = lunar.getDayJi();
     const jieqi = lunar.getJieQi(); 
@@ -50,12 +50,12 @@ function getLunarData(date) {
     };
 }
 
-// ** II. 時辰吉凶數據擷取 (修正：從 Lunar 物件取得) **
+// ** II. 時辰吉凶數據擷取 (修正：使用 solarlunar 替代 Solar) **
 function getHourAuspiceData(date) { 
-    if (typeof Solar === 'undefined') { return []; }
+    if (typeof solarlunar === 'undefined') { return []; }
     try {
-        // 從 Solar 轉換到 Lunar，再呼叫 getHourAuspice()
-        const lunar = Solar.fromDate(date).getLunar();
+        // 從 solarlunar 轉換到 Lunar，再呼叫 getHourAuspice()
+        const lunar = solarlunar.fromDate(date).getLunar();
         return lunar.getHourAuspice();
     } catch (e) {
         console.error("Failed to get hour auspice data:", e);
@@ -151,27 +151,8 @@ function generateHourAuspiceTable(data) {
 
 
 // IV. 每日語錄 API
-async function fetchQuote() { 
-    const url = 'https://type.fit/api/quotes';
-    try {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 3000); 
+// 已移除 fetchQuote 函式。
 
-        const response = await fetch(url, { signal: controller.signal });
-        clearTimeout(timeoutId);
-
-        if (!response.ok) throw new Error('Network response was not ok');
-        
-        const data = await response.json(); 
-        const randomIndex = Math.floor(Math.random() * data.length);
-        const randomQuote = data[randomIndex];
-        return `${randomQuote.text} — ${randomQuote.author || 'Unknown'}`;
-    } catch (error) {
-        // 這是正常警告，表示 API 無法載入，將切換到時鐘
-        console.warn("Quote API failed, switching to Clock mode.");
-        return null; 
-    }
-}
 
 // V. 天氣 API 擷取邏輯
 async function fetchWeatherForecast(lat, lon, cityName) { 
@@ -219,13 +200,13 @@ function startClock() {
 // VII. 生成小月曆函式
 function generateMiniCalendar(date) { 
     const year = date.getFullYear();
-    const month = date.getMonth(); 
-    const todayDay = date.getDate(); 
-    const firstDayOfWeek = new Date(year, month, 1).getDay(); 
-    const daysInMonth = new Date(year, month + 1, 0).getDate(); 
+    const month = date.getMonth();
+    const todayDay = date.getDate();
+    const firstDayOfWeek = new Date(year, month, 1).getDay();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
     const weekdays = ['日', '一', '二', '三', '四', '五', '六'];
-    
     let html = '';
+
     html += `<table style="width: 100%; border-collapse: collapse; font-size: 0.5em; text-align: center; border: 1px solid #eee;">`;
     html += `<thead style="background-color: #f7f7f7;"><tr>`;
     weekdays.forEach(day => {
@@ -233,178 +214,177 @@ function generateMiniCalendar(date) {
         html += `<th style="padding: 0px 0; color: ${color}; font-weight: normal;">${day}</th>`;
     });
     html += `</tr></thead><tbody><tr>`;
-
-    let cellCount = 0; 
-    for (let i = 0; i < firstDayOfWeek; i++) { html += `<td style="padding: 0px;"></td>`; cellCount++; }
-    for (let day = 1; day <= daysInMonth; day++) {
-        if (cellCount % 7 === 0 && cellCount !== 0) { html += `</tr><tr>`; }
-        const isToday = day === todayDay;
-        const style = isToday 
-            ? `background-color: #004d99; color: white; border-radius: 3px; font-weight: bold;` 
-            : `color: #333;`;
-        html += `<td style="padding: 0px; ${style}">${day}</td>`;
+    
+    let cellCount = 0;
+    for (let i = 0; i < firstDayOfWeek; i++) {
+        html += `<td style="padding: 0px;"></td>`;
         cellCount++;
     }
-    while (cellCount % 7 !== 0) { html += `<td style="padding: 0px;"></td>`; cellCount++; }
+
+    for (let day = 1; day <= daysInMonth; day++) {
+        if (cellCount % 7 === 0 && cellCount !== 0) {
+            html += `</tr><tr>`;
+        }
+        const isSunday = (cellCount % 7 === 0);
+        const isCurrentDay = (day === todayDay);
+        
+        let style = "padding: 0px; height: 16px; width: 14.28%;";
+        if (isCurrentDay) {
+             style += "background-color: #004d99; color: white; border-radius: 3px; font-weight: bold;"; // Use inline style or class
+        } else if (isSunday) {
+            style += "color: #cc0000;";
+        } else {
+             style += "color: #333;";
+        }
+        
+        html += `<td style="${style}">${day}</td>`;
+        cellCount++;
+    }
+
+    while (cellCount % 7 !== 0) {
+        html += `<td style="padding: 0px;"></td>`;
+        cellCount++;
+    }
+
     html += `</tr></tbody></table>`;
+
     return html;
 }
 
-// VIII. 渲染邏輯
-function renderPageContent(date, weather, quote) { 
-    // 這裡會呼叫 getLunarData 和 getHourAuspiceData，必須確保它們在前面定義。
-    const dayNumber = date.getDate();
-    const weekdayName = date.toLocaleString('zh-Hant', { weekday: 'long' });
-    const month = date.getMonth() + 1;
-    const monthShort = date.toLocaleDateString('en-US', { month: 'short' }).toUpperCase();
-    
-    const lunarData = getLunarData(date);
-    const topLabel = lunarData.jieqi ? lunarData.jieqi : '農曆';
-    const lunarHtml = `<div>${topLabel}</div><div>${lunarData.month}</div><div>${lunarData.day}</div>`;
-    
-    let content = `<div style="height: 100%; position: relative; padding-bottom: 15px; max-width: 400px; margin: 0 auto; box-sizing: border-box;">`;
 
-    // 1. 頂部資訊 (年號)
-    content += `<div style="overflow: auto; border-bottom: 1px solid #eee; padding-bottom: 5px; margin-top: 10px;">
-        <span style="float: left; font-size: 0.8em;">${date.getFullYear() - 1911}年 歲次${typeof Solar !== 'undefined' ? Solar.fromDate(date).getLunar().getYearInGanZhi() : ''}</span>
-        <span style="float: right; font-size: 0.8em;">${date.getFullYear()}</span>
+// VIII. 核心渲染邏輯
+function renderPageContent(date, weather, quote) {
+    let content = '';
+
+    // 1. 頂部資訊：年號與西元
+    const lunarYearInfo = typeof solarlunar !== 'undefined' ? solarlunar.fromDate(date).getLunar().getYearInGanZhi() : '';
+
+    content += `<div class="top-info">
+        <span class="top-info-left">${date.getFullYear() - 1911}年 歲次${lunarYearInfo}</span>
+        <span class="top-info-right">${date.getFullYear()}</span>
     </div>`;
-    
+
     // 2. 主體內容：大日期區塊
-    content += `<div style="position: relative; height: 120px; margin-top: 15px; display: flex; align-items: flex-start; justify-content: center;">`; 
     
-    // 日期切換按鈕容器 
-    content += `<div style="position: absolute; top: 90%; width: 100%; transform: translateY(-50%); display: flex; justify-content: space-between; padding: 0 10px; z-index: 10;">
-        <button id="prev-day-btn" style="background: none; border: none; font-size: 2.5em; color: #004d99; cursor: pointer; padding: 0 10px; outline: none; opacity: 0.5;">
-            &#x23EA;
-        </button>
-        <button id="next-day-btn" style="background: none; border: none; font-size: 2.5em; color: #004d99; cursor: pointer; padding: 0 10px; outline: none; opacity: 0.5;">
-            &#x23E9;
-        </button>
-    </div>`;
-
     // (A) 左側：農曆紅條
-    content += `<div style="position: absolute; left: 0; background-color: #cc0000; color: white; padding: 5px; font-size: 1.1em; text-align: center; box-shadow: 2px 2px 5px rgba(0,0,0,0.1); line-height: 1.2;">
-        ${lunarHtml}
-    </div>`;
-    // (B) 中央：大日期
-    content += `<div style="width: 100%; text-align: center;">
-        <div style="font-size: 7.5em; font-weight: 900; color: #004d99; line-height: 1;">
-            ${dayNumber}
-        </div>
-    </div>`;
-    // (C) 右側：月份 
-    content += `<div style="position: absolute; right: 0; text-align: right; line-height: 1.1; width: 160px;">
-        <div style="font-size: 2.5em; font-weight: bold; color: #cc0000;">${monthShort}</div>
-        <span style="display: block; transform: scale(2, 1.5); transform-origin: right top; margin-top: 5px;">
-            <div style="font-size: 1.2em; font-weight: bold; color: #333;">${month}月</div>
-        </span>
-    </div>`;
-    content += `</div>`; 
+    let lunarData = getLunarData(date);
+    let lunarHtml = `${lunarData.month}<br>${lunarData.day}`;
+    if (lunarData.jieqi) {
+        lunarHtml += `<br>(${lunarData.jieqi})`;
+    }
     
-    // 3. 星期 
-    content += `<div style="clear: both; margin-top: 10px; text-align: center; margin-bottom: 5px;">
-        <div style="font-size: 1.5em; font-weight: bold; color: #333; margin-bottom: 5px;">
-            ${weekdayName}
-        </div>
-    </div>`;
+    // 取得當日星期幾的中文名稱
+    const weekdays = ['日', '一', '二', '三', '四', '五', '六'];
+    const dayOfWeek = weekdays[date.getDay()];
     
-    // 3.5. 小月曆 (在星期下方，靠右)
-    content += `<div style="text-align: right; margin-right: 5px; margin-bottom: 10px;">
-        <div style="width: 160px; display: inline-block;">
-            ${generateMiniCalendar(date)}
+    // 取得月份中文縮寫
+    const monthShort = (date.getMonth() + 1).toString().padStart(2, '0');
+
+    content += `<div class="main-date-container">
+        <div class="date-shift-controls">
+            <button id="prev-day-btn" class="shift-btn"> &#x23EA; </button>
+            <button id="next-day-btn" class="shift-btn"> &#x23E9; </button>
+        </div>
+        
+        <div class="lunar-badge"> 
+            ${lunarHtml} 
+        </div>
+
+        <div class="date-number-wrapper">
+            <div class="big-date-number">${date.getDate()}</div>
+        </div>
+
+        <div class="month-info">
+            <div class="month-short">${monthShort}</div>
+            <div class="month-long">星期${dayOfWeek}</div>
         </div>
     </div>`;
 
-    // 4. 宜/忌 
-    content += `<div style="margin: 0 5px; padding: 15px 0; text-align: center; border-top: 1px dashed #ccc; border-bottom: 1px dashed #ccc;">
-        <div style="display: flex; justify-content: space-around; text-align: center; font-size: 1.1em; line-height: 1.6;">
-            <div style="width: 48%; border-right: 1px solid #eee;"><div style="font-weight: bold; color: green; margin-bottom: 5px;">**宜**</div><div style="white-space: pre-wrap; color: #555;">${lunarData.yi || '諸事不宜'}</div></div>
-            <div style="width: 48%;"><div style="font-weight: bold; color: #cc0000; margin-bottom: 5px;">**忌**</div><div style="white-space: pre-wrap; color: #555;">${lunarData.ji || '諸事不宜'}</div></div>
-        </div>
+    // 3. 宜/忌 區塊 (使用 class)
+    content += `<div class="yi-ji-section">
+        <div class="yi-section">宜: ${lunarData.yi}</div>
+        <div class="ji-section">忌: ${lunarData.ji}</div>
     </div>`;
     
-    // 4.5. 時辰吉凶表 
+    // 4. 小月曆
+    content += `<div class="mini-calendar-container">
+        <div class="mini-calendar-title">${date.getFullYear()}年${date.getMonth() + 1}月</div>
+        <div class="mini-calendar-table">${generateMiniCalendar(date)}</div>
+    </div>`;
+
+    // 5. 每日語錄或時鐘 (已移除語錄功能，永遠顯示時鐘)
+    content += `<div class="quote-clock-section"> 
+        <span id="live-clock" class="live-clock-text">--:--:--</span> 
+    </div>`;
+    
+    // 6. 縣市天氣
+    content += `<div class="weather-section">
+        <span class="weather-city-name">${weather.city} 天氣:</span> ${weather.description}
+        <span class="weather-temp">${weather.temperature}</span>
+    </div>`;
+    
+    // 7. 時辰吉凶
     const hourAuspiceData = getHourAuspiceData(date);
     content += generateHourAuspiceTable(hourAuspiceData);
 
 
-    // 5. 每日語錄 或 現在時刻 
-    if (quote) {
-        content += `<div style="margin-top: 20px; padding: 10px; border: 1px dashed #ccc; background-color: #f9f9f9; font-size: 0.9em; color: #555; min-height: 50px; display: flex; align-items: center; justify-content: center; text-align: center; font-style: italic;">
-            "${quote}"
-        </div>`;
-    } else {
-        // 時鐘
-        content += `<div style="margin-top: 20px; padding: 10px; border: 1px dashed #ccc; background-color: #f9f9f9; font-size: 2.0em; font-weight: bold; color: #333; min-height: 50px; display: flex; align-items: center; justify-content: center; text-align: center;">
-            <span id="live-clock">--:--:--</span>
-        </div>`;
-    }
-
-    // 6. 縣市天氣 
-    content += `<div style="padding: 15px; text-align: center; font-size: 0.9em; color: #666;">
-        <span style="font-weight: bold; color: #333;">${weather.city} 天氣:</span> 
-        ${weather.description} 
-        <span style="font-weight: bold; color: #e60000;">(${weather.temperature})</span>
-    </div>`;
-    
-    content += `</div>`; 
     PAGE_CONTAINER.innerHTML = content;
 
-    if (!quote) {
-        startClock();
-    }
-    
-    // 按鈕事件綁定 (按鈕是動態生成的，所以必須在這裡綁定)
-    document.getElementById('prev-day-btn').addEventListener('click', () => {
-        shiftDate(-1); // 傳入 -1 表示前一天
-    });
-    document.getElementById('next-day-btn').addEventListener('click', () => {
-        shiftDate(1);  // 傳入 1 表示後一天
-    });
+    // 添加日期切換事件監聽器
+    document.getElementById('prev-day-btn').onclick = () => {
+        shiftDate(-1);
+    };
+    document.getElementById('next-day-btn').onclick = () => {
+        shiftDate(1);
+    };
+
+    // 啟動時鐘
+    startClock();
 }
 
-// ------------------------------------------
-// IX. 日期切換核心邏輯
-// ------------------------------------------
 
-function isToday(someDate) {
+// IX. 日期切換與天氣獲取邏輯
+function shiftDate(days) { 
+    currentDisplayDate.setDate(currentDisplayDate.getDate() + days);
+    updateCalendar(currentDisplayDate);
+}
+
+function isToday(date) {
     const today = new Date();
-    return someDate.getDate() === today.getDate() &&
-           someDate.getMonth() === today.getMonth() &&
-           someDate.getFullYear() === today.getFullYear();
+    return date.getDate() === today.getDate() &&
+           date.getMonth() === today.getMonth() &&
+           date.getFullYear() === today.getFullYear();
 }
 
-function shiftDate(days) {
-    const oldDate = currentDisplayDate;
-    const newDate = new Date(oldDate);
-    newDate.setDate(oldDate.getDate() + days); 
+async function updateCalendar(date, lat, lon, cityName) { 
+    // 設定預設城市為台北
+    if (!lat || !lon || !cityName) {
+        const selectedIndex = CITY_SELECTOR.selectedIndex;
+        const selectedOption = CITY_SELECTOR.options[selectedIndex];
+        if (selectedOption) {
+            [lat, lon] = selectedOption.value.split(',');
+            cityName = selectedOption.textContent;
+        } else {
+            // Fallback to Taipei
+            lat = TAIWAN_CITIES[0].lat;
+            lon = TAIWAN_CITIES[0].lon;
+            cityName = TAIWAN_CITIES[0].name;
+        }
+    }
 
-    const [lat, lon] = CITY_SELECTOR.value.split(',');
-    const cityName = CITY_SELECTOR.options[CITY_SELECTOR.selectedIndex].textContent;
-
-    updateCalendar(newDate, lat, lon, cityName);
-}
-
-async function updateCalendar(date, lat, lon, cityName) {
-    if (clockInterval) clearInterval(clockInterval); 
-    
-    currentDisplayDate = date; 
-    
     let weatherData = { description: "載入中", temperature: "??°", city: cityName };
-    let quoteData = null;
+    let quoteData = null; // 始終為 null，強制顯示時鐘 (已移除語錄功能)
 
     if (isToday(date)) {
-        // 只有在顯示「今天」時才獲取天氣和語錄
-        [weatherData, quoteData] = await Promise.all([
-            fetchWeatherForecast(lat, lon, cityName),
-            fetchQuote() 
+        // 只有在顯示「今天」時才獲取天氣。已移除 fetchQuote()
+        [weatherData] = await Promise.all([
+            fetchWeatherForecast(lat, lon, cityName)
         ]);
+        // quoteData 保持為 null
     } else {
         weatherData.description = "僅顯示今日天氣";
         weatherData.temperature = "----";
-        // 非今日不獲取語錄，強制切換到時鐘
-        quoteData = null; 
+        // quoteData 保持為 null 
     }
 
     renderPageContent(date, weatherData, quoteData); 
@@ -432,10 +412,9 @@ function initApp() {
         const cityName = event.target.options[event.target.selectedIndex].textContent;
         updateCalendar(currentDate, lat, lon, cityName);
     });
-    
-    const defaultCity = TAIWAN_CITIES[0];
-    const today = new Date(); 
-    updateCalendar(today, defaultCity.lat, defaultCity.lon, defaultCity.name);
+
+    updateCalendar(currentDisplayDate);
 }
 
-initApp();
+// 啟動應用程式
+document.addEventListener('DOMContentLoaded', initApp);
