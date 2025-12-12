@@ -1,6 +1,5 @@
 // ====================================================================
-// 專案名稱：極簡日曆儀表板 (穩定回歸版)
-// 特色：切換日期功能穩定，時辰吉凶採靜態顯示以防卡死
+// 專案名稱：極簡日曆儀表板 (動態吉凶連動版)
 // ====================================================================
 
 const PAGE_CONTAINER = document.getElementById('calendar-page-container');
@@ -23,7 +22,40 @@ const TAIWAN_CITIES = [
 const MONTH_NAMES_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 const MONTH_CHINESE = ['一', '二', '三', '四', '五', '六', '七', '八', '九', '十', '十一', '十二'];
 const WEEKDAYS_CHINESE = ['日', '一', '二', '三', '四', '五', '六'];
-const WEEKDAYS_ENGLISH = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+// 1. 核心計算：時辰吉凶判斷
+function getHourAuspiceDynamic(lunar) {
+    const hours = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥'];
+    const luckyGods = ['青龍', '明堂', '金匱', '天德', '玉堂', '司命'];
+    let good = [], bad = [];
+    
+    hours.forEach(h => {
+        const god = lunar.getTimeZhiShen(h + '時');
+        if (luckyGods.includes(god)) {
+            good.push(h);
+        } else {
+            bad.push(h);
+        }
+    });
+    return { 
+        good: good.join(' '), 
+        bad: bad.join(' ') 
+    };
+}
+
+// 2. 取得農曆與宜忌
+function getLunarData(date) { 
+    if (typeof Solar === 'undefined') return { month: '農曆', day: '載入中', yi: '', ji: '', hourAuspice: {good:'', bad:''} };
+    const lunar = Solar.fromDate(date).getLunar();
+    return {
+        month: lunar.getMonthInChinese() + '月',
+        day: lunar.getDayInChinese(),
+        yi: simplifiedToTraditional(lunar.getDayYi().slice(0, 5).join(' ')), 
+        ji: simplifiedToTraditional(lunar.getDayJi().slice(0, 5).join(' ')), 
+        jieqi: lunar.getJieQi(),
+        hourAuspice: getHourAuspiceDynamic(lunar) // 動態推算時辰
+    };
+}
 
 function simplifiedToTraditional(text) {
     if (!text) return '';
@@ -31,64 +63,7 @@ function simplifiedToTraditional(text) {
     return text.split('').map(c => map[c] || c).join('');
 }
 
-function getLunarData(date) { 
-    if (typeof Solar === 'undefined') return { month: '農曆', day: '載入中', yi: '', ji: '', jieqi: '' };
-    const lunar = Solar.fromDate(date).getLunar();
-    return {
-        month: lunar.getMonthInChinese() + '月',
-        day: lunar.getDayInChinese(),
-        yi: simplifiedToTraditional(lunar.getDayYi().slice(0, 5).join(' ')), 
-        ji: simplifiedToTraditional(lunar.getDayJi().slice(0, 5).join(' ')), 
-        jieqi: lunar.getJieQi()
-    };
-}
-
-async function fetchWeatherForecast(lat, lon, cityName) { 
-    const url = `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=metric&lang=zh_tw`;
-    try {
-        const response = await fetch(url);
-        const data = await response.json();
-        if (data.cod != 200) throw new Error();
-        const todayStr = new Date().toDateString();
-        let maxT = -Infinity, minT = Infinity, desc = data.list[0].weather[0].description;
-        data.list.forEach(item => {
-            if (new Date(item.dt_txt).toDateString() === todayStr) {
-                maxT = Math.max(maxT, item.main.temp_max); minT = Math.min(minT, item.main.temp_min); desc = item.weather[0].description;
-            }
-        });
-        return { description: desc, temperature: `${Math.round(minT)}°C ~ ${Math.round(maxT)}°C`, city: cityName };
-    } catch (e) { return { description: "更新中", temperature: "--°C", city: cityName }; }
-}
-
-function startClock() { 
-    if (clockInterval) clearInterval(clockInterval);
-    const update = () => {
-        const el = document.getElementById('live-clock');
-        if (el) el.textContent = new Date().toLocaleTimeString('zh-TW', { hour12: false });
-    };
-    update(); clockInterval = setInterval(update, 1000);
-}
-
-function generateMiniCalendar(date) { 
-    const year = date.getFullYear(), month = date.getMonth();
-    const firstDay = new Date(year, month, 1).getDay();
-    const daysInMonth = new Date(year, month + 1, 0).getDate();
-    let html = '<table><thead><tr>';
-    WEEKDAYS_CHINESE.forEach(d => html += `<th style="color:${d==='日'?'#cc0000':'#333'};">${d}</th>`);
-    html += '</tr></thead><tbody><tr>';
-    let cells = 0;
-    for (let i = 0; i < firstDay; i++) { html += '<td></td>'; cells++; }
-    for (let d = 1; d <= daysInMonth; d++) {
-        if (cells % 7 === 0 && cells !== 0) html += '</tr><tr>';
-        let style = (d === date.getDate() && month === date.getMonth()) ? 'background:#004d99;color:white;border-radius:3px;font-weight:bold;' : '';
-        if (cells % 7 === 0 && !style.includes('color')) style += 'color:#cc0000;';
-        html += `<td style="${style}">${d}</td>`;
-        cells++;
-    }
-    html += '</tr></tbody></table>';
-    return html;
-}
-
+// 3. 渲染頁面
 function renderPageContent(date, weather) {
     const dayIdx = date.getDay();
     const lunar = getLunarData(date);
@@ -142,17 +117,18 @@ function renderPageContent(date, weather) {
 
     <div class="hour-auspice-container">
         <div class="hour-auspice-text">
-            <span class="auspice-good">吉時: 子 寅 卯 午 申 酉</span> 
+            <span class="auspice-good">吉時: ${lunar.hourAuspice.good}</span> 
             <span class="auspice-separator">|</span>
-            <span class="auspice-bad">凶時: 丑 辰 巳 未 戌 亥</span>
+            <span class="auspice-bad">凶時: ${lunar.hourAuspice.bad}</span>
         </div>
-    </div>`; // 修正 HTML 結構以配合單行 CSS
+    </div>`;
 
     document.getElementById('prevDayBtn').onclick = () => { currentDisplayDate.setDate(currentDisplayDate.getDate() - 1); updateCalendar(currentDisplayDate); };
     document.getElementById('nextDayBtn').onclick = () => { currentDisplayDate.setDate(currentDisplayDate.getDate() + 1); updateCalendar(currentDisplayDate); };
     startClock();
 }
 
+// 4. 其餘功能 (保持不變)
 async function updateCalendar(date) {
     const [lat, lon] = CITY_SELECTOR.value.split(',');
     const cityName = CITY_SELECTOR.options[CITY_SELECTOR.selectedIndex].textContent;
@@ -161,11 +137,56 @@ async function updateCalendar(date) {
     renderPageContent(date, weather);
 }
 
+function startClock() { 
+    if (clockInterval) clearInterval(clockInterval);
+    const update = () => {
+        const el = document.getElementById('live-clock');
+        if (el) el.textContent = new Date().toLocaleTimeString('zh-TW', { hour12: false });
+    };
+    update(); clockInterval = setInterval(update, 1000);
+}
+
+function generateMiniCalendar(date) { 
+    const year = date.getFullYear(), month = date.getMonth();
+    const firstDay = new Date(year, month, 1).getDay();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    let html = '<table><thead><tr>';
+    WEEKDAYS_CHINESE.forEach(d => html += `<th style="color:${d==='日'?'#cc0000':'#333'};">${d}</th>`);
+    html += '</tr></thead><tbody><tr>';
+    let cells = 0;
+    for (let i = 0; i < firstDay; i++) { html += '<td></td>'; cells++; }
+    for (let d = 1; d <= daysInMonth; d++) {
+        if (cells % 7 === 0 && cells !== 0) html += '</tr><tr>';
+        let style = (d === date.getDate() && month === date.getMonth()) ? 'background:#004d99;color:white;border-radius:3px;font-weight:bold;' : '';
+        if (cells % 7 === 0 && !style.includes('color')) style += 'color:#cc0000;';
+        html += `<td style="${style}">${d}</td>`;
+        cells++;
+    }
+    html += '</tr></tbody></table>';
+    return html;
+}
+
 window.handleMiniCalendarSelection = function() {
     const y = document.getElementById('mini-calendar-year').value;
     const m = document.getElementById('mini-calendar-month').value;
     currentDisplayDate = new Date(y, m, 1);
     updateCalendar(currentDisplayDate);
+}
+
+async function fetchWeatherForecast(lat, lon, cityName) { 
+    const url = `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=metric&lang=zh_tw`;
+    try {
+        const response = await fetch(url);
+        const data = await response.json();
+        const todayStr = new Date().toDateString();
+        let maxT = -Infinity, minT = Infinity, desc = data.list[0].weather[0].description;
+        data.list.forEach(item => {
+            if (new Date(item.dt_txt).toDateString() === todayStr) {
+                maxT = Math.max(maxT, item.main.temp_max); minT = Math.min(minT, item.main.temp_min); desc = item.weather[0].description;
+            }
+        });
+        return { description: desc, temperature: `${Math.round(minT)}°C ~ ${Math.round(maxT)}°C`, city: cityName };
+    } catch (e) { return { description: "更新中", temperature: "--°C", city: cityName }; }
 }
 
 document.addEventListener('DOMContentLoaded', () => {
