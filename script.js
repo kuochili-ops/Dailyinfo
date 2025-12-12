@@ -1,7 +1,6 @@
 // ====================================================================
 // 專案名稱：極簡日曆儀表板 (最終定案版 - 支援年月選擇，介面文字已轉為正體中文)
-// 狀態：已移除日期切換按鈕，改為年月選擇器。
-// 修正：擴充簡體轉正體函式，加入「飾」、「餘」等更多易被忽略的字。
+// 狀態：已加入生肖 Emoji，小月曆日期可點擊切換。
 // ====================================================================
 
 const PAGE_CONTAINER = document.getElementById('calendar-page-container');
@@ -28,6 +27,15 @@ const TAIWAN_CITIES = [
 ];
 
 // ******************************************************
+// ** 核心修正：生肖 Emoji 函式 **
+// ******************************************************
+function getChineseZodiacEmoji(year) {
+    const zodiacs = ['🐒', '🐔', '🐶', '🐷', '🐭', '🐮', '🐯', '🐰', '🐲', '🐍', '🐴', '🐑'];
+    // 農曆年從立春開始，但為簡化顯示，這裡使用公曆年計算 (year - 4) % 12
+    return zodiacs[(year - 4) % 12];
+}
+
+// ******************************************************
 // ** 核心修正：簡體轉正體函式 (擴充) **
 // ******************************************************
 function simplifiedToTraditional(text) {
@@ -38,7 +46,6 @@ function simplifiedToTraditional(text) {
         '进': '進', '习': '習', '医': '醫', '启': '啟', '会': '會',
         '备': '備', '园': '園', '买': '買', '卖': '賣', '发': '發', 
         '设': '設', '坛': '壇',
-        // 新增的字：飾、餘、療、理
         '饰': '飾', '馀': '餘', '疗': '療', '理': '理', '归': '歸',
         '灶': '竈', '会': '會'
     };
@@ -145,6 +152,7 @@ function startClock() {
     clockInterval = setInterval(updateTime, 1000);
 }
 
+// 核心修正：加入點擊事件
 function generateMiniCalendar(date) { 
     const year = date.getFullYear();
     const month = date.getMonth();
@@ -167,22 +175,35 @@ function generateMiniCalendar(date) {
     
     let cellCount = 0;
     for (let i = 0; i < firstDayOfWeek; i++) html += `<td></td>`, cellCount++;
+    
     for (let day = 1; day <= daysInMonth; day++) {
         if (cellCount % 7 === 0 && cellCount !== 0) html += `</tr><tr>`;
         const isSunday = (cellCount % 7 === 0);
-        // 只有當日期是今天、且年份和月份都吻合時，才標記 current-day
         const isCurrentDay = (day === todayDay && month === currentMonth && year === currentYear);
+        
         let className = '';
         if (isCurrentDay) className = 'current-day';
         else if (isSunday) className = 'sunday-day';
+
+        // 核心修正：加入 onclick 事件，點擊後切換日期
+        const newDateString = new Date(year, month, day).toISOString().split('T')[0];
+        html += `<td class="${className}" onclick="handleMiniCalendarClick('${newDateString}')">${day}</td>`;
         
-        html += `<td class="${className}">${day}</td>`;
         cellCount++;
     }
     while (cellCount % 7 !== 0) html += `<td></td>`, cellCount++;
     html += `</tr></tbody></table>`;
     return html;
 }
+
+// 新增的點擊處理函式
+window.handleMiniCalendarClick = function(dateString) {
+    const [year, month, day] = dateString.split('-').map(Number);
+    // JS month is 0-indexed, so we need month - 1
+    currentDisplayDate = new Date(year, month - 1, day);
+    updateCalendar(currentDisplayDate);
+}
+
 
 // VI. 產生年月選擇器
 function generateDateSelectors(date) {
@@ -212,14 +233,16 @@ function generateDateSelectors(date) {
 // VIII. 核心渲染邏輯
 function renderPageContent(date, weather, quote) {
     let content = '';
+    const currentYear = date.getFullYear();
     const lunarYearInfo = typeof Solar !== 'undefined' ? Solar.fromDate(date).getLunar().getYearInGanZhi() : '';
+    const zodiacEmoji = getChineseZodiacEmoji(currentYear); // 取得生肖 Emoji
 
     // 1. 頂部資訊 (年與歲次)
-    content += `<div class="top-info"><span class="top-info-left">${date.getFullYear() - 1911}年 歲次${lunarYearInfo}</span><span class="top-info-right">${date.getFullYear()}</span></div>`;
+    content += `<div class="top-info"><span class="top-info-left">${currentYear - 1911}年 歲次${lunarYearInfo} ${zodiacEmoji}</span><span class="top-info-right">${currentYear}</span></div>`;
 
     let lunarData = getLunarData(date);
     let lunarHtml = `${lunarData.month}<br>${lunarData.day}`;
-    if (lunarData.jieqi) lunarHtml += `<br>(${simplifiedToTraditional(lunarData.jieqi)})`; // 節氣也轉正體
+    if (lunarData.jieqi) lunarHtml += `<br>(${simplifiedToTraditional(lunarData.jieqi)})`; 
     
     const weekdays = ['日', '一', '二', '三', '四', '五', '六'];
     const dayOfWeek = weekdays[date.getDay()];
@@ -302,6 +325,7 @@ function isToday(date) {
 }
 
 async function updateCalendar(date, lat, lon, cityName) { 
+    currentDisplayDate = date; // 更新當前顯示日期
     if (!lat || !lon || !cityName) {
         const selectedIndex = CITY_SELECTOR.selectedIndex;
         const selectedOption = CITY_SELECTOR.options[selectedIndex];
