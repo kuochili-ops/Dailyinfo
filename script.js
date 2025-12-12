@@ -1,5 +1,5 @@
 // ====================================================================
-// 專案名稱：極簡日曆儀表板 (動態吉凶連動版)
+// 專案名稱：極簡日曆儀表板 (時辰吉凶徹底修正版)
 // ====================================================================
 
 const PAGE_CONTAINER = document.getElementById('calendar-page-container');
@@ -23,37 +23,44 @@ const MONTH_NAMES_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug
 const MONTH_CHINESE = ['一', '二', '三', '四', '五', '六', '七', '八', '九', '十', '十一', '十二'];
 const WEEKDAYS_CHINESE = ['日', '一', '二', '三', '四', '五', '六'];
 
-// 1. 核心計算：時辰吉凶判斷
+// --- 核心修正：使用官方 getTimes() 方法確保時辰連動 ---
 function getHourAuspiceDynamic(lunar) {
-    const hours = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥'];
     const luckyGods = ['青龍', '明堂', '金匱', '天德', '玉堂', '司命'];
     let good = [], bad = [];
     
-    hours.forEach(h => {
-        const god = lunar.getTimeZhiShen(h + '時');
+    // 獲取該日 12 時辰物件
+    const times = lunar.getTimes(); 
+    
+    times.forEach(t => {
+        const zhi = t.getZhi();      // 地支 (子, 丑...)
+        const god = t.getZhiShen();  // 獲取該時辰的神煞 (青龍, 天刑...)
+        
         if (luckyGods.includes(god)) {
-            good.push(h);
+            good.push(zhi);
         } else {
-            bad.push(h);
+            bad.push(zhi);
         }
     });
+
     return { 
-        good: good.join(' '), 
-        bad: bad.join(' ') 
+        good: good.length > 0 ? good.join(' ') : '無', 
+        bad: bad.length > 0 ? bad.join(' ') : '無' 
     };
 }
 
-// 2. 取得農曆與宜忌
 function getLunarData(date) { 
     if (typeof Solar === 'undefined') return { month: '農曆', day: '載入中', yi: '', ji: '', hourAuspice: {good:'', bad:''} };
+    
     const lunar = Solar.fromDate(date).getLunar();
+    const auspice = getHourAuspiceDynamic(lunar); // 在這裡執行時辰計算
+
     return {
         month: lunar.getMonthInChinese() + '月',
         day: lunar.getDayInChinese(),
         yi: simplifiedToTraditional(lunar.getDayYi().slice(0, 5).join(' ')), 
         ji: simplifiedToTraditional(lunar.getDayJi().slice(0, 5).join(' ')), 
         jieqi: lunar.getJieQi(),
-        hourAuspice: getHourAuspiceDynamic(lunar) // 動態推算時辰
+        hourAuspice: auspice
     };
 }
 
@@ -63,7 +70,7 @@ function simplifiedToTraditional(text) {
     return text.split('').map(c => map[c] || c).join('');
 }
 
-// 3. 渲染頁面
+// --- 渲染與控制 (HTML 結構與 CSS 完全對接) ---
 function renderPageContent(date, weather) {
     const dayIdx = date.getDay();
     const lunar = getLunarData(date);
@@ -128,7 +135,7 @@ function renderPageContent(date, weather) {
     startClock();
 }
 
-// 4. 其餘功能 (保持不變)
+// --- 天氣與時鐘其餘邏輯 (保持不變) ---
 async function updateCalendar(date) {
     const [lat, lon] = CITY_SELECTOR.value.split(',');
     const cityName = CITY_SELECTOR.options[CITY_SELECTOR.selectedIndex].textContent;
