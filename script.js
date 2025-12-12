@@ -23,10 +23,11 @@ const TAIWAN_CITIES = [
 const MONTH_NAMES_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 const MONTH_CHINESE = ['一', '二', '三', '四', '五', '六', '七', '八', '九', '十', '十一', '十二'];
 const WEEKDAYS_CHINESE = ['日', '一', '二', '三', '四', '五', '六'];
+const WEEKDAYS_ENGLISH = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
 function simplifiedToTraditional(text) {
     if (!text) return '';
-    const map = { '开': '開', '动': '動', '修': '修', '造': '造', '谢': '謝', '盖': '蓋', '纳': '納', '結': '結', '办': '辦', '迁': '遷', '进': '進', '習': '習', '医': '醫', '启': '啟', '会': '會', '備': '備', '园': '園', '买': '買', '卖': '賣', '发': '發', '設': '設', '坛': '壇', '饰': '飾', '馀': '餘', '疗': '療', '理': '理', '歸': '歸', '灶': '竈' };
+    const map = { '开': '開', '动': '動', '修': '修', '造': '造', '谢': '謝', '盖': '蓋', '纳': '納', '結': '結', '办': '辦', '迁': '遷', '进': '進', '习': '習', '医': '醫', '启': '啟', '会': '會', '備': '備', '园': '園', '买': '買', '卖': '賣', '发': '發', '設': '設', '坛': '壇', '饰': '飾', '馀': '餘', '疗': '療', '理': '理', '歸': '歸', '灶': '竈' };
     return text.split('').map(c => map[c] || c).join('');
 }
 
@@ -140,12 +141,12 @@ function renderPageContent(date, weather) {
     </div>
 
     <div class="hour-auspice-container">
-        <div class="hour-auspice-title">今日時辰吉凶</div>
         <div class="hour-auspice-text">
-            <span class="auspice-good">吉時: 子 寅 卯 午 申 酉</span> | 
+            <span class="auspice-good">吉時: 子 寅 卯 午 申 酉</span> 
+            <span class="auspice-separator">|</span>
             <span class="auspice-bad">凶時: 丑 辰 巳 未 戌 亥</span>
         </div>
-    </div>`;
+    </div>`; // 修正 HTML 結構以配合單行 CSS
 
     document.getElementById('prevDayBtn').onclick = () => { currentDisplayDate.setDate(currentDisplayDate.getDate() - 1); updateCalendar(currentDisplayDate); };
     document.getElementById('nextDayBtn').onclick = () => { currentDisplayDate.setDate(currentDisplayDate.getDate() + 1); updateCalendar(currentDisplayDate); };
