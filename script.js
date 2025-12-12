@@ -150,29 +150,6 @@ function generateHourAuspiceTable(data) {
 }
 
 
-// IV. 每日語錄 API
-async function fetchQuote() { 
-    const url = 'https://type.fit/api/quotes';
-    try {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 3000); 
-
-        const response = await fetch(url, { signal: controller.signal });
-        clearTimeout(timeoutId);
-
-        if (!response.ok) throw new Error('Network response was not ok');
-        
-        const data = await response.json(); 
-        const randomIndex = Math.floor(Math.random() * data.length);
-        const randomQuote = data[randomIndex];
-        return `${randomQuote.text} — ${randomQuote.author || 'Unknown'}`;
-    } catch (error) {
-        // 這是正常警告，表示 API 無法載入，將切換到時鐘
-        console.warn("Quote API failed, switching to Clock mode.");
-        return null; 
-    }
-}
-
 // V. 天氣 API 擷取邏輯
 async function fetchWeatherForecast(lat, lon, cityName) { 
     const forecast_url = `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=metric&lang=zh_tw`;
