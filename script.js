@@ -1,8 +1,7 @@
 // ====================================================================
 // 專案名稱：極簡日曆儀表板 (最終版 - 依圖定稿)
 // 功能：顯示天氣、農民曆 (含宜忌)、時鐘、時辰吉凶
-// 修正：已修正天氣載入問題、恢復簡體轉正體、恢復生肖顯示。
-// 新增：小月曆區域改用「年/月下拉式選單」輔助選擇。
+// 修正：修正佈局，移除頂部換日鍵、調整月份格式、移動星期到小月曆下方。
 // ====================================================================
 
 const PAGE_CONTAINER = document.getElementById('calendar-page-container');
@@ -29,6 +28,13 @@ const TAIWAN_CITIES = [
 
 let clockInterval = null;
 
+// 月份與星期對應表
+const MONTH_NAMES = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+const MONTH_CHINESE = ['一', '二', '三', '四', '五', '六', '七', '八', '九', '十', '十一', '十二'];
+const WEEKDAYS_CHINESE = ['日', '一', '二', '三', '四', '五', '六'];
+const WEEKDAYS_ENGLISH = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+
 // ******************************************************
 // ** 輔助函式：生肖 Emoji & 簡體轉正體 **
 // ******************************************************
@@ -45,7 +51,7 @@ function simplifiedToTraditional(text) {
         '进': '進', '习': '習', '医': '醫', '启': '啟', '会': '會',
         '備': '備', '园': '園', '买': '買', '卖': '賣', '发': '發', 
         '設': '設', '坛': '壇',
-        '饰': '飾', '馀': '餘', '疗': '療', '理': '理', '归': '歸',
+        '饰': '飾', '馀': '餘', '疗': '療', '理': '理', '歸': '歸',
         '灶': '竈'
     };
     let result = '';
@@ -93,12 +99,11 @@ function getLunarData(date) {
     };
 }
 
-// II. 時辰吉凶數據擷取 
+// II. 時辰吉凶數據擷取 & 生成
 function getHourAuspiceData(date) { 
     return getLunarData(date).hourAuspice; 
 }
 
-// III. 時辰吉凶表格生成
 function generateHourAuspiceContent(data) { 
     if (!data || data.length === 0) return '';
     
@@ -115,7 +120,7 @@ function generateHourAuspiceContent(data) {
     </div>`;
 }
 
-// IV. 天氣 API (使用 openweathermap.org/forecast)
+// III. 天氣 API 
 async function fetchWeatherForecast(lat, lon, cityName) { 
     const forecast_url = `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=metric&lang=zh_tw`;
     try {
@@ -156,7 +161,7 @@ async function fetchWeatherForecast(lat, lon, cityName) {
     }
 }
 
-// V. 時鐘與小月曆
+// IV. 時鐘與小月曆
 function startClock() { 
     if (clockInterval) clearInterval(clockInterval);
     const updateTime = () => {
@@ -183,7 +188,7 @@ function generateMiniCalendar(date) {
     
     const firstDayOfWeek = new Date(year, month, 1).getDay();
     const daysInMonth = new Date(year, month + 1, 0).getDate();
-    const weekdays = ['日', '一', '二', '三', '四', '五', '六'];
+    const weekdays = WEEKDAYS_CHINESE;
     let html = '';
 
     html += `<table style="border-collapse: collapse; font-size: 1em; text-align: center;">`;
@@ -222,13 +227,13 @@ function generateMiniCalendar(date) {
     return html;
 }
 
-// VI. 日期控制函式 (主日曆/小月曆共用)
+// V. 日期控制函式 (主日曆/小月曆共用)
 function shiftDate(days) { 
     currentDisplayDate.setDate(currentDisplayDate.getDate() + days);
     updateCalendar(currentDisplayDate);
 }
 
-// VII. 新增：生成年/月下拉選單
+// VI. 新增：生成年/月下拉選單
 function generateMiniCalendarHeader(date) {
     const currentYear = date.getFullYear();
     const currentMonth = date.getMonth() + 1; // 1-indexed
@@ -258,7 +263,7 @@ function generateMiniCalendarHeader(date) {
     </div>`;
 }
 
-// VIII. 新增：處理年/月選擇器變更
+// VII. 新增：處理年/月選擇器變更
 window.handleMiniCalendarSelection = function() {
     const yearSelect = document.getElementById('mini-calendar-year');
     const monthSelect = document.getElementById('mini-calendar-month');
@@ -277,12 +282,13 @@ window.handleMiniCalendarSelection = function() {
 }
 
 
-// IX. 核心渲染邏輯 (調整順序與結構)
+// VIII. 核心渲染邏輯 (調整順序與結構)
 function renderPageContent(date, weather, quote) {
     let content = '';
     const currentYear = date.getFullYear();
     const lunarYearInfo = typeof Solar !== 'undefined' ? Solar.fromDate(date).getLunar().getYearInGanZhi() : '';
     const zodiacEmoji = getChineseZodiacEmoji(currentYear); 
+    const dayIndex = date.getDay();
 
     // 1. 頂部資訊 (年與歲次)
     content += `<div class="top-info"><span class="top-info-left">${currentYear - 1911}年 歲次${lunarYearInfo} ${zodiacEmoji}</span><span class="top-info-right">${currentYear}</span></div>`;
@@ -291,21 +297,21 @@ function renderPageContent(date, weather, quote) {
     let lunarHtml = `${lunarData.month}<br>${lunarData.day}`;
     if (lunarData.jieqi) lunarHtml += `<br>(${simplifiedToTraditional(lunarData.jieqi)})`; 
     
-    const weekdays = ['日', '一', '二', '三', '四', '五', '六'];
-    const dayOfWeek = weekdays[date.getDay()];
-    const monthShort = (date.getMonth() + 1).toString().padStart(2, '0');
+    const monthChineseName = MONTH_CHINESE[date.getMonth()];
+    const monthEnglishName = MONTH_NAMES[date.getMonth()];
+    // 星期資訊 (用於小月曆下方)
+    const dayOfWeekChinese = `星期${WEEKDAYS_CHINESE[dayIndex]}`;
+    const dayOfWeekEnglish = WEEKDAYS_ENGLISH[dayIndex];
 
-    // 2. 日期切換按鈕 (主日曆切換)
-    content += `<div class="date-shift-wrapper">
-        <button id="prev-day-btn" class="shift-btn date-shift-top"> &#x23EA; </button>
-        <button id="next-day-btn" class="shift-btn date-shift-top"> &#x23E9; </button>
-    </div>`;
+    // 2. 移除頂部換日按鈕 (原 date-shift-wrapper)
 
     // 3. 主日期區塊 
     content += `<div class="main-date-container">
         <div class="lunar-badge">${lunarHtml}</div>
         <div class="date-number-wrapper"><div class="big-date-number">${date.getDate()}</div></div>
-        <div class="month-info"><div class="month-short">${monthShort}</div><div class="month-long">星期${dayOfWeek}</div></div>
+        <div class="month-info">
+            <div class="month-short">${monthChineseName}月 / ${monthEnglishName}</div>
+            </div>
     </div>`;
 
     // 4. 宜/忌 區塊 (左右並列)
@@ -334,6 +340,10 @@ function renderPageContent(date, weather, quote) {
                 <button id="prev-day-mini-btn" class="shift-btn day-shift-mini"> &#x23EA; </button>
                 <button id="next-day-mini-btn" class="shift-btn day-shift-mini"> &#x23E9; </button>
             </div>
+            <div class="mini-calendar-weekday">
+                <span class="weekday-cn">${dayOfWeekChinese}</span>
+                <span class="weekday-en">${dayOfWeekEnglish}</span>
+            </div>
         </div>
         
     </div>`;
@@ -343,9 +353,7 @@ function renderPageContent(date, weather, quote) {
 
     PAGE_CONTAINER.innerHTML = content;
     
-    // 綁定所有按鈕
-    document.getElementById('prev-day-btn').onclick = () => shiftDate(-1);
-    document.getElementById('next-day-btn').onclick = () => shiftDate(1);
+    // 綁定按鈕 (只剩下小月曆下方的換日按鈕)
     document.getElementById('prev-day-mini-btn').onclick = () => shiftDate(-1);
     document.getElementById('next-day-mini-btn').onclick = () => shiftDate(1);
     
