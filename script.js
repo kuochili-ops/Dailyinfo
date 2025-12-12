@@ -306,17 +306,10 @@ function renderPageContent(date, weather, quote) {
     content += generateHourAuspiceTable(hourAuspiceData);
 
 
-    // 5. 每日語錄 或 現在時刻 
-    if (quote) {
-        content += `<div style="margin-top: 20px; padding: 10px; border: 1px dashed #ccc; background-color: #f9f9f9; font-size: 0.9em; color: #555; min-height: 50px; display: flex; align-items: center; justify-content: center; text-align: center; font-style: italic;">
-            "${quote}"
-        </div>`;
-    } else {
-        // 時鐘
-        content += `<div style="margin-top: 20px; padding: 10px; border: 1px dashed #ccc; background-color: #f9f9f9; font-size: 2.0em; font-weight: bold; color: #333; min-height: 50px; display: flex; align-items: center; justify-content: center; text-align: center;">
+   // 時鐘
+   content += `<div style="margin-top: 20px; padding: 10px; border: 1px dashed #ccc; background-color: #f9f9f9; font-size: 2.0em; font-weight: bold; color: #333; min-height: 50px; display: flex; align-items: center; justify-content: center; text-align: center;">
             <span id="live-clock">--:--:--</span>
         </div>`;
-    }
 
     // 6. 縣市天氣 
     content += `<div style="padding: 15px; text-align: center; font-size: 0.9em; color: #666;">
