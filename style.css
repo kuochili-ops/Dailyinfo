@@ -85,12 +85,12 @@ body {
     text-align: center;
 }
 .big-date-number {
-    /* *** 修正點：再次加大字體，減少行高，模擬高長比例 *** */
-    font-size: 5.5em; /* 增大字體 */
+    /* *** 修正點：增大字體，減少行高，模擬高長比例 *** */
+    font-size: 6.5em; /* 增大字體 */
     font-weight: 900; 
     color: #333;
-    line-height: 0.9; /* 減少行高，使數字更緊湊、長高 */
-    letter-spacing: -2px; /* 稍微減少字距，使數字更集中 */
+    line-height: 0.8; /* 減少行高，使數字更緊湊、長高 */
+    letter-spacing: -3px; /* 稍微減少字距 */
 }
 .weekday-below-date { 
     font-size: 1em;
@@ -120,7 +120,7 @@ body {
 
 
 /* ==================================================\
-   *** 日期切換按鈕 (保持上次調整，大尺寸/全白背景) ***
+   *** 日期切換按鈕 (調整大小與透明度) ***
    ================================================== */
 .date-shift-wrapper {
     position: absolute;
@@ -134,17 +134,18 @@ body {
 }
 
 .shift-btn {
+    /* *** 修正點：尺寸增大，背景使用純白提高透明度 *** */
     background: #fff; 
     border: 1px solid #ccc;
     border-radius: 50%;
-    width: 35px; 
-    height: 35px; 
-    line-height: 35px;
+    width: 40px; /* 增大 */
+    height: 40px; /* 增大 */
+    line-height: 40px;
     text-align: center;
-    font-size: 1.4em; 
+    font-size: 1.6em; /* 增大圖示 */
     color: #666;
     cursor: pointer;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
     transition: all 0.15s;
     pointer-events: auto; 
 }
