@@ -42,7 +42,7 @@ body {
 .top-info {
     display: flex;
     justify-content: space-between;
-    padding: 5px 15px 0 15px; /* 貼近日期切換按鈕 */
+    padding: 5px 15px 0 15px; 
     font-size: 0.8em;
     color: #999;
 }
@@ -57,7 +57,7 @@ body {
    ================================================== */
 .date-shift-wrapper {
     text-align: right;
-    padding: 0 15px 5px 15px; /* 貼近上下區塊 */
+    padding: 0 15px 5px 15px; 
 }
 
 .shift-btn {
@@ -232,7 +232,7 @@ body {
    *** 時辰吉凶表 (最底部) ***
    ================================================== */
 .hour-auspice-container {
-    margin: 15px 15px 20px 15px; /* 底部間距 */
+    margin: 15px 15px 20px 15px; 
     padding: 10px 0; 
     text-align: center;
     font-size: 0.9em;
