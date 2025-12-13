@@ -1,9 +1,9 @@
 /* ====================================================================
-   時辰吉凶區域 (Flexbox 左右並列佈局)
+   時辰吉凶區域 (Flexbox 左右並列佈局 - 優化版)
    ==================================================================== */
 .hour-auspice-container {
     width: 100%;
-    margin-top: 15px;
+    margin-top: 20px;
     padding: 10px 0;
     border-top: 2px solid #004d99;
     padding-top: 15px;
@@ -16,28 +16,26 @@
     font-size: 1.1em; 
     font-weight: 500;
     padding: 0;
-    /* 確保在小螢幕上可以換行 */
-    flex-wrap: wrap;
+    flex-wrap: wrap; /* 允許在小螢幕上換行 */
+    align-items: stretch; /* 讓兩個區塊高度一致，視覺更美觀 */
 }
 
 /* 讓吉時和凶時各自佔據一半空間，並確保文字靠左 */
 .auspice-good,
 .auspice-bad {
-    display: flex; /* 讓內容靠左對齊 */
-    flex-direction: column; 
+    display: block; /* 簡化為 Block，內容是單行文字 */
     
     /* 核心佈局：讓兩者平均分配剩餘空間 */
     flex: 1 1 45%; 
-    min-width: 250px; /* 設定最小寬度，防止過度擠壓 */
+    min-width: 250px; /* 設定最小寬度 */
     
     margin: 5px 0; 
-    padding: 5px 8px; 
+    padding: 8px 10px; /* 增加內邊距 */
     border-radius: 5px;
     
     text-align: left; /* 確保區塊內文字靠左 */
     box-sizing: border-box; 
     
-    /* 清除所有 !important 避免干擾 */
     float: none;
 }
 
@@ -51,9 +49,8 @@
     background-color: #cc0000; /* 凶險色 */
 }
 
-/* 分隔符在左右並列時不再需要，保持隱藏 */
 .auspice-separator {
-    display: none; 
+    display: none; /* 分隔符隱藏 */
 }
 
 
@@ -61,7 +58,6 @@
    響應式調整：在小螢幕上退回垂直堆疊
    ==================================================================== */
 @media (max-width: 600px) {
-    /* 當螢幕較窄時，讓吉時和凶時強制佔滿一行，退回垂直堆疊 */
     .hour-auspice-text {
         flex-direction: column;
         gap: 0;
@@ -70,8 +66,7 @@
     .auspice-good,
     .auspice-bad {
         flex: none;
-        min-width: 100%;
         width: 100%;
-        margin: 5px 0;
+        min-width: 100%;
     }
 }
