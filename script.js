@@ -1,5 +1,5 @@
 // ====================================================================
-// 專案名稱：極簡日曆儀表板 (時辰吉凶強制更新版)
+// 專案名稱：極簡日曆儀表板 (最終穩定初始化版)
 // ====================================================================
 
 const PAGE_CONTAINER = document.getElementById('calendar-page-container');
@@ -9,29 +9,36 @@ const API_KEY = 'Dcd113bba5675965ccf9e60a7e6d06e5';
 let currentDisplayDate = new Date(); 
 let clockInterval = null;
 
+// 將所有城市都列出，避免索引錯誤
 const TAIWAN_CITIES = [
     { name: '臺北市', lat: 25.0330, lon: 121.5654 }, { name: '新北市', lat: 25.0139, lon: 121.4552 }, 
     { name: '桃園市', lat: 24.9961, lon: 121.3129 }, { name: '臺中市', lat: 24.1478, lon: 120.6728 }, 
-    { name: '臺南市', lat: 22.9909, lon: 120.2132 }, { name: '高雄市', lat: 22.6273, lon: 120.3014 }
+    { name: '臺南市', lat: 22.9909, lon: 120.2132 }, { name: '高雄市', lat: 22.6273, lon: 120.3014 },
+    { name: '基隆市', lat: 25.1276, lon: 121.7392 }, { name: '新竹市', lat: 24.8037, lon: 120.9669 }, 
+    { name: '嘉義市', lat: 23.4841, lon: 120.4497 }, { name: '宜蘭縣', lat: 24.7577, lon: 121.7533 }, 
+    { name: '花蓮縣', lat: 23.9730, lon: 121.6030 }, { name: '屏東縣', lat: 22.6738, lon: 120.4851 }, 
+    { name: '臺東縣', lat: 22.7505, lon: 121.1518 }
 ];
 
-// --- 核心計算：根據當日農曆物件計算時辰吉凶 ---
-function calculateHourAuspice(lunar) {
-    const hours = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥'];
-    // 黃道六神（吉）：青龍、明堂、金匱、天德、玉堂、司命
-    const luckyGods = ['青龍', '明堂', '金匱', '天德', '玉堂', '司命'];
-    
-    let good = [];
-    let bad = [];
+const WEEKDAYS_CHINESE = ['日', '一', '二', '三', '四', '五', '六'];
+const MONTH_CHINESE = ['一', '二', '三', '四', '五', '六', '七', '八', '九', '十', '十一', '十二'];
+const MONTH_NAMES_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
-    // 強制對 12 個時辰進行輪詢計算
-    hours.forEach(h => {
-        // 透過 getTimeZhiShen 取得該時辰對應當日日柱的神煞
-        const god = lunar.getTimeZhiShen(h + '時');
+// --- 核心計算：時辰吉凶 ---
+function calculateHourAuspice(lunar) {
+    if (typeof lunar.getTimes !== 'function') return { good: '載入中', bad: '載入中' };
+    
+    const luckyGods = ['青龍', '明堂', '金匱', '天德', '玉堂', '司命'];
+    let good = [], bad = [];
+    
+    lunar.getTimes().forEach(t => {
+        const zhi = t.getZhi();      
+        const god = t.getZhiShen();  
+        
         if (luckyGods.includes(god)) {
-            good.push(h);
+            good.push(zhi);
         } else {
-            bad.push(h);
+            bad.push(zhi);
         }
     });
 
@@ -41,14 +48,12 @@ function calculateHourAuspice(lunar) {
     };
 }
 
+// --- 農曆數據處理 ---
 function getLunarData(date) { 
-    if (typeof Solar === 'undefined') return { month: '農曆', day: '載入中', yi: '', ji: '', hourAuspice: {good:'--', bad:'--'} };
+    if (typeof Solar === 'undefined') return { month: '農曆', day: '載入中', yi: '載入中', ji: '載入中', ganzhi: '載入中', hourAuspice: {good:'載入中', bad:'載入中'} };
     
-    // 取得當前日期的農曆物件
     const lunar = Solar.fromDate(date).getLunar();
-    
-    // 立即計算該日期的時辰吉凶
-    const auspice = calculateHourAuspice(lunar);
+    const auspice = calculateHourAuspice(lunar); 
 
     return {
         month: lunar.getMonthInChinese() + '月',
@@ -63,18 +68,47 @@ function getLunarData(date) {
 
 function simplifiedToTraditional(text) {
     if (!text) return '';
-    const map = { '开': '開', '动': '動', '修': '修', '造': '造', '谢': '謝', '盖': '蓋', '纳': '納', '結': '結', '办': '辦', '迁': '遷', '进': '進', '习': '習', '医': '醫', '启': '啟', '会': '會', '備': '備', '园': '園', '買': '買', '賣': '賣', '發': '發', '設': '設', '壇': '壇', '飾': '飾' };
+    const map = { '开': '開', '动': '動', '修': '修', '造': '造', '谢': '謝', '盖': '蓋', '納': '納', '結': '結', '办': '辦', '遷': '遷', '進': '進', '習': '習', '醫': '醫', '啟': '啟', '會': '會', '備': '備', '園': '園', '買': '買', '賣': '賣', '發': '發', '設': '設', '壇': '壇', '飾': '飾', '馀': '餘', '療': '療', '理': '理', '歸': '歸', '灶': '竈' };
     return text.split('').map(c => map[c] || c).join('');
 }
 
-// --- 渲染畫面 (確保 UI 內容與邏輯同步) ---
+// --- 天氣 API 呼叫 (確保容錯) ---
+async function fetchWeatherForecast(lat, lon, cityName) { 
+    try {
+        const url = `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=metric&lang=zh_tw`;
+        const response = await fetch(url);
+        const data = await response.json();
+        if (data.cod != 200) throw new Error("API response error: " + data.message);
+        
+        let maxT = -Infinity, minT = Infinity, description = "載入中";
+        
+        // 確保 data.list 有數據
+        if (data.list && data.list.length > 0) {
+            description = data.list[0].weather[0].description;
+            const todayStr = new Date().toDateString();
+            
+            data.list.forEach(i => {
+                 if (new Date(i.dt_txt).toDateString() === todayStr) {
+                     maxT = Math.max(maxT, i.main.temp_max);
+                     minT = Math.min(minT, i.main.temp_min);
+                 }
+             });
+        }
+        
+        const tempRange = (minT !== Infinity && maxT !== -Infinity) ? `${Math.round(minT)}°C ~ ${Math.round(maxT)}°C` : 'N/A';
+
+        return { description: description, temperature: tempRange, city: cityName };
+    } catch (e) { 
+        console.error("Weather API Error:", e.message);
+        return { description: "連線錯誤", temperature: "--°C", city: cityName };
+    }
+}
+
+// --- 渲染畫面 (使用完整的天氣結構) ---
 function renderPageContent(date, weather) {
     const lunar = getLunarData(date);
     const dayIdx = date.getDay();
-    const WEEKDAYS_CHINESE = ['日', '一', '二', '三', '四', '五', '六'];
-    const MONTH_CHINESE = ['一', '二', '三', '四', '五', '六', '七', '八', '九', '十', '十一', '十二'];
-    const MONTH_NAMES_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-
+    
     PAGE_CONTAINER.innerHTML = `
     <div class="top-info">
         <span>${date.getFullYear()-1911}年 歲次${lunar.ganzhi}</span>
@@ -133,16 +167,21 @@ function renderPageContent(date, weather) {
     startClock();
 }
 
-// --- 更新機制 (先渲染 UI 再抓天氣，避免卡死) ---
+// --- 更新機制：核心隔離，僅更新 DOM ---
 async function updateCalendar(date) {
-    const [lat, lon] = CITY_SELECTOR.value.split(',');
-    const cityName = CITY_SELECTOR.options[CITY_SELECTOR.selectedIndex].textContent;
+    const selectedCityIndex = CITY_SELECTOR.selectedIndex;
+    const currentCityData = TAIWAN_CITIES[selectedCityIndex] || TAIWAN_CITIES[0]; // 確保總是有數據
+    const [lat, lon] = [currentCityData.lat, currentCityData.lon];
+    const cityName = currentCityData.name;
+
+    // 1. 立即渲染日曆內容（使用載入中的天氣資訊）
+    // 這樣可以保證畫面立即出現，不會因網路等待而空白
+    renderPageContent(date, { city: cityName, description: "載入中...", temperature: "--°C" });
     
-    // 1. 立即更新日曆內容（包含新的吉凶時辰）
-    renderPageContent(date, { city: cityName, description: "載入中", temperature: "" });
-    
-    // 2. 異步抓取天氣，抓完再補上
+    // 2. 異步抓取天氣
     const weather = await fetchWeatherForecast(lat, lon, cityName);
+    
+    // 3. 抓完後，僅更新天氣區塊
     const weatherBox = document.getElementById('weather-box');
     if (weatherBox) {
         weatherBox.innerHTML = `<span class="weather-city-name">${weather.city} 天氣:</span> ${weather.description} <span class="weather-temp">${weather.temperature}</span>`;
@@ -163,7 +202,7 @@ function generateMiniCalendar(date) {
     const year = date.getFullYear(), month = date.getMonth();
     const firstDay = new Date(year, month, 1).getDay();
     const daysInMonth = new Date(year, month + 1, 0).getDate();
-    let html = '<table><thead><tr>' + ['日','一','二','三','四','五','六'].map(d=>`<th style="color:${d==='日'?'#cc0000':'#333'};">${d}</th>`).join('') + '</tr></thead><tbody><tr>';
+    let html = '<table><thead><tr>' + WEEKDAYS_CHINESE.map(d=>`<th style="color:${d==='日'?'#cc0000':'#333'};">${d}</th>`).join('') + '</tr></thead><tbody><tr>';
     let cells = 0;
     for (let i = 0; i < firstDay; i++) { html += '<td></td>'; cells++; }
     for (let d = 1; d <= daysInMonth; d++) {
@@ -183,17 +222,17 @@ window.handleMiniCalendarSelection = function() {
     updateCalendar(currentDisplayDate);
 }
 
-async function fetchWeatherForecast(lat, lon, cityName) { 
-    try {
-        const response = await fetch(`https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=metric&lang=zh_tw`);
-        const data = await response.json();
-        const item = data.list[0];
-        return { description: item.weather[0].description, temperature: `${Math.round(item.main.temp)}°C`, city: cityName };
-    } catch (e) { return { description: "暫無數據", temperature: "--°C", city: cityName }; }
-}
-
+// --- 程式入口點：確保初始化穩定 ---
 document.addEventListener('DOMContentLoaded', () => {
+    // 填充城市選擇器
     TAIWAN_CITIES.forEach(c => CITY_SELECTOR.add(new Option(c.name, `${c.lat},${c.lon}`)));
+    
+    // 首次載入時，將選擇器預設為臺北市
+    CITY_SELECTOR.value = `${TAIWAN_CITIES[0].lat},${TAIWAN_CITIES[0].lon}`;
+
+    // 綁定事件
     CITY_SELECTOR.onchange = () => updateCalendar(currentDisplayDate);
+    
+    // 首次呼叫：啟動日曆
     updateCalendar(currentDisplayDate);
 });
