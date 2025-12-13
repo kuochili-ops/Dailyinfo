@@ -1,6 +1,6 @@
 // ====================================================================
-// 專案名稱：極簡日曆儀表板 (最終結構與圖片佈局版 - 已修復 SyntaxError)
-// 修正重點：修復 Uncaught SyntaxError: Unexpected token '}' 錯誤。
+// 專案名稱：極簡日曆儀表板 (最終結構與圖片佈局版 - 已移除圖片元素)
+// 修正重點：從 renderPageContent 函式中移除 <div class="image-column"> HTML 元素。
 // ====================================================================
 
 const PAGE_CONTAINER = document.getElementById('calendar-page-container');
@@ -76,6 +76,7 @@ function getDynamicAuspiceHours(date) {
         const branchIndex = (startBranchIndex + i) % 12;
         const branchName = HOUR_BRANCHES[branchIndex];
         
+        // 這是簡易判斷吉凶的邏輯，可能需要根據實際農民曆規則調整
         if (i % 2 === 0) {
             goodHours.push(branchName);
         } else {
@@ -139,7 +140,14 @@ function generateMiniCalendar(date) {
         html += `<td style="${style}" data-day="${d}" onclick="handleMiniCalendarClick(${year}, ${month}, ${d})">${d}</td>`;
         cells++;
     }
-    html += '</tr></tbody></table>';
+    // 補足表格行尾空格
+    while (cells % 7 !== 0) {
+        html += '<td></td>';
+        cells++;
+    }
+    if (cells % 7 === 0 && cells !== 0) html += '</tr>'; // 結束最後一行 (如果需要)
+    
+    html += '</tbody></table>';
     return html;
 }
 
@@ -181,10 +189,6 @@ function renderPageContent(date, lunar, weather, auspiceHours) {
             </div>
         </div>
         
-        <div class="image-column">
-            <img src="IMG_5998.jpeg" alt="自定義圖片" class="custom-image">
-        </div>
-        
         <div class="mini-calendar-container">
             <div class="mini-calendar-select-wrapper">
                 <select id="mini-calendar-year" onchange="handleMiniCalendarSelection()">${Array.from({length:21},(_,i)=>`<option value="${date.getFullYear()-10+i}" ${date.getFullYear()-10+i===date.getFullYear()?'selected':''}>${date.getFullYear()-10+i}年</option>`).join('')}</select>
@@ -218,8 +222,10 @@ async function updateCalendar(date) {
         
         const auspiceHours = getDynamicAuspiceHours(date);
 
+        // 首次渲染，天氣顯示為「載入中」
         renderPageContent(date, lunar, { city: cityName, description: "載入中", temperature: "" }, auspiceHours);
         
+        // 異步獲取並更新天氣
         const weather = await fetchWeatherForecast(lat, lon, cityName);
         
         const weatherBox = document.getElementById('weather-box');
@@ -227,20 +233,21 @@ async function updateCalendar(date) {
             weatherBox.innerHTML = `<span class="weather-city-name">${weather.city} 天氣:</span> ${weather.description} <span class="weather-temp">${weather.temperature}</span>`;
         }
 
+        // 更新迷你日曆表格
         const miniCalTable = document.querySelector('.mini-calendar-table');
         if (miniCalTable) {
             miniCalTable.innerHTML = generateMiniCalendar(date);
         }
     } catch (error) {
         console.error("更新日曆時發生嚴重錯誤:", error);
-        // 如果 lunar.js/solar.js 沒載入，會顯示這個錯誤
         PAGE_CONTAINER.innerHTML = '<div style="text-align: center; margin-top: 50px; color: #cc0000; font-weight: bold;">日曆載入失敗 (JS 錯誤)<br>錯誤: ' + error.message + '<br>提示: 請確認 lunar.js 和 solar.js 已正確載入。</div>';
     }
-} // <--- 258 行，updateCalendar 結束
+} 
 
 window.handleMiniCalendarSelection = function() {
     const y = document.getElementById('mini-calendar-year').value;
     const m = document.getElementById('mini-calendar-month').value;
+    // 設置年月時，保持日期不變，但要防止月份溢出
     currentDisplayDate.setFullYear(y);
     currentDisplayDate.setMonth(m);
     updateCalendar(currentDisplayDate);
@@ -252,9 +259,11 @@ window.handleMiniCalendarClick = function(year, month, day) {
 };
 
 document.addEventListener('DOMContentLoaded', () => {
+    // 填充城市選擇器
     TAIWAN_CITIES.forEach(c => CITY_SELECTOR.add(new Option(c.name, `${c.lat},${c.lon}`)));
     CITY_SELECTOR.onchange = () => updateCalendar(currentDisplayDate);
     
+    // 初始化日曆
     updateCalendar(currentDisplayDate);
 }); 
 // 檔案結束
