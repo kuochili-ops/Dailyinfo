@@ -1,5 +1,5 @@
 /* ====================================================================
-   style.css - 極簡日曆 dashboard 樣式 (最終並排修正版)
+   style.css - 極簡日曆 dashboard 樣式 (包含三欄圖片佈局修正)
    ==================================================================== */
 
 body {
@@ -35,6 +35,194 @@ body {
 }
 
 /* 主日期 */
+.main-date-container {
+    display: flex; 
+    align-items: center; 
+    justify-content: space-between;
+    padding: 10px 15px; 
+    border-bottom: 1px solid #eee; 
+    min-height: 120px;
+}
+.lunar-badge { 
+    width: 25%; 
+    text-align: center; 
+    color: #004d99; 
+    font-weight: bold; 
+    border-right: 1px dashed #ccc; 
+}
+.center-date-info { 
+    flex-grow: 1; 
+    text-align: center; 
+}
+.big-date-number { 
+    font-size: 6em; 
+    font-weight: 900; 
+    line-height: 0.8; 
+    transform: scaleY(1.3); 
+    color: #333; 
+}
+.main-day-of-week { 
+    font-size: 1.2em; 
+    font-weight: bold; 
+    color: #e60000; 
+    margin-top: 25px; 
+}
+.month-info { 
+    width: 25%; 
+    text-align: right; 
+    color: #666; 
+    font-size: 0.9em; 
+}
+
+/* 宜忌 */
+.yi-ji-section { 
+    display: flex; 
+    border-bottom: 1px solid #eee; 
+}
+.yi-section, .ji-section { 
+    flex: 1; 
+    padding: 10px 15px; 
+    font-weight: bold; 
+    font-size: 0.9em; 
+}
+.yi-section { 
+    color: #e60000; 
+    border-right: 1px dashed #eee; 
+}
+.ji-section { 
+    color: #333; 
+}
+
+/* 底部欄位 - 三欄佈局 (天氣/時鐘 | 圖片 | 小月曆) */
+.bottom-row-container { 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: flex-start; /* 讓三欄頂端對齊 */
+    padding: 15px; 
+    border-bottom: 1px solid #eee; 
+}
+
+/* 1. 左側資訊欄 (時鐘/天氣) */
+.left-info-column { 
+    width: 30%; /* 佔據約 30% 寬度 */
+    display: flex; 
+    flex-direction: column; 
+    min-width: 100px; 
+}
+.weather-section { 
+    font-size: 0.85em; 
+    color: #666; 
+    min-height: 45px; 
+}
+.clock-section { 
+    margin-top: 10px; 
+    border-top: 1px solid #eee; 
+    padding-top: 10px; 
+}
+#live-clock { 
+    font-size: 1.5em; 
+    color: #004d99; 
+    font-weight: bold; 
+    font-family: monospace; 
+}
+
+/* 2. 新增圖片欄位 */
+.image-column {
+    width: 30%; /* 圖片佔據約 30% */
+    max-height: 150px; /* 限制高度，與月曆對齊 */
+    overflow: hidden; 
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.custom-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* 圖片裁剪以適應容器，保持比例 */
+    display: block;
+}
+
+/* 3. 小月曆 */
+.mini-calendar-container { 
+    width: 35%; /* 佔據約 35% 寬度 */
+    font-size: 0.7em; 
+    border: 1px solid #eee; 
+    border-radius: 4px; 
+}
+.mini-calendar-select-wrapper { 
+    display: flex; 
+    background: #f7f7f7; 
+    padding: 2px; 
+}
+.mini-calendar-select-wrapper select { 
+    flex: 1; 
+    border: none; 
+    background: transparent; 
+}
+.mini-calendar-table table { 
+    width: 100%; 
+    text-align: center; 
+}
+.mini-calendar-footer { 
+    display: flex; 
+    justify-content: space-around; 
+    padding: 5px; 
+    border-top: 1px solid #eee; 
+    background: #fafafa; 
+}
+.shift-mini-btn { 
+    border: 1px solid #ccc; 
+    background: white; 
+    cursor: pointer; 
+    border-radius: 3px; 
+}
+
+/* 時辰吉凶 */
+.hour-auspice-container { 
+    padding: 10px 15px 20px 15px; 
+    border-top: 1px solid #eee; 
+}
+.hour-auspice-text {
+    display: flex; 
+    gap: 10px; 
+    font-size: 0.9em; 
+    font-weight: 500;
+    flex-wrap: wrap; 
+}
+.auspice-good,
+.auspice-bad {
+    flex: 1; 
+    padding: 8px 10px; 
+    border-radius: 5px;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.1); 
+    text-align: center; 
+}
+.auspice-good { 
+    color: white; 
+    background-color: #e60000; 
+}
+.auspice-bad { 
+    color: white; 
+    background-color: #333; 
+}
+/* 響應式調整 */
+@media (max-width: 350px) {
+    /* 在窄螢幕上將三欄轉為垂直堆疊 */
+    .bottom-row-container {
+        flex-direction: column;
+        gap: 10px;
+    }
+    .left-info-column, .image-column, .mini-calendar-container {
+        width: 100%;
+    }
+    .hour-auspice-text {
+        flex-direction: column;
+        gap: 8px;
+    }
+}/* 主日期 */
 .main-date-container {
     display: flex; 
     align-items: center; 
