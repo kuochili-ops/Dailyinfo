@@ -239,7 +239,7 @@ body {
 
 
 /* ====================================================================
-   時辰吉凶區域 (重點修正區：靠左對齊)
+   時辰吉凶區域 (最終排版修正：強制靠左)
    ==================================================================== */
 .hour-auspice-container {
     width: 100%;
@@ -251,26 +251,24 @@ body {
 }
 
 .hour-auspice-text {
-    /* 使用 Flexbox 讓吉時和凶時在同一行 */
-    display: flex;
-    justify-content: flex-start; /* 內容從左側開始對齊 */
-    align-items: flex-start;
-    flex-wrap: wrap; /* 允許換行 */
+    /* 使用 Block 元素清除浮動，並包含時辰行 */
+    display: block; 
     font-size: 1.1em; 
     font-weight: 500;
-    padding-left: 5px; /* 給予一點左側空間 */
+    padding: 0 5px; /* 給予一點左右空間 */
 }
 
+/* 讓吉時和凶時並排 */
 .auspice-good,
 .auspice-bad {
-    display: flex; 
-    margin: 3px 3px; /* 縮小外部間隔 */
-    padding: 3px 6px; /* 縮小內部間隔 */
+    display: block; /* 確保能控制寬度 */
+    float: left; /* 【關鍵修正】：讓它們並排浮動 */
+    width: calc(50% - 10px); /* 各佔 50% 減去間距 */
+    margin: 3px 5px; /* 給予間距 */
+    padding: 3px 6px; 
     border-radius: 5px;
-    align-items: center;
-    flex-grow: 1; 
-    flex-shrink: 1; 
-    min-width: 45%; /* 確保在寬螢幕下是並排的 */
+    /* 確保文字內容能夠被換行，並從左側開始 */
+    text-align: left; 
 }
 
 .auspice-good {
@@ -284,9 +282,32 @@ body {
 }
 
 .auspice-separator {
-    display: none; /* 在窄螢幕上隱藏分隔符 */
+    display: none; 
 }
 
+/* 清除浮動：確保後續內容不會跑位 */
+.hour-auspice-text::after {
+    content: "";
+    display: table;
+    clear: both;
+}
+
+/* ====================================================================
+   響應式設計 (RWD) - 針對手機版面優化靠左排版
+   ==================================================================== */
+@media (max-width: 550px) {
+    .auspice-good,
+    .auspice-bad {
+        width: 100%; /* 垂直堆疊時，各佔滿整行 */
+        float: none; /* 【關鍵修正】：移除浮動，讓它們自然垂直排列 */
+        margin: 5px 0;
+        text-align: left; /* 再次確保文字靠左 */
+    }
+    /* 移除父容器的 padding，讓子元素靠到最左邊 */
+    .hour-auspice-text {
+        padding: 0; 
+    }
+}
 
 /* ====================================================================
    響應式設計 (RWD) - 確保小螢幕可讀性
