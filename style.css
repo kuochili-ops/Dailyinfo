@@ -1,5 +1,5 @@
 /* ====================================================================
-   style.css - 極簡日曆 dashboard 樣式 (最終優化並排版)
+   style.css - 極簡日曆 dashboard 樣式 (最終並排修正版)
    ==================================================================== */
 
 body {
@@ -74,7 +74,7 @@ body {
     font-size: 0.9em; 
 }
 
-/* 宜忌 (顏色修正: 宜紅, 忌黑) */
+/* 宜忌 */
 .yi-ji-section { 
     display: flex; 
     border-bottom: 1px solid #eee; 
@@ -86,11 +86,11 @@ body {
     font-size: 0.9em; 
 }
 .yi-section { 
-    color: #e60000; /* 宜字體紅色 */
+    color: #e60000; 
     border-right: 1px dashed #eee; 
 }
 .ji-section { 
-    color: #333; /* 忌字體黑色 */
+    color: #333; 
 }
 
 /* 底部欄位 */
@@ -158,21 +158,15 @@ body {
 }
 
 /* ====================================================================
-   時辰吉凶 (卡片左右並排，吉紅底，凶黑底)
+   時辰吉凶 (最終並排修正)
    ==================================================================== */
 .hour-auspice-container { 
     padding: 10px 15px 20px 15px; 
-    text-align: left; 
     border-top: 1px solid #eee; 
 }
-.hour-auspice-container h3 {
-    font-size: 1.1em;
-    font-weight: bold;
-    color: #333;
-    margin-bottom: 10px;
-}
+
 .hour-auspice-text {
-    /* 核心：啟用 Flexbox 實現左右並排 */
+    /* 關鍵：啟用 Flexbox 實現左右並排 */
     display: flex; 
     gap: 10px; 
     font-size: 0.9em; 
@@ -183,12 +177,12 @@ body {
 /* 吉時/凶時卡片樣式 */
 .auspice-good,
 .auspice-bad {
-    /* 讓兩者平均分配空間 (左右並列) */
-    flex: 1 1 48%; 
-    min-width: 150px; 
+    /* 關鍵：讓兩者平均分配空間 */
+    flex: 1; 
     padding: 8px 10px; 
     border-radius: 5px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05); 
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.1); 
+    text-align: center; 
 }
 
 /* 吉時 -> 紅色背景，白色文字 */
@@ -203,11 +197,6 @@ body {
     background-color: #333; 
 }
 
-/* 移除分隔符樣式，因為 HTML 結構中已經移除分隔符 */
-.auspice-separator {
-    display: none; 
-}
-
 /* 響應式調整：當視窗小於 350px 時，轉為垂直堆疊 */
 @media (max-width: 350px) {
     .hour-auspice-text {
@@ -218,6 +207,5 @@ body {
     .auspice-bad {
         flex: none;
         width: 100%;
-        min-width: 100%;
     }
 }
