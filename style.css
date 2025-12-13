@@ -7,7 +7,7 @@ body {
     color: #333;
     display: flex;
     justify-content: center;
-    align-items: flex-start; /* 讓內容從頂部開始 */
+    align-items: flex-start;
     min-height: 100vh;
     margin: 0;
     padding: 20px;
@@ -19,7 +19,7 @@ body {
     border-radius: 15px;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
     width: 100%;
-    max-width: 800px; /* 限制最大寬度以保持美觀 */
+    max-width: 800px; 
     padding: 30px;
     box-sizing: border-box;
     display: flex;
@@ -27,7 +27,7 @@ body {
 }
 
 /* ====================================================================
-   頂部資訊：年號與年份
+   頂部資訊與主日期
    ==================================================================== */
 .top-info {
     display: flex;
@@ -39,23 +39,18 @@ body {
     border-bottom: 1px solid #eee;
     padding-bottom: 10px;
 }
-
 .top-info span:last-child {
     font-size: 1.2em;
     font-weight: bold;
     color: #004d99;
 }
 
-/* ====================================================================
-   主日期區域
-   ==================================================================== */
 .main-date-container {
     display: flex;
     align-items: center;
     justify-content: space-around;
     padding: 10px 0;
 }
-
 .lunar-badge {
     background-color: #004d99;
     color: white;
@@ -65,30 +60,26 @@ body {
     text-align: center;
     line-height: 1.3;
     width: 100px;
-    flex-shrink: 0; /* 確保不被壓縮 */
+    flex-shrink: 0;
 }
-
 .center-date-info {
     display: flex;
     flex-direction: column;
     align-items: center;
     margin: 0 30px;
 }
-
 .big-date-number {
     font-size: 8em;
     font-weight: 800;
     line-height: 1;
     color: #222;
 }
-
 .main-day-of-week {
     font-size: 1.5em;
     font-weight: bold;
     color: #004d99;
     margin-top: -10px;
 }
-
 .month-info {
     font-size: 1.5em;
     color: #666;
@@ -113,22 +104,18 @@ body {
     border-radius: 10px;
     border: 1px solid #eee;
 }
-
 .yi-section, .ji-section {
     flex: 1;
     font-size: 1.1em;
     padding: 0 10px;
+    font-weight: bold;
 }
-
 .yi-section {
-    color: #1a7e1a; /* 吉利色 */
+    color: #1a7e1a;
     border-right: 1px solid #ddd;
-    font-weight: bold;
 }
-
 .ji-section {
-    color: #cc0000; /* 凶險色 */
-    font-weight: bold;
+    color: #cc0000;
 }
 
 /* ====================================================================
@@ -141,15 +128,12 @@ body {
     gap: 20px;
     margin-bottom: 20px;
 }
-
 .left-info-column {
     display: flex;
     flex-direction: column;
     flex: 1;
     gap: 20px;
 }
-
-/* 天氣 */
 .weather-section {
     background-color: #e0f7fa;
     color: #00796b;
@@ -162,27 +146,18 @@ body {
     font-weight: bold;
     color: #004d99;
 }
-.weather-temp {
-    font-weight: 700;
-    margin-left: 5px;
-}
-
-/* 時鐘 */
 .clock-section {
     background-color: #f0f4c3;
     padding: 15px;
     border-radius: 8px;
     text-align: center;
 }
-
 #live-clock {
     font-size: 2.5em;
     font-weight: 700;
     color: #333;
-    font-variant-numeric: tabular-nums; /* 確保數字等寬，避免跳動 */
+    font-variant-numeric: tabular-nums;
 }
-
-/* 小日曆 */
 .mini-calendar-container {
     width: 300px;
     background-color: #f9f9f9;
@@ -204,7 +179,6 @@ body {
     border: 1px solid #ccc;
     font-size: 0.9em;
 }
-
 .mini-calendar-table table {
     width: 100%;
     border-collapse: collapse;
@@ -218,9 +192,8 @@ body {
 }
 .mini-calendar-table td {
     padding: 5px 3px;
-    cursor: default; /* 禁用點擊效果 */
+    cursor: default;
 }
-
 .mini-calendar-footer {
     display: flex;
     justify-content: center;
@@ -241,9 +214,8 @@ body {
     background: #003366;
 }
 
-
 /* ====================================================================
-   時辰吉凶區域 (重點修正區)
+   時辰吉凶區域 (最終排版優化)
    ==================================================================== */
 .hour-auspice-container {
     width: 100%;
@@ -255,56 +227,55 @@ body {
 }
 
 .hour-auspice-text {
-    /* 確保所有內容在單行內（若空間不足則內部換行） */
-    display: block; 
-    font-size: 1.25em;
+    /* 使用 Flexbox 讓吉時和凶時在同一行 */
+    display: flex;
+    justify-content: center; 
+    align-items: flex-start;
+    flex-wrap: wrap; /* 允許在極窄螢幕上換行，但保持左右結構 */
+    font-size: 1.1em; 
     font-weight: 500;
-    line-height: 1.5; 
-    white-space: normal; /* 允許文字自動換行 */
 }
 
-/* 確保吉時、凶時及其分隔線在同一行內 */
+/* 確保吉時、凶時及其分隔線並排 */
 .auspice-good,
-.auspice-bad,
-.auspice-separator {
-    display: inline; 
+.auspice-bad {
+    display: flex; 
     margin: 0 5px;
-    padding: 0 8px;
-    border-radius: 3px;
+    padding: 3px 8px;
+    border-radius: 5px;
+    align-items: center;
+    flex-shrink: 1; /* 允許收縮 */
 }
 
 .auspice-good {
     color: white;
     background-color: #1a7e1a; /* 吉利背景色 */
+    min-width: 40%;
 }
 
 .auspice-bad {
     color: white;
     background-color: #cc0000; /* 凶險背景色 */
+    min-width: 40%;
 }
 
 .auspice-separator {
-    color: #666;
-    font-weight: normal;
+    display: none; /* 在手機上隱藏分隔符 */
 }
 
-
 /* ====================================================================
-   響應式設計 (RWD) - 適用於小螢幕 (例如手機)
+   響應式設計 (RWD) 
    ==================================================================== */
 @media (max-width: 768px) {
     #calendar-page-container {
         padding: 20px;
         max-width: 100%;
     }
-
     .main-date-container {
         flex-direction: column;
         text-align: center;
     }
-
-    .lunar-badge,
-    .month-info {
+    .lunar-badge, .month-info {
         width: auto;
         margin-bottom: 15px;
     }
@@ -314,22 +285,32 @@ body {
     .big-date-number {
         font-size: 6em;
     }
-
     .bottom-row-container {
         flex-direction: column;
     }
-    
     .left-info-column {
         flex: none;
         width: 100%;
     }
-
     .mini-calendar-container {
         width: 100%;
         margin-top: 15px;
     }
-    
+}
+
+/* 針對極窄手機螢幕 (小於 500px) 時辰調整 */
+@media (max-width: 500px) {
     .hour-auspice-text {
-        font-size: 1.1em;
+        flex-direction: column; /* 垂直堆疊 */
+        align-items: center;
+    }
+    .auspice-good,
+    .auspice-bad {
+        width: 90%;
+        margin: 5px 0;
+        justify-content: center;
+    }
+    .auspice-separator {
+        display: none; /* 繼續隱藏 */
     }
 }
