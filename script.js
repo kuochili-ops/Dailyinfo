@@ -1,6 +1,6 @@
 // ====================================================================
-// 專案名稱：極簡日曆儀表板 (時辰連動最終版)
-// =話：確保時辰吉凶隨日期變動
+// 專案名稱：極簡日曆儀表板 (時辰連動最終版：單行呈現)
+// 特色：確保時辰吉凶隨日期變動，並優化為單行呈現
 // ====================================================================
 
 const PAGE_CONTAINER = document.getElementById('calendar-page-container');
@@ -26,11 +26,11 @@ const WEEKDAYS_CHINESE = ['日', '一', '二', '三', '四', '五', '六'];
 
 function simplifiedToTraditional(text) {
     if (!text) return '';
-    const map = { '开': '開', '动': '動', '修': '修', '造': '造', '谢': '謝', '盖': '蓋', '纳': '納', '結': '結', '办': '辦', '迁': '遷', '进': '進', '习': '習', '医': '醫', '启': '啟', '会': '會', '備': '備', '园': '園', '买': '買', '卖': '賣', '发': '發', '設': '設', '坛': '壇', '饰': '飾', '馀': '餘', '疗': '療', '理': '理', '歸': '歸', '灶': '竈' };
+    const map = { '开': '開', '动': '動', '修': '修', '造': '造', '谢': '謝', '盖': '蓋', '纳': '納', '結': '結', '办': '辦', '迁': '遷', '进': '進', '习': '習', '医': '醫', '启': '啟', '会': '會', '備': '備', '園': '園', '买': '買', '卖': '賣', '发': '發', '設': '設', '坛': '壇', '饰': '飾', '馀': '餘', '疗': '療', '理': '理', '歸': '歸', '灶': '竈' };
     return text.split('').map(c => map[c] || c).join('');
 }
 
-// --- 【關鍵修正 1】重新定義時辰吉凶計算函式 ---
+// 時辰吉凶計算
 function calculateHourAuspice(lunar) {
     if (typeof lunar.getTimes !== 'function') return { good: '計算錯誤', bad: '檢查庫文件' };
     
@@ -54,12 +54,12 @@ function calculateHourAuspice(lunar) {
     };
 }
 
-// --- 【關鍵修正 2】確保 getLunarData 呼叫計算函式並回傳結果 ---
+// 獲取農曆數據 (包含時辰)
 function getLunarData(date) { 
     if (typeof Solar === 'undefined') return { month: '農曆', day: '載入中', yi: '', ji: '', jieqi: '', ganzhi: '', hourAuspice: {good: '載入中', bad: '載入中'} };
     
     const lunar = Solar.fromDate(date).getLunar();
-    const auspice = calculateHourAuspice(lunar); // 呼叫時辰計算
+    const auspice = calculateHourAuspice(lunar); 
 
     return {
         month: lunar.getMonthInChinese() + '月',
@@ -67,12 +67,10 @@ function getLunarData(date) {
         yi: simplifiedToTraditional(lunar.getDayYi().slice(0, 5).join(' ')), 
         ji: simplifiedToTraditional(lunar.getDayJi().slice(0, 5).join(' ')), 
         jieqi: lunar.getJieQi(),
-        ganzhi: lunar.getYearInGanZhi(), // 必須回傳 ganzhi
-        hourAuspice: auspice // 必須回傳時辰吉凶物件
+        ganzhi: lunar.getYearInGanZhi(), 
+        hourAuspice: auspice 
     };
 }
-
-// ... (fetchWeatherForecast, startClock, generateMiniCalendar 函式內容不變，省略以保持程式碼簡潔性)
 
 async function fetchWeatherForecast(lat, lon, cityName) { 
     const url = `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=metric&lang=zh_tw`;
@@ -120,7 +118,6 @@ function generateMiniCalendar(date) {
     return html;
 }
 
-// --- 【關鍵修正 3】確保 renderPageContent 取用動態數據 ---
 function renderPageContent(date, weather) {
     const dayIdx = date.getDay();
     const lunar = getLunarData(date);
@@ -188,13 +185,14 @@ function renderPageContent(date, weather) {
 async function updateCalendar(date) {
     const [lat, lon] = CITY_SELECTOR.value.split(',');
     const cityName = CITY_SELECTOR.options[CITY_SELECTOR.selectedIndex].textContent;
-    // 先渲染核心內容（包含動態時辰），天氣顯示「載入中」
+    
+    // 先渲染核心內容（包含動態時辰）
     renderPageContent(date, { city: cityName, description: "載入中", temperature: "" }); 
     
     // 等待天氣 API
     const weather = await fetchWeatherForecast(lat, lon, cityName);
     
-    // 抓完後，僅更新天氣區塊
+    // 只更新天氣 box
     const weatherBox = document.getElementById('weather-box');
     if (weatherBox) {
         weatherBox.innerHTML = `<span class="weather-city-name">${weather.city} 天氣:</span> ${weather.description} <span class="weather-temp">${weather.temperature}</span>`;
