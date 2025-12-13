@@ -1,215 +1,42 @@
-/* ====================================================================
-   style.css - 極簡日曆 dashboard 樣式 (最終並排修正版)
-   ==================================================================== */
+// ====================================================================
+// 專案名稱：極簡日曆儀表板 (最終清潔與並排修正版)
+// 修正重點：修復所有 SyntaxError，確保邏輯和 HTML 結構正確。
+// ====================================================================
 
-body {
-    font-family: 'Arial', sans-serif;
-    margin: 0; 
-    background-color: #f0f0f0;
-    display: flex; 
-    justify-content: center;
-}
-.calendar-card {
-    width: 100%; 
-    max-width: 400px; 
-    background: white;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.1); 
-    margin: 10px 0;
-}
-.city-selection-container { 
-    padding: 10px; 
-    background: #f7f7f7; 
-    text-align: center; 
-}
-#city-selector { 
-    padding: 8px; 
-    width: 90%; 
-}
+const PAGE_CONTAINER = document.getElementById('calendar-page-container');
+const CITY_SELECTOR = document.getElementById('city-selector');
+const API_KEY = 'Dcd113bba5675965ccf9e60a7e6d06e5'; 
 
-.top-info { 
-    display: flex; 
-    justify-content: space-between; 
-    padding: 5px 15px; 
-    font-size: 0.8em; 
-    color: #999; 
-}
+let currentDisplayDate = new Date(); 
+let clockInterval = null;
 
-/* 主日期 */
-.main-date-container {
-    display: flex; 
-    align-items: center; 
-    justify-content: space-between;
-    padding: 10px 15px; 
-    border-bottom: 1px solid #eee; 
-    min-height: 120px;
-}
-.lunar-badge { 
-    width: 25%; 
-    text-align: center; 
-    color: #004d99; 
-    font-weight: bold; 
-    border-right: 1px dashed #ccc; 
-}
-.center-date-info { 
-    flex-grow: 1; 
-    text-align: center; 
-}
-.big-date-number { 
-    font-size: 6em; 
-    font-weight: 900; 
-    line-height: 0.8; 
-    transform: scaleY(1.3); 
-    color: #333; 
-}
-.main-day-of-week { 
-    font-size: 1.2em; 
-    font-weight: bold; 
-    color: #e60000; 
-    margin-top: 25px; 
-}
-.month-info { 
-    width: 25%; 
-    text-align: right; 
-    color: #666; 
-    font-size: 0.9em; 
+const TAIWAN_CITIES = [
+    { name: '臺北市', lat: 25.0330, lon: 121.5654 }, { name: '新北市', lat: 25.0139, lon: 121.4552 }, 
+    { name: '桃園市', lat: 24.9961, lon: 121.3129 }, { name: '臺中市', lat: 24.1478, lon: 120.6728 }, 
+    { name: '臺南市', lat: 22.9909, lon: 120.2132 }, { name: '高雄市', lat: 22.6273, lon: 120.3014 },
+    { name: '基隆市', lat: 25.1276, lon: 121.7392 }, { name: '新竹市', lat: 24.8037, lon: 120.9669 }, 
+    { name: '嘉義市', lat: 23.4841, lon: 120.4497 }, { name: '宜蘭縣', lat: 24.7577, lon: 121.7533 }, 
+    { name: '花蓮縣', lat: 23.9730, lon: 121.6030 }, { name: '屏東縣', lat: 22.6738, lon: 120.4851 }, 
+    { name: '臺東縣', lat: 22.7505, lon: 121.1518 }
+];
+
+const MONTH_NAMES_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+const MONTH_CHINESE = ['一', '二', '三', '四', '五', '六', '七', '八', '九', '十', '十一', '十二'];
+const WEEKDAYS_CHINESE = ['日', '一', '二', '三', '四', '五', '六'];
+
+function simplifiedToTraditional(text) {
+    if (!text) return '';
+    const map = { 
+        '开': '開', '动': '動', '修': '修', '造': '造', '谢': '謝', '盖': '蓋', '納': '納', '结': '結', '办': '辦', 
+        '迁': '遷', '进': '進', '习': '習', '医': '醫', '启': '啟', '会': '會', '备': '備', '园': '園', 
+        '买': '買', '卖': '賣', '发': '發', '设': '設', '坛': '壇', '饰': '飾', '馀': '餘', '疗': '療', 
+        '理': '理', '归': '歸', '灶': '竈' 
+    };
+    return text.split('').map(c => map[c] || c).join('');
 }
 
-/* 宜忌 */
-.yi-ji-section { 
-    display: flex; 
-    border-bottom: 1px solid #eee; 
-}
-.yi-section, .ji-section { 
-    flex: 1; 
-    padding: 10px 15px; 
-    font-weight: bold; 
-    font-size: 0.9em; 
-}
-.yi-section { 
-    color: #e60000; 
-    border-right: 1px dashed #eee; 
-}
-.ji-section { 
-    color: #333; 
-}
-
-/* 底部欄位 */
-.bottom-row-container { 
-    display: flex; 
-    justify-content: space-between; 
-    padding: 15px; 
-    border-bottom: 1px solid #eee; 
-}
-.left-info-column { 
-    width: 55%; 
-    display: flex; 
-    flex-direction: column; 
-}
-.weather-section { 
-    font-size: 0.85em; 
-    color: #666; 
-    min-height: 45px; 
-}
-.clock-section { 
-    margin-top: 10px; 
-    border-top: 1px solid #eee; 
-    padding-top: 10px; 
-}
-#live-clock { 
-    font-size: 1.5em; 
-    color: #004d99; 
-    font-weight: bold; 
-    font-family: monospace; 
-}
-
-/* 小月曆 */
-.mini-calendar-container { 
-    width: 42%; 
-    font-size: 0.7em; 
-    border: 1px solid #eee; 
-    border-radius: 4px; 
-}
-.mini-calendar-select-wrapper { 
-    display: flex; 
-    background: #f7f7f7; 
-    padding: 2px; 
-}
-.mini-calendar-select-wrapper select { 
-    flex: 1; 
-    border: none; 
-    background: transparent; 
-}
-.mini-calendar-table table { 
-    width: 100%; 
-    text-align: center; 
-}
-.mini-calendar-footer { 
-    display: flex; 
-    justify-content: space-around; 
-    padding: 5px; 
-    border-top: 1px solid #eee; 
-    background: #fafafa; 
-}
-.shift-mini-btn { 
-    border: 1px solid #ccc; 
-    background: white; 
-    cursor: pointer; 
-    border-radius: 3px; 
-}
-
-/* ====================================================================
-   時辰吉凶 (最終並排修正)
-   ==================================================================== */
-.hour-auspice-container { 
-    padding: 10px 15px 20px 15px; 
-    border-top: 1px solid #eee; 
-}
-
-.hour-auspice-text {
-    /* 關鍵：啟用 Flexbox 實現左右並排 */
-    display: flex; 
-    gap: 10px; 
-    font-size: 0.9em; 
-    font-weight: 500;
-    flex-wrap: wrap; 
-}
-
-/* 吉時/凶時卡片樣式 */
-.auspice-good,
-.auspice-bad {
-    /* 關鍵：讓兩者平均分配空間 */
-    flex: 1; 
-    padding: 8px 10px; 
-    border-radius: 5px;
-    box-shadow: 0 0 5px rgba(0, 0, 0, 0.1); 
-    text-align: center; 
-}
-
-/* 吉時 -> 紅色背景，白色文字 */
-.auspice-good { 
-    color: white; 
-    background-color: #e60000; 
-}
-
-/* 凶時 -> 黑色背景，白色文字 */
-.auspice-bad { 
-    color: white; 
-    background-color: #333; 
-}
-
-/* 響應式調整：當視窗小於 350px 時，轉為垂直堆疊 */
-@media (max-width: 350px) {
-    .hour-auspice-text {
-        flex-direction: column;
-        gap: 8px;
-    }
-    .auspice-good,
-    .auspice-bad {
-        flex: none;
-        width: 100%;
-    }
-}
 function getLunarData(date) { 
+    // 檢查 lunar.js 和 solar.js 是否已載入
     if (typeof Solar === 'undefined') return { month: '農曆', day: '載入中', yi: '', ji: '', jieqi: '', ganzhi: '載入中' };
     const lunar = Solar.fromDate(date).getLunar();
     return {
@@ -364,6 +191,7 @@ async function updateCalendar(date) {
         }
     } catch (error) {
         console.error("更新日曆時發生嚴重錯誤:", error);
+        // 如果 lunar.js/solar.js 沒載入，會顯示這個錯誤
         PAGE_CONTAINER.innerHTML = '<div style="text-align: center; margin-top: 50px; color: #cc0000; font-weight: bold;">日曆載入失敗 (JS 錯誤)<br>錯誤: ' + error.message + '<br>提示: 請確認 lunar.js 和 solar.js 已正確載入。</div>';
     }
 }
@@ -382,9 +210,11 @@ window.handleMiniCalendarClick = function(year, month, day) {
 };
 
 document.addEventListener('DOMContentLoaded', () => {
+    // 1. 初始化城市選擇器
     TAIWAN_CITIES.forEach(c => CITY_SELECTOR.add(new Option(c.name, `${c.lat},${c.lon}`)));
     CITY_SELECTOR.onchange = () => updateCalendar(currentDisplayDate);
     
+    // 2. 第一次載入頁面
     updateCalendar(currentDisplayDate);
 }); 
 // 檔案結束
