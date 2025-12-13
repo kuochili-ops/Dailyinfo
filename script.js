@@ -1,6 +1,6 @@
 // ====================================================================
-// 專案名稱：極簡日曆儀表板 (最終清潔與並排修正版)
-// 修正重點：修復所有 SyntaxError，確保邏輯和 HTML 結構正確。
+// 專案名稱：極簡日曆儀表板 (最終動態時辰版)
+// 修正重點：新增 getDynamicAuspiceHours 函式，實現切換日期時，時辰吉凶同步變更。
 // ====================================================================
 
 const PAGE_CONTAINER = document.getElementById('calendar-page-container');
@@ -23,12 +23,13 @@ const TAIWAN_CITIES = [
 const MONTH_NAMES_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 const MONTH_CHINESE = ['一', '二', '三', '四', '五', '六', '七', '八', '九', '十', '十一', '十二'];
 const WEEKDAYS_CHINESE = ['日', '一', '二', '三', '四', '五', '六'];
+const HOUR_BRANCHES = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥']; // 十二地支
 
 function simplifiedToTraditional(text) {
     if (!text) return '';
     const map = { 
         '开': '開', '动': '動', '修': '修', '造': '造', '谢': '謝', '盖': '蓋', '納': '納', '结': '結', '办': '辦', 
-        '迁': '遷', '进': '進', '习': '習', '医': '醫', '启': '啟', '会': '會', '备': '備', '园': '園', 
+        '迁': '遷', '进': '進', '习': '習', '医': '醫', '启': '啟', '会': '會', '備': '備', '园': '園', 
         '买': '買', '卖': '賣', '发': '發', '设': '設', '坛': '壇', '饰': '飾', '馀': '餘', '疗': '療', 
         '理': '理', '归': '歸', '灶': '竈' 
     };
@@ -36,7 +37,6 @@ function simplifiedToTraditional(text) {
 }
 
 function getLunarData(date) { 
-    // 檢查 lunar.js 和 solar.js 是否已載入
     if (typeof Solar === 'undefined') return { month: '農曆', day: '載入中', yi: '', ji: '', jieqi: '', ganzhi: '載入中' };
     const lunar = Solar.fromDate(date).getLunar();
     return {
@@ -48,6 +48,51 @@ function getLunarData(date) {
         ganzhi: lunar.getYearInGanZhi() 
     };
 }
+
+// ====================================================================
+// 新增：動態計算時辰吉凶的函式
+// 邏輯：根據農曆日子的「地支」來判斷黃道/黑道起始時辰，然後交替分配吉凶。
+// ====================================================================
+function getDynamicAuspiceHours(date) {
+    if (typeof Solar === 'undefined') return { good: ['載入中'], bad: ['載入中'] };
+    
+    const lunar = Solar.fromDate(date).getLunar();
+    const dayBranch = lunar.getDayBranch(); // 獲取日地支 (e.g., 卯, 申)
+    
+    let startBranchName;
+
+    // 1. 確定黃道起始時辰 (根據日支查表)
+    switch (dayBranch) {
+        case '子': case '午': startBranchName = '申'; break; // 子午日，申時為黃道(吉)始
+        case '丑': case '未': startBranchName = '戌'; break; // 丑未日，戌時為黃道(吉)始
+        case '寅': case '申': startBranchName = '子'; break; // 寅申日，子時為黃道(吉)始
+        case '卯': case '酉': startBranchName = '寅'; break; // 卯酉日，寅時為黃道(吉)始
+        case '辰': case '戌': startBranchName = '辰'; break; // 辰戌日，辰時為黃道(吉)始
+        case '巳': case '亥': startBranchName = '午'; break; // 巳亥日，午時為黃道(吉)始
+        default: return { good: ['-'], bad: ['-'] };
+    }
+
+    let goodHours = [];
+    let badHours = [];
+    const startBranchIndex = HOUR_BRANCHES.indexOf(startBranchName);
+
+    // 2. 依照 黃道(吉)/黑道(凶) 順序循環 12 次
+    for (let i = 0; i < 12; i++) {
+        const branchIndex = (startBranchIndex + i) % 12;
+        const branchName = HOUR_BRANCHES[branchIndex];
+        
+        // 從起始時辰開始，序號 i=0, 2, 4... 是吉時 (黃道)
+        if (i % 2 === 0) {
+            goodHours.push(branchName);
+        } else {
+            badHours.push(branchName);
+        }
+    }
+
+    return { good: goodHours, bad: badHours };
+}
+
+// --------------------------------------------------------------------
 
 async function fetchWeatherForecast(lat, lon, cityName) { 
     const url = `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=metric&lang=zh_tw`;
@@ -107,7 +152,7 @@ function generateMiniCalendar(date) {
     return html;
 }
 
-function renderPageContent(date, lunar, weather) {
+function renderPageContent(date, lunar, weather, auspiceHours) {
     const dayIdx = date.getDay();
     const lunarHtml = `${lunar.month}<br>${lunar.day}${lunar.jieqi ? '<br>('+simplifiedToTraditional(lunar.jieqi)+')' : ''}`;
     
@@ -159,8 +204,8 @@ function renderPageContent(date, lunar, weather) {
 
     <div class="hour-auspice-container">
         <div class="hour-auspice-text">
-            <div class="auspice-good">吉時: 子 寅 卯 午 申 酉</div> 
-            <div class="auspice-bad">凶時: 丑 辰 巳 未 戌 亥</div>
+            <div class="auspice-good">吉時: ${auspiceHours.good.join(' ')}</div> 
+            <div class="auspice-bad">凶時: ${auspiceHours.bad.join(' ')}</div>
         </div>
     </div>`; 
 
@@ -176,8 +221,13 @@ async function updateCalendar(date) {
         const [lat, lon] = CITY_SELECTOR.value.split(',');
         const cityName = CITY_SELECTOR.options[CITY_SELECTOR.selectedIndex].textContent;
         
-        renderPageContent(date, lunar, { city: cityName, description: "載入中", temperature: "" });
+        // NEW: 計算動態的時辰吉凶
+        const auspiceHours = getDynamicAuspiceHours(date);
+
+        // 首次渲染，顯示「載入中」天氣，但時辰已經是動態的
+        renderPageContent(date, lunar, { city: cityName, description: "載入中", temperature: "" }, auspiceHours);
         
+        // 異步獲取並更新天氣數據
         const weather = await fetchWeatherForecast(lat, lon, cityName);
         
         const weatherBox = document.getElementById('weather-box');
@@ -185,13 +235,13 @@ async function updateCalendar(date) {
             weatherBox.innerHTML = `<span class="weather-city-name">${weather.city} 天氣:</span> ${weather.description} <span class="weather-temp">${weather.temperature}</span>`;
         }
 
+        // 局部更新小日曆 (主要是為了解決選中狀態的同步)
         const miniCalTable = document.querySelector('.mini-calendar-table');
         if (miniCalTable) {
             miniCalTable.innerHTML = generateMiniCalendar(date);
         }
     } catch (error) {
         console.error("更新日曆時發生嚴重錯誤:", error);
-        // 如果 lunar.js/solar.js 沒載入，會顯示這個錯誤
         PAGE_CONTAINER.innerHTML = '<div style="text-align: center; margin-top: 50px; color: #cc0000; font-weight: bold;">日曆載入失敗 (JS 錯誤)<br>錯誤: ' + error.message + '<br>提示: 請確認 lunar.js 和 solar.js 已正確載入。</div>';
     }
 }
@@ -210,11 +260,8 @@ window.handleMiniCalendarClick = function(year, month, day) {
 };
 
 document.addEventListener('DOMContentLoaded', () => {
-    // 1. 初始化城市選擇器
     TAIWAN_CITIES.forEach(c => CITY_SELECTOR.add(new Option(c.name, `${c.lat},${c.lon}`)));
     CITY_SELECTOR.onchange = () => updateCalendar(currentDisplayDate);
     
-    // 2. 第一次載入頁面
     updateCalendar(currentDisplayDate);
-}); 
-// 檔案結束
+});
