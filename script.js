@@ -30,9 +30,12 @@ function simplifiedToTraditional(text) {
     return text.split('').map(c => map[c] || c).join('');
 }
 
-// 時辰吉凶計算
+// 時辰吉凶計算 (包含偵錯輸出)
 function calculateHourAuspice(lunar) {
-    if (typeof lunar.getTimes !== 'function') return { good: '連動錯誤', bad: '連動錯誤' };
+    if (typeof lunar.getTimes !== 'function') {
+        console.error("LUNAR LIB ERROR: lunar.getTimes is undefined."); 
+        return { good: '連動錯誤', bad: '連動錯誤' };
+    }
     
     // 黃道六神（吉）：青龍、明堂、金匱、天德、玉堂、司命
     const luckyGods = ['青龍', '明堂', '金匱', '天德', '玉堂', '司命'];
@@ -48,7 +51,11 @@ function calculateHourAuspice(lunar) {
             bad.push(zhi);
         }
     });
-
+    
+    // 【偵錯輸出】：檢查時辰數據是否變動
+    console.log("當前農曆日:", lunar.getYearInGanZhi() + lunar.getMonthInChinese() + lunar.getDayInChinese());
+    console.log("計算出的吉時:", good.join(' '));
+    
     return {
         good: good.join(' '),
         bad: bad.join(' ')
@@ -178,6 +185,7 @@ function renderPageContent(date, weather) {
         </div>
     </div>`; 
 
+    // 【連動性關鍵點】：重新綁定按鈕點擊事件
     document.getElementById('prevDayBtn').onclick = () => { currentDisplayDate.setDate(currentDisplayDate.getDate() - 1); updateCalendar(currentDisplayDate); };
     document.getElementById('nextDayBtn').onclick = () => { currentDisplayDate.setDate(currentDisplayDate.getDate() + 1); updateCalendar(currentDisplayDate); };
     startClock();
