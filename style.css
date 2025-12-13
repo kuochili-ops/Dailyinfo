@@ -239,36 +239,50 @@ body {
 
 
 /* ====================================================================
-   時辰吉凶區域 (最終排版修正：強制靠左)
+   時辰吉凶區域 (Flexbox 強化修正：確保排版靠左)
    ==================================================================== */
 .hour-auspice-container {
     width: 100%;
     margin-top: 15px;
     padding: 10px 0;
-    text-align: left; /* 讓容器內文字左對齊 */
+    text-align: left; /* 父容器左對齊 */
     border-top: 2px solid #004d99;
     padding-top: 15px;
 }
 
 .hour-auspice-text {
-    /* 使用 Block 元素清除浮動，並包含時辰行 */
-    display: block; 
+    /* 使用 Flexbox，並確保從左側開始排列 */
+    display: flex;
+    justify-content: flex-start; /* 【關鍵修正】：內容強制靠左開始 */
+    align-items: flex-start;
+    flex-wrap: wrap; /* 允許在空間不足時自動換行 */
     font-size: 1.1em; 
     font-weight: 500;
-    padding: 0 5px; /* 給予一點左右空間 */
+    padding: 0 5px; 
+    box-sizing: border-box; /* 確保 padding 不增加寬度 */
 }
 
 /* 讓吉時和凶時並排 */
 .auspice-good,
 .auspice-bad {
-    display: block; /* 確保能控制寬度 */
-    float: left; /* 【關鍵修正】：讓它們並排浮動 */
-    width: calc(50% - 10px); /* 各佔 50% 減去間距 */
-    margin: 3px 5px; /* 給予間距 */
-    padding: 3px 6px; 
+    display: block; 
+    
+    /* 確保在寬螢幕下並排時，能容納間距 */
+    width: calc(50% - 10px); 
+    
+    margin: 3px 5px; /* 外部間距 */
+    padding: 3px 6px; /* 內部間距 */
     border-radius: 5px;
-    /* 確保文字內容能夠被換行，並從左側開始 */
+    
+    /* 確保文字靠左 */
     text-align: left; 
+    
+    /* Flex 相關屬性：允許收縮 */
+    flex-grow: 1;
+    flex-shrink: 1; 
+    
+    /* 避免繼承到 float 或其他舊屬性 */
+    float: none; 
 }
 
 .auspice-good {
@@ -285,11 +299,27 @@ body {
     display: none; 
 }
 
-/* 清除浮動：確保後續內容不會跑位 */
+/* 移除 float 清除，因為我們不使用 float 了 */
 .hour-auspice-text::after {
-    content: "";
-    display: table;
-    clear: both;
+    content: none;
+}
+
+
+/* ====================================================================
+   響應式設計 (RWD) - 針對手機版面優化
+   ==================================================================== */
+@media (max-width: 550px) {
+    .hour-auspice-text {
+        flex-direction: column; /* 【關鍵修正】：小螢幕時強制垂直堆疊 */
+        padding: 0;
+    }
+
+    .auspice-good,
+    .auspice-bad {
+        width: 100%; /* 佔滿整行 */
+        margin: 5px 0;
+        /* 由於父容器是 column，這裡不需要 float/flex 屬性 */
+    }
 }
 
 /* ====================================================================
