@@ -1,6 +1,6 @@
 // ====================================================================
-// 專案名稱：極簡日曆儀表板 (穩定回歸版)
-// 特色：切換日期功能穩定，時辰吉凶採靜態顯示以防卡死
+// 專案名稱：極簡日曆儀表板 (最終穩定版：時辰吉凶動態連動)
+// 特色：在用戶確認的穩定版本基礎上，重新啟用時辰動態計算
 // ====================================================================
 
 const PAGE_CONTAINER = document.getElementById('calendar-page-container');
@@ -23,7 +23,6 @@ const TAIWAN_CITIES = [
 const MONTH_NAMES_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 const MONTH_CHINESE = ['一', '二', '三', '四', '五', '六', '七', '八', '九', '十', '十一', '十二'];
 const WEEKDAYS_CHINESE = ['日', '一', '二', '三', '四', '五', '六'];
-const WEEKDAYS_ENGLISH = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
 function simplifiedToTraditional(text) {
     if (!text) return '';
@@ -31,15 +30,46 @@ function simplifiedToTraditional(text) {
     return text.split('').map(c => map[c] || c).join('');
 }
 
+// --- 【修改 1】新增時辰吉凶計算函式 ---
+function calculateHourAuspice(lunar) {
+    if (typeof lunar.getTimes !== 'function') return { good: '計算錯誤', bad: '檢查庫文件' };
+    
+    const luckyGods = ['青龍', '明堂', '金匱', '天德', '玉堂', '司命'];
+    let good = [], bad = [];
+    
+    lunar.getTimes().forEach(t => {
+        const zhi = t.getZhi();      
+        const god = t.getZhiShen();  
+        
+        if (luckyGods.includes(god)) {
+            good.push(zhi);
+        } else {
+            bad.push(zhi);
+        }
+    });
+
+    return {
+        good: good.join(' '),
+        bad: bad.join(' ')
+    };
+}
+
+// --- 【修改 2】更新 getLunarData 納入時辰計算結果 ---
 function getLunarData(date) { 
-    if (typeof Solar === 'undefined') return { month: '農曆', day: '載入中', yi: '', ji: '', jieqi: '' };
+    // 加入 hourAuspice 預設值，避免 renderPageContent 報錯
+    if (typeof Solar === 'undefined') return { month: '農曆', day: '載入中', yi: '', ji: '', jieqi: '', ganzhi: '', hourAuspice: {good: '載入中', bad: '載入中'} };
+    
     const lunar = Solar.fromDate(date).getLunar();
+    const auspice = calculateHourAuspice(lunar); // 計算時辰吉凶
+
     return {
         month: lunar.getMonthInChinese() + '月',
         day: lunar.getDayInChinese(),
         yi: simplifiedToTraditional(lunar.getDayYi().slice(0, 5).join(' ')), 
         ji: simplifiedToTraditional(lunar.getDayJi().slice(0, 5).join(' ')), 
-        jieqi: lunar.getJieQi()
+        jieqi: lunar.getJieQi(),
+        ganzhi: lunar.getYearInGanZhi(), // 新增 ganzhi 確保頂部顯示
+        hourAuspice: auspice // 新增時辰吉凶物件
     };
 }
 
@@ -96,7 +126,7 @@ function renderPageContent(date, weather) {
     
     PAGE_CONTAINER.innerHTML = `
     <div class="top-info">
-        <span>${date.getFullYear()-1911}年 歲次${typeof Solar!=='undefined'?Solar.fromDate(date).getLunar().getYearInGanZhi():''}</span>
+        <span>${date.getFullYear()-1911}年 歲次${lunar.ganzhi || (typeof Solar!=='undefined'?Solar.fromDate(date).getLunar().getYearInGanZhi():'')}</span>
         <span>${date.getFullYear()}</span>
     </div>
     
@@ -142,11 +172,11 @@ function renderPageContent(date, weather) {
 
     <div class="hour-auspice-container">
         <div class="hour-auspice-text">
-            <span class="auspice-good">吉時: 子 寅 卯 午 申 酉</span> 
+            <span class="auspice-good">吉時: ${lunar.hourAuspice.good}</span> 
             <span class="auspice-separator">|</span>
-            <span class="auspice-bad">凶時: 丑 辰 巳 未 戌 亥</span>
+            <span class="auspice-bad">凶時: ${lunar.hourAuspice.bad}</span>
         </div>
-    </div>`; // 修正 HTML 結構以配合單行 CSS
+    </div>`; 
 
     document.getElementById('prevDayBtn').onclick = () => { currentDisplayDate.setDate(currentDisplayDate.getDate() - 1); updateCalendar(currentDisplayDate); };
     document.getElementById('nextDayBtn').onclick = () => { currentDisplayDate.setDate(currentDisplayDate.getDate() + 1); updateCalendar(currentDisplayDate); };
@@ -156,9 +186,18 @@ function renderPageContent(date, weather) {
 async function updateCalendar(date) {
     const [lat, lon] = CITY_SELECTOR.value.split(',');
     const cityName = CITY_SELECTOR.options[CITY_SELECTOR.selectedIndex].textContent;
-    renderPageContent(date, { city: cityName, description: "載入中", temperature: "" });
+    // 先渲染核心內容（包含動態時辰），天氣顯示「載入中」
+    renderPageContent(date, { city: cityName, description: "載入中", temperature: "" }); 
+    
+    // 等待天氣 API
     const weather = await fetchWeatherForecast(lat, lon, cityName);
-    renderPageContent(date, weather);
+    
+    // 完成後再次渲染，補上天氣資訊
+    // 這裡我們只更新天氣 box 即可，避免重畫導致閃爍
+    const weatherBox = document.getElementById('weather-box');
+    if (weatherBox) {
+        weatherBox.innerHTML = `<span class="weather-city-name">${weather.city} 天氣:</span> ${weather.description} <span class="weather-temp">${weather.temperature}</span>`;
+    }
 }
 
 window.handleMiniCalendarSelection = function() {
