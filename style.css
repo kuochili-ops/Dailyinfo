@@ -1,5 +1,5 @@
 /* ====================================================================
-   style.css - 極簡日曆 dashboard 樣式 (顏色與排版修正版)
+   style.css - 極簡日曆 dashboard 樣式 (最終並排修正版)
    ==================================================================== */
 
 body {
@@ -86,16 +86,14 @@ body {
     font-size: 0.9em; 
 }
 .yi-section { 
-    /* 宜字體紅色 */
     color: #e60000; 
     border-right: 1px dashed #eee; 
 }
 .ji-section { 
-    /* 忌字體黑色 */
     color: #333; 
 }
 
-/* 底部欄位 */
+/* 底部欄位 (保持不變) */
 .bottom-row-container { 
     display: flex; 
     justify-content: space-between; 
@@ -174,7 +172,7 @@ body {
     margin-bottom: 10px;
 }
 .hour-auspice-text {
-    /* 關鍵：啟用 Flexbox 實現左右並排 */
+    /* ★ 核心設置：確保啟用 Flexbox 進行左右並排 ★ */
     display: flex; 
     gap: 10px; 
     font-size: 0.9em; 
@@ -185,7 +183,7 @@ body {
 /* 吉時/凶時卡片樣式 */
 .auspice-good,
 .auspice-bad {
-    /* 關鍵：平均分配空間 */
+    /* ★ 核心設置：讓兩者平均分配空間 (左右並列) ★ */
     flex: 1 1 48%; 
     min-width: 150px; 
     padding: 8px 10px; 
@@ -209,7 +207,7 @@ body {
     display: none; 
 }
 
-/* 響應式調整：小螢幕上會自動轉為垂直堆疊 */
+/* 響應式調整：當視窗小於 350px 時，會轉為垂直堆疊 */
 @media (max-width: 350px) {
     .hour-auspice-text {
         flex-direction: column;
