@@ -97,19 +97,43 @@ body {
 .bottom-row-container { 
     display: flex; 
     justify-content: space-between; 
-    align-items: flex-start; /* 讓三欄頂端對齊 */
+    /* 修正點 1: 改為 'center' 或 'stretch' 以讓圖片看起來更居中或與月曆對齊底部 */
+    align-items: center; /* 讓三欄垂直居中對齊 */
     padding: 15px; 
     border-bottom: 1px solid #eee; 
 }
 
-/* 1. 左側資訊欄 (時鐘/天氣) */
+/* 1. 左側資訊欄 (時鐘/天氣) - 保持不變 */
 .left-info-column { 
-    width: 30%; /* 佔據約 30% 寬度 */
+    width: 30%; 
     display: flex; 
     flex-direction: column; 
     min-width: 100px; 
 }
-.weather-section { 
+
+/* 2. 中間圖片欄位 */
+.image-column {
+    width: 30%; 
+    max-height: 150px; 
+    overflow: hidden; 
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    
+    /* 修正點 2: 增加上邊距和右邊距，實現下移和左移的效果 */
+    margin-top: 10px;    /* 增加上邊距，視覺上使圖片下移 */
+    margin-right: -5px;  /* 增加負右邊距，讓圖片往左靠近左欄一點 */
+}
+
+/* 3. 小月曆 - 保持不變 */
+.mini-calendar-container { 
+    width: 35%; 
+    font-size: 0.7em; 
+    border: 1px solid #eee; 
+    border-radius: 4px; 
+}.weather-section { 
     font-size: 0.85em; 
     color: #666; 
     min-height: 45px; 
