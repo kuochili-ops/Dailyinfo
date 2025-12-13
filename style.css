@@ -1,10 +1,9 @@
 /* ====================================================================
-   style.css - 極簡日曆 dashboard 樣式 (最終修正版：圖片下移 70px + 透明背景)
+   style.css - 極簡日曆 dashboard 樣式 (圖片移到時鐘下方修正版)
    修正內容：
-   1. 圖片容器 (.image-column) 寬度 45%，左移 -25px。
-   2. 圖片向下位移 70px (margin-top: 70px)。
-   3. 移除背景色 (background: transparent)。
-   4. 移除陰影 (box-shadow: none)。
+   1. 圖片容器 (.image-column) 移入左欄 (.left-info-column) 內部。
+   2. 左欄寬度變為 40%，右欄變為 55%。
+   3. 圖片被縮小並置於時鐘下方 (margin-top: 10px)。
    ==================================================================== */
 
 body {
@@ -98,7 +97,7 @@ body {
     color: #333; 
 }
 
-/* 底部欄位 - 三欄佈局 */
+/* 底部欄位 - 現在只有兩欄：左側資訊區 (40%) 和 小月曆 (55%) */
 .bottom-row-container { 
     display: flex; 
     justify-content: space-between; 
@@ -107,11 +106,11 @@ body {
     border-bottom: 1px solid #eee; 
 }
 
-/* 1. 左側資訊欄 (時鐘/天氣) */
+/* 1. 左側資訊欄 (時鐘/天氣/圖片) */
 .left-info-column { 
-    width: 25%; 
+    width: 40%; /* 擴大左欄寬度，容納圖片 */
     display: flex; 
-    flex-direction: column; 
+    flex-direction: column; /* 確保內容垂直堆疊 */
     min-width: 100px; 
 }
 
@@ -136,38 +135,37 @@ body {
     font-family: monospace; 
 }
 
-/* 2. 中間圖片欄位 (擴大寬度、左移、下移 70px、透明背景) */
+/* 2. 圖片欄位 - 現在位於左欄內，因此不再需要負邊距或複雜定位 */
 .image-column {
-    width: 45%; 
-    max-height: 150px; 
+    /* 縮小圖片容器尺寸 */
+    width: 100%; /* 佔滿左欄寬度 */
+    height: 100px; /* 固定高度，縮小圖片 */
     overflow: hidden; 
     display: flex;
-    align-items: flex-start; 
     justify-content: flex-start; 
+    align-items: center; /* 讓圖片垂直居中在容器內 */
     
-    /* ***** 關鍵修正：透明化和下移 ***** */
-    background: transparent;  /* 移除背景色 */
-    box-shadow: none;        /* 移除陰影 */
-    border-radius: 0;        /* 移除圓角 */
+    /* 移除視覺樣式 */
+    background: transparent;
+    box-shadow: none;
+    border-radius: 0;
     
-    margin-top: 70px;        /* 向下移動 70 像素 */
-    margin-left: -25px;       /* 向左移動 25 像素 */
-    /* ********************************* */
-    
-    margin-right: 5px;    
+    /* 放置在時鐘下方 */
+    margin-top: 10px; /* 移到時鐘下方，給予間隔 */
+    margin-left: 0;
+    margin-right: 0; 
 }
 
 .custom-image {
-    /* 假設圖片 IMG_5998.jpeg 本身沒有白色邊緣或背景 */
     width: 100%;
     height: 100%;
-    object-fit: cover; 
+    object-fit: cover; /* 讓圖片覆蓋容器 */
     display: block;
 }
 
-/* 3. 小月曆 (維持 35% 寬度不變) */
+/* 3. 小月曆 (擴大至 55% 寬度) */
 .mini-calendar-container { 
-    width: 35%; 
+    width: 55%; /* 擴大寬度，佔據剩餘空間 */
     font-size: 0.7em; 
     border: 1px solid #eee; 
     border-radius: 4px; 
@@ -239,6 +237,7 @@ body {
         margin-top: 0;
         margin-left: 0;
         margin-right: 0;
+        height: auto; /* 移除固定高度限制 */
     }
     .hour-auspice-text {
         flex-direction: column;
