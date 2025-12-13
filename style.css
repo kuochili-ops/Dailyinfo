@@ -7,7 +7,7 @@ body {
     color: #333;
     display: flex;
     justify-content: center;
-    align-items: flex-start; 
+    align-items: flex-start;
     min-height: 100vh;
     margin: 0;
     padding: 20px;
@@ -235,7 +235,7 @@ body {
 
 
 /* ====================================================================
-   時辰吉凶區域 (強制垂直堆疊與靠左對齊 - 最終版)
+   時辰吉凶區域 (最終排版：固定兩行靠左)
    ==================================================================== */
 .hour-auspice-container {
     width: 100%;
