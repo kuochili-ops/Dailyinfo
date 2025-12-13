@@ -1,9 +1,10 @@
 /* ====================================================================
-   style.css - 極簡日曆 dashboard 樣式 (最終修正版：圖片擴大寬度並左移)
+   style.css - 極簡日曆 dashboard 樣式 (最終修正版：圖片下移 70px + 透明背景)
    修正內容：
-   1. 圖片容器 (.image-column) 寬度增加至 45% (使其右側靠近中線)。
-   2. 圖片貼回頂部 (margin-top: 0)。
-   3. 左移量調整為 -25px。
+   1. 圖片容器 (.image-column) 寬度 45%，左移 -25px。
+   2. 圖片向下位移 70px (margin-top: 70px)。
+   3. 移除背景色 (background: transparent)。
+   4. 移除陰影 (box-shadow: none)。
    ==================================================================== */
 
 body {
@@ -108,7 +109,7 @@ body {
 
 /* 1. 左側資訊欄 (時鐘/天氣) */
 .left-info-column { 
-    width: 25%; /* 稍微縮小左欄寬度，為圖片讓出空間 */
+    width: 25%; 
     display: flex; 
     flex-direction: column; 
     min-width: 100px; 
@@ -135,23 +136,29 @@ body {
     font-family: monospace; 
 }
 
-/* 2. 中間圖片欄位 (擴大寬度至 45%，並左移貼頂部) */
+/* 2. 中間圖片欄位 (擴大寬度、左移、下移 70px、透明背景) */
 .image-column {
-    width: 45%; /* 擴大寬度，讓圖片更明顯延伸至右側中線 */
+    width: 45%; 
     max-height: 150px; 
     overflow: hidden; 
     display: flex;
     align-items: flex-start; 
     justify-content: flex-start; 
-    border-radius: 4px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
     
-    margin-top: 0;        /* 貼回頂部 */
-    margin-left: -25px;    /* 增大左移量 */
+    /* ***** 關鍵修正：透明化和下移 ***** */
+    background: transparent;  /* 移除背景色 */
+    box-shadow: none;        /* 移除陰影 */
+    border-radius: 0;        /* 移除圓角 */
+    
+    margin-top: 70px;        /* 向下移動 70 像素 */
+    margin-left: -25px;       /* 向左移動 25 像素 */
+    /* ********************************* */
+    
     margin-right: 5px;    
 }
 
 .custom-image {
+    /* 假設圖片 IMG_5998.jpeg 本身沒有白色邊緣或背景 */
     width: 100%;
     height: 100%;
     object-fit: cover; 
@@ -160,7 +167,7 @@ body {
 
 /* 3. 小月曆 (維持 35% 寬度不變) */
 .mini-calendar-container { 
-    width: 35%; /* 保持 35%，總寬度：25% + 45% + 35% = 105% (Flexbox 會壓縮/調整) */
+    width: 35%; 
     font-size: 0.7em; 
     border: 1px solid #eee; 
     border-radius: 4px; 
