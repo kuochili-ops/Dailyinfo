@@ -1,6 +1,6 @@
 // ====================================================================
-// 專案名稱：極簡日曆儀表板 (時辰吉凶動態連動最終穩定版)
-// 特色：修正時辰計算並確保初始化穩定
+// 專案名稱：極簡日曆儀表板 (穩定回歸版)
+// 特色：切換日期功能穩定，時辰吉凶採靜態顯示以防卡死
 // ====================================================================
 
 const PAGE_CONTAINER = document.getElementById('calendar-page-container');
@@ -23,6 +23,7 @@ const TAIWAN_CITIES = [
 const MONTH_NAMES_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 const MONTH_CHINESE = ['一', '二', '三', '四', '五', '六', '七', '八', '九', '十', '十一', '十二'];
 const WEEKDAYS_CHINESE = ['日', '一', '二', '三', '四', '五', '六'];
+const WEEKDAYS_ENGLISH = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
 function simplifiedToTraditional(text) {
     if (!text) return '';
@@ -30,48 +31,15 @@ function simplifiedToTraditional(text) {
     return text.split('').map(c => map[c] || c).join('');
 }
 
-// --- 【修正點 1】新增時辰吉凶計算邏輯 ---
-function calculateHourAuspice(lunar) {
-    if (typeof lunar.getTimes !== 'function') return { good: '計算錯誤', bad: '計算錯誤' };
-    
-    // 黃道六神（吉）：青龍、明堂、金匱、天德、玉堂、司命
-    const luckyGods = ['青龍', '明堂', '金匱', '天德', '玉堂', '司命'];
-    let good = [], bad = [];
-    
-    // 透過 getTimes() 取得當日所有時辰物件
-    lunar.getTimes().forEach(t => {
-        const zhi = t.getZhi();      
-        const god = t.getZhiShen();  
-        
-        if (luckyGods.includes(god)) {
-            good.push(zhi);
-        } else {
-            bad.push(zhi);
-        }
-    });
-
-    return {
-        good: good.join(' '),
-        bad: bad.join(' ')
-    };
-}
-
-// --- 【修正點 2】在獲取農曆數據時，同時計算時辰 ---
 function getLunarData(date) { 
-    // 確保 Solar 庫已載入
-    if (typeof Solar === 'undefined') return { month: '農曆', day: '載入中', yi: '載入中', ji: '載入中', jieqi: '', ganzhi: '載入中', hourAuspice: {good:'載入中', bad:'載入中'} };
-    
+    if (typeof Solar === 'undefined') return { month: '農曆', day: '載入中', yi: '', ji: '', jieqi: '' };
     const lunar = Solar.fromDate(date).getLunar();
-    const auspice = calculateHourAuspice(lunar); // 計算時辰吉凶
-
     return {
         month: lunar.getMonthInChinese() + '月',
         day: lunar.getDayInChinese(),
         yi: simplifiedToTraditional(lunar.getDayYi().slice(0, 5).join(' ')), 
         ji: simplifiedToTraditional(lunar.getDayJi().slice(0, 5).join(' ')), 
-        jieqi: lunar.getJieQi(),
-        ganzhi: lunar.getYearInGanZhi(),
-        hourAuspice: auspice
+        jieqi: lunar.getJieQi()
     };
 }
 
@@ -80,21 +48,16 @@ async function fetchWeatherForecast(lat, lon, cityName) {
     try {
         const response = await fetch(url);
         const data = await response.json();
-        if (data.cod != 200) throw new Error(data.message);
-        
+        if (data.cod != 200) throw new Error();
         const todayStr = new Date().toDateString();
         let maxT = -Infinity, minT = Infinity, desc = data.list[0].weather[0].description;
-        
         data.list.forEach(item => {
             if (new Date(item.dt_txt).toDateString() === todayStr) {
                 maxT = Math.max(maxT, item.main.temp_max); minT = Math.min(minT, item.main.temp_min); desc = item.weather[0].description;
             }
         });
-        
         return { description: desc, temperature: `${Math.round(minT)}°C ~ ${Math.round(maxT)}°C`, city: cityName };
-    } catch (e) { 
-        return { description: "連線錯誤", temperature: "--°C", city: cityName }; 
-    }
+    } catch (e) { return { description: "更新中", temperature: "--°C", city: cityName }; }
 }
 
 function startClock() { 
@@ -133,7 +96,7 @@ function renderPageContent(date, weather) {
     
     PAGE_CONTAINER.innerHTML = `
     <div class="top-info">
-        <span>${date.getFullYear()-1911}年 歲次${lunar.ganzhi || (typeof Solar!=='undefined'?Solar.fromDate(date).getLunar().getYearInGanZhi():'')}</span>
+        <span>${date.getFullYear()-1911}年 歲次${typeof Solar!=='undefined'?Solar.fromDate(date).getLunar().getYearInGanZhi():''}</span>
         <span>${date.getFullYear()}</span>
     </div>
     
@@ -179,35 +142,23 @@ function renderPageContent(date, weather) {
 
     <div class="hour-auspice-container">
         <div class="hour-auspice-text">
-            <span class="auspice-good">吉時: ${lunar.hourAuspice.good}</span> 
+            <span class="auspice-good">吉時: 子 寅 卯 午 申 酉</span> 
             <span class="auspice-separator">|</span>
-            <span class="auspice-bad">凶時: ${lunar.hourAuspice.bad}</span>
+            <span class="auspice-bad">凶時: 丑 辰 巳 未 戌 亥</span>
         </div>
-    </div>`; // 【修正點 3】使用動態變數
-    
+    </div>`; // 修正 HTML 結構以配合單行 CSS
+
     document.getElementById('prevDayBtn').onclick = () => { currentDisplayDate.setDate(currentDisplayDate.getDate() - 1); updateCalendar(currentDisplayDate); };
     document.getElementById('nextDayBtn').onclick = () => { currentDisplayDate.setDate(currentDisplayDate.getDate() + 1); updateCalendar(currentDisplayDate); };
     startClock();
 }
 
-// --- 【修正點 4】調整 updateCalendar 確保先渲染再拿天氣 ---
 async function updateCalendar(date) {
-    const selectedCityOption = CITY_SELECTOR.options[CITY_SELECTOR.selectedIndex];
-    const cityName = selectedCityOption ? selectedCityOption.textContent : TAIWAN_CITIES[0].name;
-    const cityCoords = selectedCityOption ? selectedCityOption.value.split(',') : [`${TAIWAN_CITIES[0].lat}`, `${TAIWAN_CITIES[0].lon}`];
-    const [lat, lon] = cityCoords;
-
-    // 1. 立即渲染核心內容 (時辰吉凶、農曆等)
-    renderPageContent(date, { city: cityName, description: "載入中...", temperature: "--°C" }); 
-
-    // 2. 異步抓取天氣
+    const [lat, lon] = CITY_SELECTOR.value.split(',');
+    const cityName = CITY_SELECTOR.options[CITY_SELECTOR.selectedIndex].textContent;
+    renderPageContent(date, { city: cityName, description: "載入中", temperature: "" });
     const weather = await fetchWeatherForecast(lat, lon, cityName);
-    
-    // 3. 抓完後，僅更新天氣區塊
-    const weatherBox = document.getElementById('weather-box');
-    if (weatherBox) {
-        weatherBox.innerHTML = `<span class="weather-city-name">${weather.city} 天氣:</span> ${weather.description} <span class="weather-temp">${weather.temperature}</span>`;
-    }
+    renderPageContent(date, weather);
 }
 
 window.handleMiniCalendarSelection = function() {
@@ -217,13 +168,8 @@ window.handleMiniCalendarSelection = function() {
     updateCalendar(currentDisplayDate);
 }
 
-// --- 確保初始化穩定 ---
 document.addEventListener('DOMContentLoaded', () => {
     TAIWAN_CITIES.forEach(c => CITY_SELECTOR.add(new Option(c.name, `${c.lat},${c.lon}`)));
-    
-    // 強制設定預設值
-    CITY_SELECTOR.value = `${TAIWAN_CITIES[0].lat},${TAIWAN_CITIES[0].lon}`; 
-    
     CITY_SELECTOR.onchange = () => updateCalendar(currentDisplayDate);
     updateCalendar(currentDisplayDate);
 });
