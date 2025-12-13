@@ -74,7 +74,7 @@ body {
     font-size: 0.9em; 
 }
 
-/* 宜忌 */
+/* 宜忌 (配色修正) */
 .yi-ji-section { 
     display: flex; 
     border-bottom: 1px solid #eee; 
@@ -86,11 +86,13 @@ body {
     font-size: 0.9em; 
 }
 .yi-section { 
-    color: green; 
+    /* 修正：宜字體紅色 */
+    color: #e60000; 
     border-right: 1px dashed #eee; 
 }
 .ji-section { 
-    color: red; 
+    /* 修正：忌字體黑色 */
+    color: #333; 
 }
 
 /* 底部欄位 */
@@ -158,12 +160,12 @@ body {
 }
 
 /* ====================================================================
-   時辰吉凶 (修正：配色與排版改為左右卡片，更具儀表板感)
+   時辰吉凶 (排版與配色保持優化後的卡片樣式)
    ==================================================================== */
 .hour-auspice-container { 
-    padding: 10px 15px 20px 15px; /* 底部增加間距 */
-    text-align: left; /* 文本對齊改為左對齊 */
-    border-top: 1px solid #eee; /* 新增頂部分隔線 */
+    padding: 10px 15px 20px 15px; 
+    text-align: left; 
+    border-top: 1px solid #eee; 
 }
 .hour-auspice-container h3 {
     font-size: 1.1em;
@@ -172,9 +174,8 @@ body {
     margin-bottom: 10px;
 }
 .hour-auspice-text {
-    /* 啟用 Flexbox 佈局，實現左右並列 */
     display: flex; 
-    gap: 10px; /* 區塊間距 */
+    gap: 10px; 
     font-size: 0.9em; 
     font-weight: 500;
     flex-wrap: wrap; 
@@ -183,27 +184,27 @@ body {
 /* 吉時/凶時卡片樣式 */
 .auspice-good,
 .auspice-bad {
-    flex: 1 1 48%; /* 讓兩個區塊平均分配空間 */
+    flex: 1 1 48%; 
     min-width: 150px; 
     padding: 8px 10px; 
     border-radius: 5px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05); /* 輕微卡片陰影 */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05); 
 }
 
-/* 吉時：修正為綠色/藍色系 (使用藍色，與主色調 #004d99 呼應) */
+/* 吉時：使用藍色，與主色調 #004d99 呼應 */
 .auspice-good { 
     color: white; 
-    background-color: #004d99; /* 主色調的深藍色 */
+    background-color: #004d99; 
 }
 
-/* 凶時：修正為紅色系 */
+/* 凶時：使用警示紅 */
 .auspice-bad { 
     color: white; 
-    background-color: #e60000; /* 警示紅 */
+    background-color: #e60000; 
 }
 
 .auspice-separator {
-    display: none; /* 移除分隔符，由 gap 實現間隔 */
+    display: none; 
 }
 
 /* 響應式調整：小螢幕上垂直堆疊 */
