@@ -145,7 +145,7 @@ body {
     
     margin-top: 70px;     
     /* ***** 關鍵修正：加大左移量 ***** */
-    margin-left: -15px;    
+    margin-left: -1px;    
     /* ***************************** */
     margin-right: 5px;    
 }
