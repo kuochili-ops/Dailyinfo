@@ -1,5 +1,5 @@
 // ====================================================================
-// 專案名稱：極簡日曆儀表板 (時辰吉凶徹底修正版)
+// 專案名稱：極簡日曆儀表板 (時辰吉凶強制更新版)
 // ====================================================================
 
 const PAGE_CONTAINER = document.getElementById('calendar-page-container');
@@ -12,47 +12,43 @@ let clockInterval = null;
 const TAIWAN_CITIES = [
     { name: '臺北市', lat: 25.0330, lon: 121.5654 }, { name: '新北市', lat: 25.0139, lon: 121.4552 }, 
     { name: '桃園市', lat: 24.9961, lon: 121.3129 }, { name: '臺中市', lat: 24.1478, lon: 120.6728 }, 
-    { name: '臺南市', lat: 22.9909, lon: 120.2132 }, { name: '高雄市', lat: 22.6273, lon: 120.3014 },
-    { name: '基隆市', lat: 25.1276, lon: 121.7392 }, { name: '新竹市', lat: 24.8037, lon: 120.9669 }, 
-    { name: '嘉義市', lat: 23.4841, lon: 120.4497 }, { name: '宜蘭縣', lat: 24.7577, lon: 121.7533 }, 
-    { name: '花蓮縣', lat: 23.9730, lon: 121.6030 }, { name: '屏東縣', lat: 22.6738, lon: 120.4851 }, 
-    { name: '臺東縣', lat: 22.7505, lon: 121.1518 }
+    { name: '臺南市', lat: 22.9909, lon: 120.2132 }, { name: '高雄市', lat: 22.6273, lon: 120.3014 }
 ];
 
-const MONTH_NAMES_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-const MONTH_CHINESE = ['一', '二', '三', '四', '五', '六', '七', '八', '九', '十', '十一', '十二'];
-const WEEKDAYS_CHINESE = ['日', '一', '二', '三', '四', '五', '六'];
-
-// --- 核心修正：使用官方 getTimes() 方法確保時辰連動 ---
-function getHourAuspiceDynamic(lunar) {
+// --- 核心計算：根據當日農曆物件計算時辰吉凶 ---
+function calculateHourAuspice(lunar) {
+    const hours = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥'];
+    // 黃道六神（吉）：青龍、明堂、金匱、天德、玉堂、司命
     const luckyGods = ['青龍', '明堂', '金匱', '天德', '玉堂', '司命'];
-    let good = [], bad = [];
     
-    // 獲取該日 12 時辰物件
-    const times = lunar.getTimes(); 
-    
-    times.forEach(t => {
-        const zhi = t.getZhi();      // 地支 (子, 丑...)
-        const god = t.getZhiShen();  // 獲取該時辰的神煞 (青龍, 天刑...)
-        
+    let good = [];
+    let bad = [];
+
+    // 強制對 12 個時辰進行輪詢計算
+    hours.forEach(h => {
+        // 透過 getTimeZhiShen 取得該時辰對應當日日柱的神煞
+        const god = lunar.getTimeZhiShen(h + '時');
         if (luckyGods.includes(god)) {
-            good.push(zhi);
+            good.push(h);
         } else {
-            bad.push(zhi);
+            bad.push(h);
         }
     });
 
-    return { 
-        good: good.length > 0 ? good.join(' ') : '無', 
-        bad: bad.length > 0 ? bad.join(' ') : '無' 
+    return {
+        good: good.join(' '),
+        bad: bad.join(' ')
     };
 }
 
 function getLunarData(date) { 
-    if (typeof Solar === 'undefined') return { month: '農曆', day: '載入中', yi: '', ji: '', hourAuspice: {good:'', bad:''} };
+    if (typeof Solar === 'undefined') return { month: '農曆', day: '載入中', yi: '', ji: '', hourAuspice: {good:'--', bad:'--'} };
     
+    // 取得當前日期的農曆物件
     const lunar = Solar.fromDate(date).getLunar();
-    const auspice = getHourAuspiceDynamic(lunar); // 在這裡執行時辰計算
+    
+    // 立即計算該日期的時辰吉凶
+    const auspice = calculateHourAuspice(lunar);
 
     return {
         month: lunar.getMonthInChinese() + '月',
@@ -60,30 +56,33 @@ function getLunarData(date) {
         yi: simplifiedToTraditional(lunar.getDayYi().slice(0, 5).join(' ')), 
         ji: simplifiedToTraditional(lunar.getDayJi().slice(0, 5).join(' ')), 
         jieqi: lunar.getJieQi(),
+        ganzhi: lunar.getYearInGanZhi(),
         hourAuspice: auspice
     };
 }
 
 function simplifiedToTraditional(text) {
     if (!text) return '';
-    const map = { '开': '開', '动': '動', '修': '修', '造': '造', '谢': '謝', '盖': '蓋', '纳': '納', '結': '結', '办': '辦', '迁': '遷', '进': '進', '习': '習', '医': '醫', '启': '啟', '会': '會', '備': '備', '园': '園', '买': '買', '卖': '賣', '发': '發', '設': '設', '坛': '壇', '饰': '飾', '馀': '餘', '疗': '療', '理': '理', '歸': '歸', '灶': '竈' };
+    const map = { '开': '開', '动': '動', '修': '修', '造': '造', '谢': '謝', '盖': '蓋', '纳': '納', '結': '結', '办': '辦', '迁': '遷', '进': '進', '习': '習', '医': '醫', '启': '啟', '会': '會', '備': '備', '园': '園', '買': '買', '賣': '賣', '發': '發', '設': '設', '壇': '壇', '飾': '飾' };
     return text.split('').map(c => map[c] || c).join('');
 }
 
-// --- 渲染與控制 (HTML 結構與 CSS 完全對接) ---
+// --- 渲染畫面 (確保 UI 內容與邏輯同步) ---
 function renderPageContent(date, weather) {
-    const dayIdx = date.getDay();
     const lunar = getLunarData(date);
-    const lunarHtml = `${lunar.month}<br>${lunar.day}${lunar.jieqi ? '<br>('+simplifiedToTraditional(lunar.jieqi)+')' : ''}`;
-    
+    const dayIdx = date.getDay();
+    const WEEKDAYS_CHINESE = ['日', '一', '二', '三', '四', '五', '六'];
+    const MONTH_CHINESE = ['一', '二', '三', '四', '五', '六', '七', '八', '九', '十', '十一', '十二'];
+    const MONTH_NAMES_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
     PAGE_CONTAINER.innerHTML = `
     <div class="top-info">
-        <span>${date.getFullYear()-1911}年 歲次${typeof Solar!=='undefined'?Solar.fromDate(date).getLunar().getYearInGanZhi():''}</span>
+        <span>${date.getFullYear()-1911}年 歲次${lunar.ganzhi}</span>
         <span>${date.getFullYear()}</span>
     </div>
     
     <div class="main-date-container">
-        <div class="lunar-badge">${lunarHtml}</div>
+        <div class="lunar-badge">${lunar.month}<br>${lunar.day}${lunar.jieqi ? '<br>('+simplifiedToTraditional(lunar.jieqi)+')' : ''}</div>
         <div class="center-date-info">
             <div class="big-date-number">${date.getDate()}</div>
             <div class="main-day-of-week">星期${WEEKDAYS_CHINESE[dayIdx]}</div>
@@ -108,7 +107,6 @@ function renderPageContent(date, weather) {
                 <span id="live-clock">--:--:--</span>
             </div>
         </div>
-        
         <div class="mini-calendar-container">
             <div class="mini-calendar-select-wrapper">
                 <select id="mini-calendar-year" onchange="handleMiniCalendarSelection()">${Array.from({length:21},(_,i)=>`<option value="${date.getFullYear()-10+i}" ${date.getFullYear()-10+i===date.getFullYear()?'selected':''}>${date.getFullYear()-10+i}年</option>`).join('')}</select>
@@ -135,15 +133,23 @@ function renderPageContent(date, weather) {
     startClock();
 }
 
-// --- 天氣與時鐘其餘邏輯 (保持不變) ---
+// --- 更新機制 (先渲染 UI 再抓天氣，避免卡死) ---
 async function updateCalendar(date) {
     const [lat, lon] = CITY_SELECTOR.value.split(',');
     const cityName = CITY_SELECTOR.options[CITY_SELECTOR.selectedIndex].textContent;
+    
+    // 1. 立即更新日曆內容（包含新的吉凶時辰）
     renderPageContent(date, { city: cityName, description: "載入中", temperature: "" });
+    
+    // 2. 異步抓取天氣，抓完再補上
     const weather = await fetchWeatherForecast(lat, lon, cityName);
-    renderPageContent(date, weather);
+    const weatherBox = document.getElementById('weather-box');
+    if (weatherBox) {
+        weatherBox.innerHTML = `<span class="weather-city-name">${weather.city} 天氣:</span> ${weather.description} <span class="weather-temp">${weather.temperature}</span>`;
+    }
 }
 
+// 時鐘與小月曆輔助功能 (保持不變)
 function startClock() { 
     if (clockInterval) clearInterval(clockInterval);
     const update = () => {
@@ -157,9 +163,7 @@ function generateMiniCalendar(date) {
     const year = date.getFullYear(), month = date.getMonth();
     const firstDay = new Date(year, month, 1).getDay();
     const daysInMonth = new Date(year, month + 1, 0).getDate();
-    let html = '<table><thead><tr>';
-    WEEKDAYS_CHINESE.forEach(d => html += `<th style="color:${d==='日'?'#cc0000':'#333'};">${d}</th>`);
-    html += '</tr></thead><tbody><tr>';
+    let html = '<table><thead><tr>' + ['日','一','二','三','四','五','六'].map(d=>`<th style="color:${d==='日'?'#cc0000':'#333'};">${d}</th>`).join('') + '</tr></thead><tbody><tr>';
     let cells = 0;
     for (let i = 0; i < firstDay; i++) { html += '<td></td>'; cells++; }
     for (let d = 1; d <= daysInMonth; d++) {
@@ -169,8 +173,7 @@ function generateMiniCalendar(date) {
         html += `<td style="${style}">${d}</td>`;
         cells++;
     }
-    html += '</tr></tbody></table>';
-    return html;
+    return html + '</tr></tbody></table>';
 }
 
 window.handleMiniCalendarSelection = function() {
@@ -181,19 +184,12 @@ window.handleMiniCalendarSelection = function() {
 }
 
 async function fetchWeatherForecast(lat, lon, cityName) { 
-    const url = `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=metric&lang=zh_tw`;
     try {
-        const response = await fetch(url);
+        const response = await fetch(`https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=metric&lang=zh_tw`);
         const data = await response.json();
-        const todayStr = new Date().toDateString();
-        let maxT = -Infinity, minT = Infinity, desc = data.list[0].weather[0].description;
-        data.list.forEach(item => {
-            if (new Date(item.dt_txt).toDateString() === todayStr) {
-                maxT = Math.max(maxT, item.main.temp_max); minT = Math.min(minT, item.main.temp_min); desc = item.weather[0].description;
-            }
-        });
-        return { description: desc, temperature: `${Math.round(minT)}°C ~ ${Math.round(maxT)}°C`, city: cityName };
-    } catch (e) { return { description: "更新中", temperature: "--°C", city: cityName }; }
+        const item = data.list[0];
+        return { description: item.weather[0].description, temperature: `${Math.round(item.main.temp)}°C`, city: cityName };
+    } catch (e) { return { description: "暫無數據", temperature: "--°C", city: cityName }; }
 }
 
 document.addEventListener('DOMContentLoaded', () => {
