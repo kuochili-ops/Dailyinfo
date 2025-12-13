@@ -144,7 +144,7 @@ body {
     box-shadow: 0 1px 3px rgba(0,0,0,0.1);
     
     margin-top: 70px;     
-    margin-left: -25px;    /* <-- 版本 B 修正：向左移動 25 像素 */
+    margin-left: -50px;    /* <-- 版本 B 修正：向左移動 25 像素 */
     margin-right: 5px;    
 }
 
