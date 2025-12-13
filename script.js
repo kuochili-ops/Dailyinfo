@@ -1,6 +1,6 @@
 // ====================================================================
-// 專案名稱：極簡日曆儀表板 (最終穩定版：時辰吉凶動態連動)
-// 特色：在用戶確認的穩定版本基礎上，重新啟用時辰動態計算
+// 專案名稱：極簡日曆儀表板 (時辰連動最終版)
+// =話：確保時辰吉凶隨日期變動
 // ====================================================================
 
 const PAGE_CONTAINER = document.getElementById('calendar-page-container');
@@ -30,7 +30,7 @@ function simplifiedToTraditional(text) {
     return text.split('').map(c => map[c] || c).join('');
 }
 
-// --- 【修改 1】新增時辰吉凶計算函式 ---
+// --- 【關鍵修正 1】重新定義時辰吉凶計算函式 ---
 function calculateHourAuspice(lunar) {
     if (typeof lunar.getTimes !== 'function') return { good: '計算錯誤', bad: '檢查庫文件' };
     
@@ -54,13 +54,12 @@ function calculateHourAuspice(lunar) {
     };
 }
 
-// --- 【修改 2】更新 getLunarData 納入時辰計算結果 ---
+// --- 【關鍵修正 2】確保 getLunarData 呼叫計算函式並回傳結果 ---
 function getLunarData(date) { 
-    // 加入 hourAuspice 預設值，避免 renderPageContent 報錯
     if (typeof Solar === 'undefined') return { month: '農曆', day: '載入中', yi: '', ji: '', jieqi: '', ganzhi: '', hourAuspice: {good: '載入中', bad: '載入中'} };
     
     const lunar = Solar.fromDate(date).getLunar();
-    const auspice = calculateHourAuspice(lunar); // 計算時辰吉凶
+    const auspice = calculateHourAuspice(lunar); // 呼叫時辰計算
 
     return {
         month: lunar.getMonthInChinese() + '月',
@@ -68,10 +67,12 @@ function getLunarData(date) {
         yi: simplifiedToTraditional(lunar.getDayYi().slice(0, 5).join(' ')), 
         ji: simplifiedToTraditional(lunar.getDayJi().slice(0, 5).join(' ')), 
         jieqi: lunar.getJieQi(),
-        ganzhi: lunar.getYearInGanZhi(), // 新增 ganzhi 確保頂部顯示
-        hourAuspice: auspice // 新增時辰吉凶物件
+        ganzhi: lunar.getYearInGanZhi(), // 必須回傳 ganzhi
+        hourAuspice: auspice // 必須回傳時辰吉凶物件
     };
 }
+
+// ... (fetchWeatherForecast, startClock, generateMiniCalendar 函式內容不變，省略以保持程式碼簡潔性)
 
 async function fetchWeatherForecast(lat, lon, cityName) { 
     const url = `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=metric&lang=zh_tw`;
@@ -119,6 +120,7 @@ function generateMiniCalendar(date) {
     return html;
 }
 
+// --- 【關鍵修正 3】確保 renderPageContent 取用動態數據 ---
 function renderPageContent(date, weather) {
     const dayIdx = date.getDay();
     const lunar = getLunarData(date);
@@ -126,7 +128,7 @@ function renderPageContent(date, weather) {
     
     PAGE_CONTAINER.innerHTML = `
     <div class="top-info">
-        <span>${date.getFullYear()-1911}年 歲次${lunar.ganzhi || (typeof Solar!=='undefined'?Solar.fromDate(date).getLunar().getYearInGanZhi():'')}</span>
+        <span>${date.getFullYear()-1911}年 歲次${lunar.ganzhi}</span>
         <span>${date.getFullYear()}</span>
     </div>
     
@@ -192,8 +194,7 @@ async function updateCalendar(date) {
     // 等待天氣 API
     const weather = await fetchWeatherForecast(lat, lon, cityName);
     
-    // 完成後再次渲染，補上天氣資訊
-    // 這裡我們只更新天氣 box 即可，避免重畫導致閃爍
+    // 抓完後，僅更新天氣區塊
     const weatherBox = document.getElementById('weather-box');
     if (weatherBox) {
         weatherBox.innerHTML = `<span class="weather-city-name">${weather.city} 天氣:</span> ${weather.description} <span class="weather-temp">${weather.temperature}</span>`;
