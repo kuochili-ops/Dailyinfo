@@ -7,7 +7,7 @@ body {
     color: #333;
     display: flex;
     justify-content: center;
-    align-items: flex-start; /* 讓內容從頂部開始 */
+    align-items: flex-start; 
     min-height: 100vh;
     margin: 0;
     padding: 20px;
@@ -19,7 +19,7 @@ body {
     border-radius: 15px;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
     width: 100%;
-    max-width: 800px; /* 限制最大寬度以保持美觀 */
+    max-width: 800px; 
     padding: 30px;
     box-sizing: border-box;
     display: flex;
@@ -119,12 +119,12 @@ body {
 }
 
 .yi-section {
-    color: #1a7e1a; /* 吉利色 */
+    color: #1a7e1a; 
     border-right: 1px solid #ddd;
 }
 
 .ji-section {
-    color: #cc0000; /* 凶險色 */
+    color: #cc0000; 
 }
 
 /* ====================================================================
@@ -157,10 +157,6 @@ body {
 .weather-city-name {
     font-weight: bold;
     color: #004d99;
-}
-.weather-temp {
-    font-weight: 700;
-    margin-left: 5px;
 }
 
 /* 時鐘 */
@@ -239,50 +235,40 @@ body {
 
 
 /* ====================================================================
-   時辰吉凶區域 (Flexbox 強化修正：確保排版靠左)
+   時辰吉凶區域 (強制垂直堆疊與靠左對齊 - 最終版)
    ==================================================================== */
 .hour-auspice-container {
     width: 100%;
     margin-top: 15px;
     padding: 10px 0;
-    text-align: left; /* 父容器左對齊 */
+    text-align: left; /* 讓容器內文字左對齊 */
     border-top: 2px solid #004d99;
     padding-top: 15px;
 }
 
 .hour-auspice-text {
-    /* 使用 Flexbox，並確保從左側開始排列 */
-    display: flex;
-    justify-content: flex-start; /* 【關鍵修正】：內容強制靠左開始 */
-    align-items: flex-start;
-    flex-wrap: wrap; /* 允許在空間不足時自動換行 */
+    /* 使用 Block 元素，確保內容垂直堆疊 */
+    display: block; 
     font-size: 1.1em; 
     font-weight: 500;
-    padding: 0 5px; 
-    box-sizing: border-box; /* 確保 padding 不增加寬度 */
+    padding: 0 5px; /* 僅給左右一點點間距 */
 }
 
-/* 讓吉時和凶時並排 */
+/* 讓吉時和凶時各自佔滿一行並靠左 */
 .auspice-good,
 .auspice-bad {
-    display: block; 
-    
-    /* 確保在寬螢幕下並排時，能容納間距 */
-    width: calc(50% - 10px); 
-    
-    margin: 3px 5px; /* 外部間距 */
-    padding: 3px 6px; /* 內部間距 */
+    display: block; /* 【強制佔滿一行】 */
+    width: 100%; 
+    margin: 5px 0; 
+    padding: 3px 6px; 
     border-radius: 5px;
     
-    /* 確保文字靠左 */
-    text-align: left; 
+    text-align: left; /* 確保文字內容靠左 */
+    box-sizing: border-box; 
     
-    /* Flex 相關屬性：允許收縮 */
-    flex-grow: 1;
-    flex-shrink: 1; 
-    
-    /* 避免繼承到 float 或其他舊屬性 */
-    float: none; 
+    /* 移除所有可能干擾的排版屬性 */
+    float: none;
+    flex: none;
 }
 
 .auspice-good {
@@ -296,51 +282,17 @@ body {
 }
 
 .auspice-separator {
-    display: none; 
+    display: none; /* 移除分隔符 */
 }
 
-/* 移除 float 清除，因為我們不使用 float 了 */
+/* 確保沒有任何殘餘的 float 影響 */
 .hour-auspice-text::after {
     content: none;
+    display: none;
 }
-
 
 /* ====================================================================
    響應式設計 (RWD) - 針對手機版面優化
-   ==================================================================== */
-@media (max-width: 550px) {
-    .hour-auspice-text {
-        flex-direction: column; /* 【關鍵修正】：小螢幕時強制垂直堆疊 */
-        padding: 0;
-    }
-
-    .auspice-good,
-    .auspice-bad {
-        width: 100%; /* 佔滿整行 */
-        margin: 5px 0;
-        /* 由於父容器是 column，這裡不需要 float/flex 屬性 */
-    }
-}
-
-/* ====================================================================
-   響應式設計 (RWD) - 針對手機版面優化靠左排版
-   ==================================================================== */
-@media (max-width: 550px) {
-    .auspice-good,
-    .auspice-bad {
-        width: 100%; /* 垂直堆疊時，各佔滿整行 */
-        float: none; /* 【關鍵修正】：移除浮動，讓它們自然垂直排列 */
-        margin: 5px 0;
-        text-align: left; /* 再次確保文字靠左 */
-    }
-    /* 移除父容器的 padding，讓子元素靠到最左邊 */
-    .hour-auspice-text {
-        padding: 0; 
-    }
-}
-
-/* ====================================================================
-   響應式設計 (RWD) - 確保小螢幕可讀性
    ==================================================================== */
 @media (max-width: 768px) {
     #calendar-page-container {
@@ -371,20 +323,5 @@ body {
     .mini-calendar-container {
         width: 100%;
         margin-top: 15px;
-    }
-}
-
-/* 針對極窄手機螢幕 (小於 550px) 時辰調整 */
-@media (max-width: 550px) {
-    .hour-auspice-text {
-        flex-direction: column; /* 垂直堆疊 */
-        align-items: flex-start; /* 確保內容靠左 */
-    }
-    .auspice-good,
-    .auspice-bad {
-        width: 100%; /* 佔滿整行 */
-        margin: 5px 0;
-        justify-content: flex-start; /* 內部內容靠左 */
-        white-space: normal; /* 允許文字換行，確保可讀性 */
     }
 }
