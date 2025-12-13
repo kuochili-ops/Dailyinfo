@@ -1,6 +1,6 @@
 // ====================================================================
-// 專案名稱：極簡日曆儀表板 (時辰連動最終版：單行呈現)
-// 特色：確保時辰吉凶隨日期變動，並優化為單行呈現
+// 專案名稱：極簡日曆儀表板 (時辰動態連動最終版)
+// 特色：確保時辰吉凶隨日期變動，程式邏輯經多次驗證穩定
 // ====================================================================
 
 const PAGE_CONTAINER = document.getElementById('calendar-page-container');
@@ -26,14 +26,15 @@ const WEEKDAYS_CHINESE = ['日', '一', '二', '三', '四', '五', '六'];
 
 function simplifiedToTraditional(text) {
     if (!text) return '';
-    const map = { '开': '開', '动': '動', '修': '修', '造': '造', '谢': '謝', '盖': '蓋', '纳': '納', '結': '結', '办': '辦', '迁': '遷', '进': '進', '习': '習', '医': '醫', '启': '啟', '会': '會', '備': '備', '園': '園', '买': '買', '卖': '賣', '发': '發', '設': '設', '坛': '壇', '饰': '飾', '馀': '餘', '疗': '療', '理': '理', '歸': '歸', '灶': '竈' };
+    const map = { '开': '開', '动': '動', '修': '修', '造': '造', '谢': '謝', '盖': '蓋', '納': '納', '結': '結', '办': '辦', '迁': '遷', '进': '進', '习': '習', '医': '醫', '启': '啟', '会': '會', '備': '備', '园': '園', '买': '買', '卖': '賣', '发': '發', '設': '設', '坛': '壇', '饰': '飾', '馀': '餘', '疗': '療', '理': '理', '歸': '歸', '灶': '竈' };
     return text.split('').map(c => map[c] || c).join('');
 }
 
 // 時辰吉凶計算
 function calculateHourAuspice(lunar) {
-    if (typeof lunar.getTimes !== 'function') return { good: '計算錯誤', bad: '檢查庫文件' };
+    if (typeof lunar.getTimes !== 'function') return { good: '連動錯誤', bad: '連動錯誤' };
     
+    // 黃道六神（吉）：青龍、明堂、金匱、天德、玉堂、司命
     const luckyGods = ['青龍', '明堂', '金匱', '天德', '玉堂', '司命'];
     let good = [], bad = [];
     
@@ -56,7 +57,7 @@ function calculateHourAuspice(lunar) {
 
 // 獲取農曆數據 (包含時辰)
 function getLunarData(date) { 
-    if (typeof Solar === 'undefined') return { month: '農曆', day: '載入中', yi: '', ji: '', jieqi: '', ganzhi: '', hourAuspice: {good: '載入中', bad: '載入中'} };
+    if (typeof Solar === 'undefined') return { month: '農曆', day: '載入中', yi: '', ji: '', jieqi: '', ganzhi: '', hourAuspice: {good: '連動中', bad: '連動中'} };
     
     const lunar = Solar.fromDate(date).getLunar();
     const auspice = calculateHourAuspice(lunar); 
@@ -186,13 +187,13 @@ async function updateCalendar(date) {
     const [lat, lon] = CITY_SELECTOR.value.split(',');
     const cityName = CITY_SELECTOR.options[CITY_SELECTOR.selectedIndex].textContent;
     
-    // 先渲染核心內容（包含動態時辰）
+    // 渲染核心內容（包含動態時辰）
     renderPageContent(date, { city: cityName, description: "載入中", temperature: "" }); 
     
     // 等待天氣 API
     const weather = await fetchWeatherForecast(lat, lon, cityName);
     
-    // 只更新天氣 box
+    // 只更新天氣 box，避免重畫造成閃爍
     const weatherBox = document.getElementById('weather-box');
     if (weatherBox) {
         weatherBox.innerHTML = `<span class="weather-city-name">${weather.city} 天氣:</span> ${weather.description} <span class="weather-temp">${weather.temperature}</span>`;
