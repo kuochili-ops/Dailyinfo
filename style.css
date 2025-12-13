@@ -1,9 +1,8 @@
 /* ====================================================================
-   style.css - 極簡日曆 dashboard 樣式 (圖片移到時鐘下方修正版)
+   style.css - 極簡日曆 dashboard 樣式 (最終版：移除圖片，兩欄佈局)
    修正內容：
-   1. 圖片容器 (.image-column) 移入左欄 (.left-info-column) 內部。
-   2. 左欄寬度變為 40%，右欄變為 55%。
-   3. 圖片被縮小並置於時鐘下方 (margin-top: 10px)。
+   1. 圖片相關 CSS (image-column, custom-image) 已移除。
+   2. 左側資訊欄和月曆寬度重新平衡 (40% 和 55%)。
    ==================================================================== */
 
 body {
@@ -106,11 +105,11 @@ body {
     border-bottom: 1px solid #eee; 
 }
 
-/* 1. 左側資訊欄 (時鐘/天氣/圖片) */
+/* 1. 左側資訊欄 (時鐘/天氣) - 佔 40% 寬度 */
 .left-info-column { 
-    width: 40%; /* 擴大左欄寬度，容納圖片 */
+    width: 40%; 
     display: flex; 
-    flex-direction: column; /* 確保內容垂直堆疊 */
+    flex-direction: column; 
     min-width: 100px; 
 }
 
@@ -135,37 +134,11 @@ body {
     font-family: monospace; 
 }
 
-/* 2. 圖片欄位 - 現在位於左欄內，因此不再需要負邊距或複雜定位 */
-.image-column {
-    /* 縮小圖片容器尺寸 */
-    width: 100%; /* 佔滿左欄寬度 */
-    height: 100px; /* 固定高度，縮小圖片 */
-    overflow: hidden; 
-    display: flex;
-    justify-content: flex-start; 
-    align-items: center; /* 讓圖片垂直居中在容器內 */
-    
-    /* 移除視覺樣式 */
-    background: transparent;
-    box-shadow: none;
-    border-radius: 0;
-    
-    /* 放置在時鐘下方 */
-    margin-top: 10px; /* 移到時鐘下方，給予間隔 */
-    margin-left: 0;
-    margin-right: 0; 
-}
+/* 圖片相關 CSS 已全部移除 */
 
-.custom-image {
-    width: 100%;
-    height: 100%;
-    object-fit: cover; /* 讓圖片覆蓋容器 */
-    display: block;
-}
-
-/* 3. 小月曆 (擴大至 55% 寬度) */
+/* 2. 小月曆 - 佔 55% 寬度 */
 .mini-calendar-container { 
-    width: 55%; /* 擴大寬度，佔據剩餘空間 */
+    width: 55%; 
     font-size: 0.7em; 
     border: 1px solid #eee; 
     border-radius: 4px; 
@@ -232,12 +205,8 @@ body {
         flex-direction: column;
         gap: 10px;
     }
-    .left-info-column, .image-column, .mini-calendar-container {
+    .left-info-column, .mini-calendar-container {
         width: 100%;
-        margin-top: 0;
-        margin-left: 0;
-        margin-right: 0;
-        height: auto; /* 移除固定高度限制 */
     }
     .hour-auspice-text {
         flex-direction: column;
