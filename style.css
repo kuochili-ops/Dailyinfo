@@ -136,16 +136,23 @@ body {
     font-family: monospace; 
 }
 
-/* 2. 中間圖片欄位 (狗狗圖片左移) */
+/* 2. 中間圖片欄位 (狗狗圖片左移 + 下移) */
 .image-column {
     width: 30%; 
+    /* 圖片高度被限制在 150px，我們設定 margin-top 來向下移動約這個距離 */
     max-height: 150px; 
     overflow: hidden; 
     display: flex;
-    align-items: flex-start; /* 圖片頂部對齊 */
-    justify-content: flex-start; /* 圖片左側對齊 */
+    align-items: flex-start; 
+    justify-content: flex-start; 
     border-radius: 4px;
     box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    
+    /* 修正點 1: 增加上邊距，使圖片向下移動約一個身高的距離 */
+    margin-top: 150px;    /* 根據 max-height: 150px 設置 */
+    margin-left: -5px;    
+    margin-right: 5px;    
+}
     
     margin-top: 0;        
     margin-left: -5px;    /* 負左邊距，圖片左移 */
