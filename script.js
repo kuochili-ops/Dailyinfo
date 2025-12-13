@@ -1,6 +1,6 @@
 // ====================================================================
-// 專案名稱：極簡日曆儀表板 (最終動態時辰版)
-// 修正重點：新增 getDynamicAuspiceHours 函式，實現切換日期時，時辰吉凶同步變更。
+// 專案名稱：極簡日曆儀表板 (最終動態時辰版 - 修正 TypeError)
+// 修正重點：修復 lunar.getDayBranch is not a function 錯誤，改用 getDayInGanZhi 提取日地支。
 // ====================================================================
 
 const PAGE_CONTAINER = document.getElementById('calendar-page-container');
@@ -45,23 +45,27 @@ function getLunarData(date) {
         yi: simplifiedToTraditional(lunar.getDayYi().slice(0, 5).join(' ')), 
         ji: simplifiedToTraditional(lunar.getDayJi().slice(0, 5).join(' ')), 
         jieqi: lunar.getJieQi(),
-        ganzhi: lunar.getYearInGanZhi() 
+        // 確保這裡的 ganzhi 是日子的干支
+        ganzhi: lunar.getDayInGanZhi() 
     };
 }
 
 // ====================================================================
-// 新增：動態計算時辰吉凶的函式
-// 邏輯：根據農曆日子的「地支」來判斷黃道/黑道起始時辰，然後交替分配吉凶。
+// 動態計算時辰吉凶的函式 (已修復日地支取得問題)
 // ====================================================================
 function getDynamicAuspiceHours(date) {
     if (typeof Solar === 'undefined') return { good: ['載入中'], bad: ['載入中'] };
     
     const lunar = Solar.fromDate(date).getLunar();
-    const dayBranch = lunar.getDayBranch(); // 獲取日地支 (e.g., 卯, 申)
+    
+    // *** 修正點：通過 getDayInGanZhi 獲取干支，然後提取日地支 (最後一個字) ***
+    const dayGanZhi = lunar.getDayInGanZhi(); 
+    const dayBranch = dayGanZhi.substring(1); // 日地支 (e.g., 如果是 "甲申"，則為 "申")
+    // ***************************************************************
     
     let startBranchName;
 
-    // 1. 確定黃道起始時辰 (根據日支查表)
+    // 1. 確定黃道起始時辰 (根據日地支查表)
     switch (dayBranch) {
         case '子': case '午': startBranchName = '申'; break; // 子午日，申時為黃道(吉)始
         case '丑': case '未': startBranchName = '戌'; break; // 丑未日，戌時為黃道(吉)始
@@ -154,11 +158,14 @@ function generateMiniCalendar(date) {
 
 function renderPageContent(date, lunar, weather, auspiceHours) {
     const dayIdx = date.getDay();
+    // 注意：這裡顯示的 ganzhi 已經是日干支，但通常日曆上會顯示年干支，這裡採用年干支來匹配常見習慣
+    const lunarYearGanzhi = Solar.fromDate(date).getLunar().getYearInGanZhi(); 
+    
     const lunarHtml = `${lunar.month}<br>${lunar.day}${lunar.jieqi ? '<br>('+simplifiedToTraditional(lunar.jieqi)+')' : ''}`;
     
     PAGE_CONTAINER.innerHTML = `
     <div class="top-info">
-        <span id="lunar-year-info">${date.getFullYear()-1911}年 歲次${lunar.ganzhi}</span>
+        <span id="lunar-year-info">${date.getFullYear()-1911}年 歲次${lunarYearGanzhi}</span>
         <span>${date.getFullYear()}</span>
     </div>
     
@@ -224,7 +231,7 @@ async function updateCalendar(date) {
         // NEW: 計算動態的時辰吉凶
         const auspiceHours = getDynamicAuspiceHours(date);
 
-        // 首次渲染，顯示「載入中」天氣，但時辰已經是動態的
+        // 首次渲染，顯示「載入中」天氣
         renderPageContent(date, lunar, { city: cityName, description: "載入中", temperature: "" }, auspiceHours);
         
         // 異步獲取並更新天氣數據
@@ -235,7 +242,7 @@ async function updateCalendar(date) {
             weatherBox.innerHTML = `<span class="weather-city-name">${weather.city} 天氣:</span> ${weather.description} <span class="weather-temp">${weather.temperature}</span>`;
         }
 
-        // 局部更新小日曆 (主要是為了解決選中狀態的同步)
+        // 局部更新小日曆
         const miniCalTable = document.querySelector('.mini-calendar-table');
         if (miniCalTable) {
             miniCalTable.innerHTML = generateMiniCalendar(date);
